@@ -1,10 +1,14 @@
-"""Runtime: wires SimClock + Scheduler + Simulator + Processor. Owns reset (history + warm-up) and stepping."""
+"""Runtime: wires Clock + Scheduler + Simulator + Processor.
+
+Demo mode owns reset (simulated history + warm-up) on a SimClock. Live mode runs on the wall clock with the
+simulator off, and on startup rebuilds every projection from the durable raw event log.
+"""
 from __future__ import annotations
 
 import random
 from datetime import datetime, timedelta
 
-from .clock import SimClock
+from .clock import SimClock, WallClock
 from .engine.types import iso, parse_ts
 from .persistence import NullPersistence
 from .processor import Processor
@@ -16,11 +20,12 @@ from .store import Store
 
 
 class Runtime:
-    def __init__(self, cfg, persistence=None):
+    def __init__(self, cfg, persistence=None, live: bool = False):
         self.cfg = cfg
         sc = cfg.simulator
+        self.live = live
         self.db = persistence or NullPersistence()
-        self.clock = SimClock(sc.start_time, speed=sc.default_speed, paused=True)
+        self.clock = WallClock() if live else SimClock(sc.start_time, speed=sc.default_speed, paused=True)
         self.store = Store(cfg)
         self.processor = Processor(cfg, self.store, self.clock, self.db)
         self.scheduler = Scheduler()
@@ -81,6 +86,32 @@ class Runtime:
         self.started_at = start_dt
         self.status = "ready"
         return self.stats()
+
+    def rebuild(self) -> dict:
+        """Live startup: load seed tables and closed-deal history, then replay the raw event log."""
+        self.status = "resetting"
+        self.store.reset_all()
+        self.scheduler.clear()
+        self.scenario_runs = {}
+        self.sim.background, self.sim.rep_actions = False, False
+        for r in self.cfg.data.reps:
+            self.db.upsert("reps", {k: r.get(k) for k in ("rep_id", "name", "territories", "industries", "segments",
+                                                           "languages", "capacity_points", "active", "profile")})
+        for s in self.cfg.data.sources:
+            self.db.upsert("sources", dict(s))
+        self.db.flush()
+        self.store.historical = self.db.load_historical()   # replay's reset_projections folds it into rep stats
+        self.store.raw_log = self.db.load_raw_events()
+        self.processor.restore_api_seq()
+        result = self.processor.replay()
+        now = self.clock.now()
+        for lead in self.store.leads.values():      # replay runs with hooks off: re-arm pending first-touch SLAs
+            if lead.first_touch_deadline is not None and lead.status == "active":
+                self._on_hook("sla_deadline", lead_id=lead.lead_id, deadline=lead.first_touch_deadline)
+        self._schedule_next_tick(now)
+        self.started_at = now
+        self.status = "ready"
+        return {**self.stats(), **result}
 
     def scheduler_drop_kind(self, kind: str) -> None:
         import heapq
@@ -144,7 +175,8 @@ class Runtime:
     def _on_hook(self, kind: str, **data) -> None:
         if kind == "sla_deadline":
             self.scheduler.schedule(data["deadline"] + timedelta(minutes=1), "sla_check", data["lead_id"])
-        self.sim.on_hook(kind, **data)
+        if not self.live:
+            self.sim.on_hook(kind, **data)
 
     # ------------------------------------------------------------------ introspection
     def stats(self) -> dict:
@@ -152,7 +184,7 @@ class Runtime:
         leads = [l for l in st.leads.values() if l.ev is not None and l.status != "merged"]
         open_leads = [l for l in leads if st.is_open(l)]
         return {
-            "status": self.status, "seed": self.seed, "clock": self.clock.state(),
+            "status": self.status, "mode": "live" if self.live else "demo", "seed": self.seed, "clock": self.clock.state(),
             "events": len(st.log), "raw_events": len(st.raw_log), "leads": len(leads), "open_leads": len(open_leads),
             "stalled": sum(1 for l in open_leads if l.is_stalled), "quarantined": sum(1 for l in leads if l.status == "quarantined"),
             "merged": sum(1 for l in st.leads.values() if l.status == "merged"),

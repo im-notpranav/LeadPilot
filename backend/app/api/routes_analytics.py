@@ -1,12 +1,13 @@
 """Analytics + quality review endpoints."""
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from datetime import datetime
 
 from fastapi import APIRouter, Body, HTTPException
 
-from ..analytics.calibration import score_calibration
+from ..analytics.calibration import score_calibration, train_model
 from ..analytics.funnel import funnel
 from ..analytics.rep_performance import rep_performance
 from ..analytics.response_time import response_times
@@ -43,6 +44,9 @@ async def a_reps():
 
 @router.get("/analytics/score-calibration")
 async def a_calibration():
+    # Fitting the model (and importing scikit-learn) takes seconds: do it off the event loop and outside the
+    # lock. It reads only store.historical, which changes on reset alone; the result is cached on the store.
+    await asyncio.to_thread(train_model, state.runtime.store)
     async with state.lock:
         return score_calibration(state.runtime.store)
 

@@ -22,6 +22,8 @@ const NAV = [
 ];
 
 export default function App() {
+  const { clock } = useLive();
+  const nav = clock.live ? NAV.filter((n) => n.to !== "/simulator") : NAV;
   return (
     <div className="flex h-full">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-line bg-surface md:flex">
@@ -33,7 +35,7 @@ export default function App() {
           </div>
         </div>
         <nav className="flex flex-col gap-0.5 px-3">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink key={n.to} to={n.to} className={({ isActive }) => `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${isActive ? "bg-accent-soft font-medium text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={n.icon} /></svg>
               {n.label}
@@ -53,7 +55,7 @@ export default function App() {
             <Route path="/feed" element={<LiveFeed />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/quality" element={<Quality />} />
-            <Route path="/simulator" element={<Simulator />} />
+            <Route path="/simulator" element={clock.live ? <Navigate to="/queue" replace /> : <Simulator />} />
           </Routes>
         </main>
       </div>
@@ -70,15 +72,16 @@ function TopBar() {
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5 md:px-6">
       <div className="flex items-center gap-2 md:hidden">
-        {NAV.map((n) => <NavLink key={n.to} to={n.to} className="text-xs text-ink-2">{n.label.split(" ").pop()}</NavLink>)}
+        {NAV.filter((n) => !clock.live || n.to !== "/simulator").map((n) => <NavLink key={n.to} to={n.to} className="text-xs text-ink-2">{n.label.split(" ").pop()}</NavLink>)}
       </div>
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${connected ? "bg-good" : "bg-critical"}`} aria-hidden />
         <span className="text-xs text-ink-3">{connected ? "Live" : "Reconnecting"}</span>
       </div>
-      <div className="text-sm font-medium tabular text-ink">{resetting ? "Generating 6 months of history + warm-up…" : dateTime(clock.now)} <span className="text-xs font-normal text-ink-3">UTC · sim</span></div>
+      <div className="text-sm font-medium tabular text-ink">{resetting ? (clock.live ? "Rebuilding from the event log…" : "Generating 6 months of history + warm-up…") : dateTime(clock.now)} <span className="text-xs font-normal text-ink-3">UTC · {clock.live ? "live" : "sim"}</span></div>
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <span className="hidden text-xs tabular text-ink-3 lg:inline">{eventsPerMin} events/min</span>
+        {!clock.live && <>
         <button disabled={resetting} onClick={() => act(clock.paused ? "/api/sim/start" : "/api/sim/pause")}
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-surface-2 disabled:opacity-50">
           {clock.paused ? "▶ Run" : "❚❚ Pause"}
@@ -86,6 +89,7 @@ function TopBar() {
         <Segmented label="Speed" value={clock.speed} onChange={(v) => act("/api/sim/speed", { speed: v })}
           options={[1, 10, 60, 600].map((s) => ({ value: s, label: `${s}×` }))} />
         <button disabled={resetting} onClick={() => act("/api/sim/step", { minutes: 60 })} className="h-8 rounded-lg px-2 text-xs text-ink-2 hover:bg-surface-2 disabled:opacity-50" title="Advance 1 simulated hour">+1h</button>
+        </>}
       </div>
     </header>
   );

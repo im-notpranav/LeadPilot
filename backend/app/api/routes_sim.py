@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from ..simulator.scenarios import SCENARIOS
-from .deps import state
+from .deps import demo_only, state
 
 router = APIRouter(prefix="/api")
 
@@ -17,19 +17,19 @@ async def status():
     return state.runtime.stats()
 
 
-@router.post("/sim/start")
+@router.post("/sim/start", dependencies=[Depends(demo_only)])
 async def start():
     state.runtime.clock.paused = False
     return state.runtime.clock.state()
 
 
-@router.post("/sim/pause")
+@router.post("/sim/pause", dependencies=[Depends(demo_only)])
 async def pause():
     state.runtime.clock.paused = True
     return state.runtime.clock.state()
 
 
-@router.post("/sim/step")
+@router.post("/sim/step", dependencies=[Depends(demo_only)])
 async def step(body: dict = Body(default={})):
     minutes = float(body.get("minutes", 60))
     if not 0 < minutes <= 60 * 24 * 14:
@@ -41,7 +41,7 @@ async def step(body: dict = Body(default={})):
     return {"processed": n, "clock": state.runtime.clock.state()}
 
 
-@router.post("/sim/speed")
+@router.post("/sim/speed", dependencies=[Depends(demo_only)])
 async def speed(body: dict = Body(...)):
     s = float(body.get("speed", 60))
     if not 0.1 <= s <= 3600:
@@ -50,7 +50,7 @@ async def speed(body: dict = Body(...)):
     return state.runtime.clock.state()
 
 
-@router.post("/sim/reset")
+@router.post("/sim/reset", dependencies=[Depends(demo_only)])
 async def reset(body: dict = Body(default={})):
     if state.runtime.status == "resetting":
         raise HTTPException(409, "reset already in progress")
@@ -61,13 +61,13 @@ async def reset(body: dict = Body(default={})):
     return {"status": "resetting", "seed": seed}
 
 
-@router.post("/sim/background")
+@router.post("/sim/background", dependencies=[Depends(demo_only)])
 async def background(body: dict = Body(...)):
     state.runtime.sim.background = bool(body.get("enabled", True))
     return {"background": state.runtime.sim.background}
 
 
-@router.post("/sim/rep-actions")
+@router.post("/sim/rep-actions", dependencies=[Depends(demo_only)])
 async def rep_actions(body: dict = Body(...)):
     state.runtime.sim.rep_actions = bool(body.get("enabled", True))
     return {"rep_actions": state.runtime.sim.rep_actions}
@@ -79,7 +79,7 @@ async def scenarios():
     return {"items": [{"name": k, **v, "runs": runs.get(k, 0)} for k, v in SCENARIOS.items()]}
 
 
-@router.post("/sim/scenario/{name}")
+@router.post("/sim/scenario/{name}", dependencies=[Depends(demo_only)])
 async def scenario(name: str):
     if name not in SCENARIOS:
         raise HTTPException(404, "unknown scenario")
@@ -116,4 +116,5 @@ async def replay():
 
 @router.get("/health")
 async def health():
-    return {"ok": True, "status": state.runtime.status if state.runtime else "starting"}
+    rt = state.runtime
+    return {"ok": True, "status": rt.status if rt else "starting", "mode": ("live" if rt.live else "demo") if rt else None}

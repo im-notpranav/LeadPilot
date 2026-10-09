@@ -27,6 +27,14 @@ leads = Table(
     Column("first_response_at", DateTime(timezone=True)),
 )
 
+raw_events = Table(
+    "raw_events", metadata,
+    # The durable source of truth: every accepted envelope exactly as ingested, in arrival order.
+    # Projections (including `events`) are rebuilt from this log on startup and on /api/replay.
+    Column("seq", Integer, primary_key=True, autoincrement=False),
+    Column("event_id", String, unique=True, nullable=False), Column("body", JSON, nullable=False),
+)
+
 events = Table(
     "events", metadata,
     Column("event_id", String, primary_key=True),

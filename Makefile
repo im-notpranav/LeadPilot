@@ -8,7 +8,7 @@ else
   VENV_PY := backend/.venv/bin/python
 endif
 
-.PHONY: dev install backend frontend test perf build seed clean
+.PHONY: dev install backend frontend test e2e perf build seed clean
 
 dev: install
 	$(VENV_PY) scripts/dev.py
@@ -31,6 +31,9 @@ frontend: frontend/node_modules
 
 test: $(VENV_PY)
 	cd backend && $(abspath $(VENV_PY)) -m pytest -q
+
+e2e: install
+	cd frontend && npx playwright install chromium && npm run test:e2e
 
 perf: $(VENV_PY)
 	cd backend && $(abspath $(VENV_PY)) scripts/perf.py

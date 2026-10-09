@@ -9,7 +9,7 @@ import os
 from datetime import date, datetime
 from pathlib import Path
 
-from sqlalchemy import create_engine, event, insert, text, update
+from sqlalchemy import create_engine, event, insert, select, text, update
 
 from .models import tables as T
 
@@ -41,6 +41,12 @@ class NullPersistence:
     def clear_projections(self) -> None: ...
     def count(self, table: str) -> int:
         return 0
+
+    def load_raw_events(self) -> list[dict]:
+        return []
+
+    def load_historical(self) -> list[dict]:
+        return []
 
 
 class Persistence:
@@ -111,8 +117,8 @@ class Persistence:
                 conn.execute(tbl.delete())
 
     def clear_projections(self) -> None:
-        """Everything except the event log and seed tables (used by /replay)."""
-        keep = {"events", "historical_deals", "reps", "sources"}
+        """Everything except the event logs and seed tables (used by /replay)."""
+        keep = {"raw_events", "events", "historical_deals", "reps", "sources"}
         self._inserts.clear()
         self._upserts.clear()
         with self.engine.begin() as conn:
@@ -123,3 +129,13 @@ class Persistence:
     def count(self, table: str) -> int:
         with self.engine.connect() as conn:
             return conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar_one()
+
+    def load_raw_events(self) -> list[dict]:
+        """The raw envelope log in arrival order: the input to a startup rebuild."""
+        with self.engine.connect() as conn:
+            return [dict(r.body) for r in conn.execute(select(T.raw_events.c.body).order_by(T.raw_events.c.seq))]
+
+    def load_historical(self) -> list[dict]:
+        with self.engine.connect() as conn:
+            rows = conn.execute(select(T.historical_deals)).mappings().all()
+        return [dict(r) for r in rows]

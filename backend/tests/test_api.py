@@ -4,6 +4,7 @@ import time
 
 import pytest
 
+os.environ["LEADPILOT_MODE"] = "demo"
 os.environ["LEADPILOT_PERSIST"] = "0"
 os.environ["LEADPILOT_WARMUP_DAYS"] = "2"
 

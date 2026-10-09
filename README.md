@@ -10,7 +10,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-storage-003B57?logo=sqlite&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-149%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-154%20passing-brightgreen)
 
 </div>
 
@@ -78,7 +78,8 @@ On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/p
 | Command | What it does |
 |---|---|
 | `make dev` | Backend (FastAPI + in-process simulator) and frontend (Vite) together |
-| `make test` | 149 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API |
+| `make test` | 154 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode |
+| `make e2e` | Playwright browser tests: every page renders, lead drill-down, ingestion, mobile width |
 | `make perf` | Sustained 50 events/s load test, prints p50 / p95 / p99 latency |
 | `make build` | Production frontend build |
 
@@ -235,8 +236,8 @@ Each event goes through an 11-step pipeline, one event at a time and ordered per
 
 **Design decisions**
 
-- **Event sourcing.** The raw event log is the source of truth. `POST /api/replay` re-feeds it through the same code
-  path and reproduces identical state.
+- **Event sourcing.** The raw event log (`raw_events`, every envelope exactly as ingested) is the source of truth.
+  `POST /api/replay` and every live-mode startup re-feed it through the same code path and reproduce identical state.
 - **Pure engine.** All business logic lives in `backend/app/engine/` as pure functions of
   `(profile, events, now, context, config)`, with no database, I/O or clock reads. This makes it easy to test.
 - **Config, not code.** Every weight, threshold, half-life and SLA lives in `backend/config/*.yaml`.
@@ -318,9 +319,13 @@ POST /api/events
 | `nba.yaml` | Next-best-action rules N1–N15 and priority weights |
 | `simulator.yaml` | Lead volume, sources, personas, rep profiles, warm-up length, seed |
 
+Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-ignored). Real environment variables win.
+
 | Environment variable | Default | Purpose |
 |---|---|---|
 | `LEADPILOT_DB` | `backend/var/leadpilot.db` | SQLite file path |
+| `LEADPILOT_MODE` | `demo` | `demo`: seeded simulator on a simulated clock. `live`: wall-clock time, simulator off, state rebuilt from the event log on start |
+| `LEADPILOT_DB_URL` | — | SQLAlchemy database URL (e.g. Supabase Postgres). Empty means SQLite at `LEADPILOT_DB` |
 | `LEADPILOT_PERSIST` | `1` | Set to `0` to run fully in memory |
 | `LEADPILOT_WARMUP_DAYS` | `21` | Length of the simulated warm-up |
 | `USE_LLM` | `false` | Optional LLM reply-classifier hook (core logic never depends on it) |
@@ -330,7 +335,8 @@ POST /api/events
 ## ✅ Testing & performance
 
 ```bash
-make test   # 149 tests
+make test   # 154 tests
+make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
 ```
 
@@ -369,8 +375,8 @@ above. Typical adapters:
 
 To run on real data in production, you would also need to:
 
-- [ ] Switch the clock to wall-clock time and turn off the simulator
-- [ ] Load state from the database on startup (today the server starts from a fresh simulated world)
+- [x] Switch the clock to wall-clock time and turn off the simulator (`LEADPILOT_MODE=live`)
+- [x] Load state from the database on startup (live mode replays the durable `raw_events` log)
 - [ ] Replace the mock enrichment provider with a real one (Clearbit, Apollo, …)
 - [ ] Load your real sales team instead of `backend/data/reps.json`
 - [ ] Add authentication (an API key or webhook signatures, plus a dashboard login)
@@ -412,4 +418,5 @@ Makefile
 - Weights are expert-set. The logistic model and the grade-vs-conversion chart show how to calibrate them.
 - Plus-tags are stripped from all email domains, so `rahul.k+ads@acme.io` matches `rahul.k@acme.io`. Dots are
   stripped for Gmail only.
-- The in-memory store is the working set and SQLite is the durable copy. The server starts from a fresh seeded world.
+- The in-memory store is the working set and the database is the durable copy. Demo mode starts from a fresh seeded world;
+  live mode rebuilds from the stored event log.

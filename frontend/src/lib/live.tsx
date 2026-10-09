@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useQueryClient } from "@tanstack/react-query";
 import type { FeedItem } from "./api";
 
-type Clock = { now: string | null; speed: number; paused: boolean; status: string };
+type Clock = { now: string | null; speed: number; paused: boolean; status: string; live?: boolean };
 export type Toast = { id: number; kind: string; text: string; lead_id?: string };
 type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[]; dismiss: (id: number) => void; eventsPerMin: number };
 
@@ -40,7 +40,7 @@ export function LiveProvider({ children }: { children: ReactNode }) {
         for (const m of msgs) {
           const d = m.data;
           switch (m.type) {
-            case "sim.clock": setClock({ now: d.now, speed: d.speed, paused: d.paused, status: d.status ?? "ready" }); break;
+            case "sim.clock": setClock({ now: d.now, speed: d.speed, paused: d.paused, status: d.status ?? "ready", live: !!d.live }); break;
             case "sim.reset": dirty.current.all = true; if (d.status === "resetting") setFeed([]); setClock((c) => ({ ...c, status: d.status ?? c.status })); break;
             case "event.processed": fresh.push(d); dirty.current.data = true; counter.current.push(Date.now()); break;
             case "lead.flagged": case "lead.merged": case "source.flagged": dirty.current.quality = true; dirty.current.data = true; break;

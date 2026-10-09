@@ -74,6 +74,7 @@ class Processor:
         raw_dict["event_id"], raw_dict["ts"], raw_dict["ingested_at"] = e.event_id, iso(e.ts), iso(ingested)
         if not self._replaying:
             self.store.raw_log.append(raw_dict)
+            self.db.add("raw_events", {"seq": len(self.store.raw_log), "event_id": e.event_id, "body": raw_dict})
         # A history import (past activity loaded as-of its own time) never triggers live SLA reassignment.
         self._importing = bool(raw_dict.get("import"))
         self._store_event(e, ingested)
@@ -147,6 +148,12 @@ class Processor:
             self.hooks_enabled, self.broadcast, self.autoflush = hooks, bc, af
         self.store.raw_log = raw
         return {"replayed_events": len(raw), "leads": len(self.store.leads)}
+
+    def restore_api_seq(self) -> None:
+        """Continue generated `api_` ids after the highest one in the raw log, so a restart never reuses one."""
+        nums = [int(r["event_id"][4:]) for r in self.store.raw_log
+                if str(r.get("event_id", "")).startswith("api_") and r["event_id"][4:].isdigit()]
+        self._api_seq = max(nums, default=0)
 
     # ================================================================ step 1: normalize the envelope
     def _to_event(self, d: dict) -> Event:

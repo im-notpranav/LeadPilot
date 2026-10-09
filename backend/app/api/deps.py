@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 @dataclass
 class AppState:
     runtime: object = None
+    settings: object = None
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     bus: object = None
     ws: object = None
@@ -25,3 +26,10 @@ def lead_or_404(lead_id: str):
     if lid is None:
         raise HTTPException(404, f"lead {lead_id} not found")
     return store.leads[lid]
+
+
+def demo_only() -> None:
+    """Dependency for simulator controls: they would corrupt real data, so live mode refuses them."""
+    from fastapi import HTTPException
+    if state.runtime is not None and state.runtime.live:
+        raise HTTPException(409, "simulator controls are disabled in live mode")

@@ -1,0 +1,102 @@
+# Lead scoring: score = clamp(Fit[0..40] + Engagement[0..35] + Intent[0..25] - Penalties, 0, 100)
+max_events: 500            # recompute reads at most the last N events per lead
+repeat_window_days: 7      # k-th repeat of the same signal inside this window gets repeat_decay^(k-1)
+min_display_delta: 0.5     # contributions smaller than this are rolled into a "minor" line
+store_threshold: 1.0       # tick recomputes only write a score_change when |delta| >= this
+
+grades:                    # lower bounds
+  A: 80
+  B: 60
+  C: 40
+grade_labels: {A: Hot, B: Warm, C: Cool, D: Cold}
+
+saturation:
+  engagement: {cap: 35, k: 25}
+  intent: {cap: 25, k: 18}
+
+fit:
+  company_size:
+    unknown: 0
+    bands:
+      - {max: 10, points: 2, label: "1-10"}
+      - {max: 50, points: 6, label: "11-50"}
+      - {max: 200, points: 10, label: "51-200"}
+      - {max: 1000, points: 14, label: "201-1000"}
+      - {max: null, points: 12, label: "1000+"}
+  industry_icp:
+    unknown: 0
+    other: 2
+    tiers:
+      - {name: tier1, points: 10, industries: [saas, fintech, healthcare_it]}
+      - {name: tier2, points: 6, industries: [ecommerce, logistics, manufacturing]}
+  seniority: {c_level: 8, vp: 8, director: 6, manager: 4, ic: 2, unknown: 1}
+  territory_served: {points: 4, served_regions: [NA, EMEA, APAC, India]}
+  business_email: {points: 4}
+
+# Ordered: first match wins. Matched against the lowercased title.
+seniority_patterns:
+  - [c_level, '\b(ceo|cto|cfo|coo|cio|ciso|cmo|cro|chief|founder|co-founder|owner|president|managing director)\b']
+  - [vp, '\b(vp|vice president|svp|evp)\b']
+  - [director, '\b(director|head of|head|principal)\b']
+  - [manager, '\b(manager|lead|supervisor)\b']
+  - [ic, '\b(engineer|analyst|developer|specialist|associate|consultant|coordinator|executive|designer|administrator|admin|intern|student|accountant|officer)\b']
+
+engagement:
+  email_opened:        {points: 1,  half_life_days: 3,  repeat_decay: 0.6}
+  email_clicked:       {points: 3,  half_life_days: 5,  repeat_decay: 0.7}
+  page_view_generic:   {points: 1,  half_life_days: 3,  repeat_decay: 0.5}
+  content_download:    {points: 5,  half_life_days: 10, repeat_decay: 0.7}
+  webinar_registered:  {points: 2,  half_life_days: 14, repeat_decay: 0.8}
+  webinar_attended:    {points: 6,  half_life_days: 14, repeat_decay: 0.8}
+  email_replied:       {points: 8,  half_life_days: 10, repeat_decay: 0.8}
+  call_connected:      {points: 8,  half_life_days: 10, repeat_decay: 0.8}
+  meeting_held:        {points: 12, half_life_days: 21, repeat_decay: 0.9}
+  badge_scan:          {points: 4,  half_life_days: 14, repeat_decay: 1.0}
+  form_submit:         {points: 4,  half_life_days: 14, repeat_decay: 0.7}
+  high_intent_form:    {points: 6,  half_life_days: 14, repeat_decay: 0.5}   # demo/contact/trial forms are also engagement
+
+intent:
+  pricing_view:          {points: 6,  half_life_days: 7,  repeat_decay: 0.7}
+  case_study_or_roi:     {points: 3,  half_life_days: 7,  repeat_decay: 0.7}
+  competitor_compare:    {points: 4,  half_life_days: 7,  repeat_decay: 0.7}
+  enterprise_plan_view:  {points: 5,  half_life_days: 7,  repeat_decay: 0.7}
+  demo_request:          {points: 15, half_life_days: 21, repeat_decay: 0.5}
+  contact_sales:         {points: 12, half_life_days: 21, repeat_decay: 0.5}
+  trial_signup:          {points: 12, half_life_days: 21, repeat_decay: 0.5}
+  positive_reply_intent: {points: 6,  half_life_days: 14, repeat_decay: 0.8}
+  proposal_viewed:       {points: 8,  half_life_days: 10, repeat_decay: 0.6}
+  buying_committee:      {points: 5,  window_days: 14, min_other_leads: 2}
+  intent_burst_bonus:    {points: 5,  window_hours: 72, min_signals: 3}
+
+# Signals that count toward the intent burst bonus
+high_intent_signals: [pricing_view, enterprise_plan_view, competitor_compare, demo_request, contact_sales, trial_signup, proposal_viewed]
+
+intent_levels:
+  thresholds: {low: 3, medium: 8, high: 14, hot: 20}
+  hot_recent_hours: 48
+  hot_signals: [demo_request, contact_sales]
+  index: {none: 0, low: 1, medium: 2, high: 3, hot: 4}
+  active_window_hours: 168   # signals listed in active_intent_signals
+
+penalties:
+  staleness: {grace_days: 14, per_day: 1, max: 10}
+  unanswered_streak: {min_streak: 3, points: 5}
+  email_bounced: {points: 10}
+  unsubscribed: {points: 15}
+  meeting_no_show: {points: 6, half_life_days: 14}
+  negative_reply: {points: 20}
+  disqualifier:
+    points: 10
+    title_patterns: ['\bstudent\b', '\bjob seeker\b', '\blooking for (a )?(job|work|opportunit)', '\bunemployed\b', '\bintern\b']
+    competitor_domains: [leadrocket.io, pipewise.com, dealflow.ai]
+  quality_risk: {threshold: 40, divisor: 3, max: 20}
+
+# Deterministic reply classifier. Checked in this order; first hit wins.
+reply_classifier:
+  order: [out_of_office, negative, objection, positive_intent]
+  out_of_office: ['out of office', 'out of the office', 'ooo', 'on vacation', 'on leave', 'away until', 'auto-reply', 'automatic reply']
+  negative: ['not interested', 'remove me', 'unsubscribe', 'wrong person', 'stop emailing', 'stop contacting', 'do not contact', "don't contact", 'no longer with', 'take me off']
+  objection: ['too expensive', 'no budget', 'already use', 'already have', 'not a priority', 'next year', 'bad timing', 'locked in', 'under contract with', 'cheaper', 'not the right time']
+  positive_intent: ['pricing', 'price', 'budget', 'quote', 'timeline', 'contract', 'procurement', 'proposal', 'seats', 'licen', 'purchase', 'buy', 'decision', 'this quarter', 'next steps', 'book a', 'schedule a', 'demo']
+  negotiation: ['discount', 'terms', 'contract', 'procurement', 'legal', 'redline', 'signature', 'sign ', 'purchase order', 'negotiat', 'msa']
+  pricing_terms: ['pricing', 'price', 'budget', 'quote', 'cost']

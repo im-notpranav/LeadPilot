@@ -1,0 +1,62 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { api, type FeedItem } from "../lib/api";
+import { useLive } from "../lib/live";
+import { human, time } from "../lib/format";
+import { Card, Delta, Empty, GradePill, PageHeader } from "../components/ui";
+
+const GROUPS: Record<string, string[]> = {
+  Capture: ["lead_created"],
+  Web: ["page_view", "content_download", "webinar_registered", "webinar_attended"],
+  "High intent": ["demo_request", "contact_sales", "trial_signup", "proposal_viewed"],
+  Email: ["email_sent", "email_opened", "email_clicked", "email_replied", "email_bounced", "unsubscribed"],
+  Calls: ["call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show"],
+  Deals: ["proposal_sent", "contract_sent", "deal_won", "deal_lost"],
+  Manual: ["stage_override", "lead_disqualified", "bant_qualified", "manual_assign", "quality_cleared", "task_completed"],
+};
+
+export default function LiveFeed() {
+  const { feed } = useLive();
+  const initial = useQuery({ queryKey: ["feed", "initial"], queryFn: () => api.get<{ items: FeedItem[] }>("/api/feed?limit=200"), staleTime: Infinity });
+  const [active, setActive] = useState<Set<string>>(new Set());
+  const [movers, setMovers] = useState(false);
+  const items = useMemo(() => {
+    const seen = new Set<string>();
+    const all = [...feed, ...(initial.data?.items ?? [])].filter((i) => (seen.has(i.event_id) ? false : (seen.add(i.event_id), true)));
+    const types = new Set([...active].flatMap((g) => GROUPS[g]));
+    return all.filter((i) => (!types.size || types.has(i.type)) && (!movers || Math.abs(i.delta) >= 3))
+      .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0)).slice(0, 200);
+  }, [feed, initial.data, active, movers]);
+  const toggle = (g: string) => setActive((s) => { const n = new Set(s); n.has(g) ? n.delete(g) : n.add(g); return n; });
+
+  return (
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader title="Live feed" subtitle="Every processed event with the score change it caused and a plain-English reason. Updates live." />
+      <div className="mb-3 flex flex-wrap items-center gap-1.5">
+        {Object.keys(GROUPS).map((g) => (
+          <button key={g} onClick={() => toggle(g)} className={`rounded-full border px-3 py-1 text-xs ${active.has(g) ? "border-transparent bg-accent text-white" : "border-line bg-surface text-ink-2 hover:bg-surface-2"}`}>{g}</button>
+        ))}
+        <label className="ml-2 inline-flex items-center gap-1.5 text-xs text-ink-2"><input type="checkbox" checked={movers} onChange={(e) => setMovers(e.target.checked)} /> Only moves ≥ 3 points</label>
+      </div>
+      <Card pad={false}>
+        {!items.length ? <Empty>Waiting for events… start the simulator.</Empty> : (
+          <ul>
+            {items.map((i) => (
+              <li key={i.event_id} className="flash grid grid-cols-[56px_150px_minmax(0,200px)_70px_1fr] items-baseline gap-3 border-b border-line px-4 py-2 text-sm last:border-0">
+                <span className="text-xs tabular text-ink-3">{time(i.ts)}</span>
+                <span className="truncate text-xs font-medium text-ink-2">{human(i.type)}{i.actor === "rep" ? " · rep" : ""}</span>
+                <Link to={`/leads/${i.lead_id}`} className="truncate font-medium hover:underline">{i.name ?? i.lead_id}<span className="font-normal text-ink-3"> {i.company ? `· ${i.company}` : ""}</span></Link>
+                <span className="flex items-center gap-1.5"><Delta value={i.delta} /></span>
+                <span className="flex min-w-0 items-baseline gap-2">
+                  {i.grade && <GradePill grade={i.grade} score={i.score ?? undefined} />}
+                  <span className="truncate text-xs text-ink-2">{i.summary}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}

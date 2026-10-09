@@ -1,0 +1,4673 @@
+[
+ {
+  "domain": "acme.io",
+  "name": "Acme Inc",
+  "employees": 120,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "salesforce",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmebrands.in",
+  "name": "Acme Brands Inc",
+  "employees": 44,
+  "industry": "retail",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "postgres",
+   "salesforce",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmelabs.com",
+  "name": "Acme Labs Pvt Ltd",
+  "employees": 147,
+  "industry": "saas",
+  "country": "ZA",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmemoney.in",
+  "name": "Acme Money Corp",
+  "employees": 197,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "sap",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmepay.io",
+  "name": "Acme Pay",
+  "employees": 421,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "marketo",
+   "oracle",
+   "segment"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmeshop.nl",
+  "name": "Acme Shop LLC",
+  "employees": 126,
+  "industry": "ecommerce",
+  "country": "NL",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "postgres",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmesoftware.com",
+  "name": "Acme Software GmbH",
+  "employees": 32,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "postgres",
+   "sap",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "acmesystems.com",
+  "name": "Acme Systems",
+  "employees": 82,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "oracle",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "apexacademy.com",
+  "name": "Apex Academy GmbH",
+  "employees": 9,
+  "industry": "education",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "kubernetes",
+   "salesforce",
+   "sap"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "apexbio.io",
+  "name": "Apex Bio IT Pvt Ltd",
+  "employees": 64,
+  "industry": "healthcare_it",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "oracle",
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "apexfabrication.com",
+  "name": "Apex Fabrication Pvt Ltd",
+  "employees": 4263,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "oracle",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "apexlabs.io",
+  "name": "Apex Labs Corp",
+  "employees": 22,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "oracle"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "apexsupply.ai",
+  "name": "Apex Supply Inc",
+  "employees": 77,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "atlashealth.ai",
+  "name": "Atlas Health Ltd",
+  "employees": 4,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "auroracloud.ae",
+  "name": "Aurora Cloud Pvt Ltd",
+  "employees": 33,
+  "industry": "saas",
+  "country": "AE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "salesforce"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "aurorashop.io",
+  "name": "Aurora Shop",
+  "employees": 91,
+  "industry": "ecommerce",
+  "country": "SE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "salesforce",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconai.com",
+  "name": "Beacon AI",
+  "employees": 97,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "salesforce",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconclinic.co.uk",
+  "name": "Beacon Clinic Systems Pvt Ltd",
+  "employees": 32,
+  "industry": "healthcare_it",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "marketo"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconclinic.com",
+  "name": "Beacon Clinic Systems LLC",
+  "employees": 697,
+  "industry": "healthcare_it",
+  "country": "ID",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "shopify"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconclinic.in",
+  "name": "Beacon Clinic Systems GmbH",
+  "employees": 59,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "segment",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconfinance.in",
+  "name": "Beacon Finance Ltd",
+  "employees": 503,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconshop.ai",
+  "name": "Beacon Shop GmbH",
+  "employees": 152,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "salesforce",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconstack.com",
+  "name": "Beacon Stack Corp",
+  "employees": 50,
+  "industry": "saas",
+  "country": "MX",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "snowflake"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconstores.ai",
+  "name": "Beacon Stores Corp",
+  "employees": 19,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "salesforce",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "beaconsystems.com",
+  "name": "Beacon Systems",
+  "employees": 439,
+  "industry": "saas",
+  "country": "FR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "hubspot"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "beacontransit.ai",
+  "name": "Beacon Transit Corp",
+  "employees": 4602,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "gcp",
+   "shopify"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "bluepeakadvisory.co.id",
+  "name": "Bluepeak Advisory Ltd",
+  "employees": 36,
+  "industry": "consulting",
+  "country": "ID",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "bluepeakcart.in",
+  "name": "Bluepeak Cart Pvt Ltd",
+  "employees": 46,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "postgres",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "bluepeakcloud.com",
+  "name": "Bluepeak Cloud Inc",
+  "employees": 2,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "bluepeakcommerce.com.br",
+  "name": "Bluepeak Commerce Corp",
+  "employees": 35,
+  "industry": "ecommerce",
+  "country": "BR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "slack",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "bluepeakconsulting.com",
+  "name": "Bluepeak Consulting",
+  "employees": 29,
+  "industry": "consulting",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "brightcart.co.uk",
+  "name": "BrightCart Ltd",
+  "employees": 85,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "oracle",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadecart.io",
+  "name": "Cascade Cart Inc",
+  "employees": 51,
+  "industry": "ecommerce",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "marketo",
+   "oracle",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadelabs.io",
+  "name": "Cascade Labs Pvt Ltd",
+  "employees": 108,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "segment"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadelearning.io",
+  "name": "Cascade Learning Corp",
+  "employees": 190,
+  "industry": "education",
+  "country": "BR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "shopify",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadelearning.nl",
+  "name": "Cascade Learning Inc",
+  "employees": 165,
+  "industry": "education",
+  "country": "NL",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "segment"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascademanufacturing.com",
+  "name": "Cascade Manufacturing Corp",
+  "employees": 154,
+  "industry": "manufacturing",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascaderealty.co.uk",
+  "name": "Cascade Realty Ltd",
+  "employees": 5,
+  "industry": "real_estate",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "salesforce",
+   "sap"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadeshipping.com",
+  "name": "Cascade Shipping Ltd",
+  "employees": 159,
+  "industry": "logistics",
+  "country": "AE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "marketo",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "cascadesystems.de",
+  "name": "Cascade Systems LLC",
+  "employees": 3,
+  "industry": "saas",
+  "country": "DE",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "cobaltedtech.io",
+  "name": "Cobalt EdTech Ltd",
+  "employees": 146,
+  "industry": "education",
+  "country": "AU",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "cobaltledger.mx",
+  "name": "Cobalt Ledger LLC",
+  "employees": 30,
+  "industry": "fintech",
+  "country": "MX",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "marketo",
+   "salesforce",
+   "shopify"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "crestai.com",
+  "name": "Crest AI LLC",
+  "employees": 4,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "postgres",
+   "salesforce",
+   "sap"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "crestcare.com",
+  "name": "Crest Care LLC",
+  "employees": 21,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "crestfinance.com",
+  "name": "Crest Finance Pvt Ltd",
+  "employees": 25,
+  "industry": "fintech",
+  "country": "DE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "salesforce",
+   "slack",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "crestrealty.com",
+  "name": "Crest Realty Inc",
+  "employees": 11,
+  "industry": "real_estate",
+  "country": "AE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "crestschools.co.uk",
+  "name": "Crest Schools LLC",
+  "employees": 26,
+  "industry": "education",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "salesforce",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "deltacloud.se",
+  "name": "Delta Cloud LLC",
+  "employees": 2596,
+  "industry": "saas",
+  "country": "SE",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "salesforce"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "deltacommerce.fr",
+  "name": "Delta Commerce GmbH",
+  "employees": 169,
+  "industry": "ecommerce",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "kubernetes",
+   "oracle",
+   "shopify"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "deltafabrication.ai",
+  "name": "Delta Fabrication Corp",
+  "employees": 25,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "sap",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "deltaindustries.io",
+  "name": "Delta Industries LLC",
+  "employees": 38,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberbio.io",
+  "name": "Ember Bio IT LLC",
+  "employees": 102,
+  "industry": "healthcare_it",
+  "country": "NL",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberbroadcast.de",
+  "name": "Ember Broadcast GmbH",
+  "employees": 43,
+  "industry": "media",
+  "country": "DE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "salesforce",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberlabs.com.br",
+  "name": "Ember Labs",
+  "employees": 8,
+  "industry": "saas",
+  "country": "BR",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "embermoney.io",
+  "name": "Ember Money Inc",
+  "employees": 24,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "oracle",
+   "postgres",
+   "segment"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberpartners.com.au",
+  "name": "Ember Partners Inc",
+  "employees": 226,
+  "industry": "consulting",
+  "country": "AU",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "postgres",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "embersoftware.in",
+  "name": "Ember Software GmbH",
+  "employees": 721,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "marketo",
+   "postgres",
+   "snowflake"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberstack.com",
+  "name": "Ember Stack GmbH",
+  "employees": 5380,
+  "industry": "saas",
+  "country": "JP",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "sap",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "emberstores.com",
+  "name": "Ember Stores GmbH",
+  "employees": 176,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "evergreencare.com",
+  "name": "Evergreen Care",
+  "employees": 30,
+  "industry": "healthcare_it",
+  "country": "CA",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "marketo"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "evergreencart.io",
+  "name": "Evergreen Cart",
+  "employees": 6,
+  "industry": "ecommerce",
+  "country": "BR",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "hubspot"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "evergreenconsulting.io",
+  "name": "Evergreen Consulting GmbH",
+  "employees": 88,
+  "industry": "consulting",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "salesforce",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "evergreenfabrication.io",
+  "name": "Evergreen Fabrication GmbH",
+  "employees": 24,
+  "industry": "manufacturing",
+  "country": "AU",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "oracle",
+   "segment"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "evergreenmedia.fr",
+  "name": "Evergreen Media LLC",
+  "employees": 2,
+  "industry": "media",
+  "country": "FR",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "salesforce"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconai.io",
+  "name": "Falcon AI LLC",
+  "employees": 27,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "segment"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconbio.io",
+  "name": "Falcon Bio IT Ltd",
+  "employees": 50,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "salesforce",
+   "slack"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconbrands.com",
+  "name": "Falcon Brands LLC",
+  "employees": 34,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconclinic.com",
+  "name": "Falcon Clinic Systems Pvt Ltd",
+  "employees": 6,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "segment",
+   "slack",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconcommerce.co.uk",
+  "name": "Falcon Commerce LLC",
+  "employees": 476,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "sap"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconmarket.jp",
+  "name": "Falcon Market",
+  "employees": 20,
+  "industry": "ecommerce",
+  "country": "JP",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "postgres",
+   "salesforce",
+   "sap"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "falconshop.in",
+  "name": "Falcon Shop GmbH",
+  "employees": 576,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "falcontransit.ai",
+  "name": "Falcon Transit Ltd",
+  "employees": 34,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "salesforce",
+   "sap",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "finnova.sg",
+  "name": "FinNova Payments Pte Ltd",
+  "employees": 300,
+  "industry": "fintech",
+  "country": "SG",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "slack"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusionbroadcast.com",
+  "name": "Fusion Broadcast GmbH",
+  "employees": 5,
+  "industry": "media",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusioncommerce.fr",
+  "name": "Fusion Commerce Pvt Ltd",
+  "employees": 183,
+  "industry": "ecommerce",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "postgres",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusionlabs.ca",
+  "name": "Fusion Labs GmbH",
+  "employees": 99,
+  "industry": "saas",
+  "country": "CA",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "marketo",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusionpublishing.io",
+  "name": "Fusion Publishing Ltd",
+  "employees": 6,
+  "industry": "media",
+  "country": "SG",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "postgres",
+   "sap",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusionstack.in",
+  "name": "Fusion Stack LLC",
+  "employees": 49,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "postgres",
+   "salesforce",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "fusionstack.io",
+  "name": "Fusion Stack Corp",
+  "employees": 48,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "gcp",
+   "marketo",
+   "sap"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "glaciermarket.ai",
+  "name": "Glacier Market Inc",
+  "employees": 7692,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "azure",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "glacierpayments.io",
+  "name": "Glacier Payments Inc",
+  "employees": 3,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "oracle",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "glacierretail.co.id",
+  "name": "Glacier Retail",
+  "employees": 7,
+  "industry": "retail",
+  "country": "ID",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "oracle",
+   "sap"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "glacierschools.com",
+  "name": "Glacier Schools Inc",
+  "employees": 826,
+  "industry": "education",
+  "country": "MX",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "snowflake"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "granitecloud.com.br",
+  "name": "Granite Cloud",
+  "employees": 135,
+  "industry": "saas",
+  "country": "BR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "graniteshop.com",
+  "name": "Granite Shop",
+  "employees": 363,
+  "industry": "ecommerce",
+  "country": "FR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "shopify"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborcare.com",
+  "name": "Harbor Care Pvt Ltd",
+  "employees": 887,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "marketo",
+   "salesforce",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborcare.io",
+  "name": "Harbor Care GmbH",
+  "employees": 25,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborcart.ai",
+  "name": "Harbor Cart Pvt Ltd",
+  "employees": 5,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborhealth.com",
+  "name": "Harbor Health Inc",
+  "employees": 1078,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborlabs.io",
+  "name": "Harbor Labs Pvt Ltd",
+  "employees": 6,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "postgres",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "harboroutfitters.io",
+  "name": "Harbor Outfitters Pvt Ltd",
+  "employees": 69,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "oracle"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborrealty.com",
+  "name": "Harbor Realty",
+  "employees": 15,
+  "industry": "real_estate",
+  "country": "AE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "oracle",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "harborretail.com",
+  "name": "Harbor Retail Tech LLC",
+  "employees": 128,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "oracle",
+   "sap",
+   "segment"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixcapital.com",
+  "name": "Helix Capital Inc",
+  "employees": 30,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "shopify",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixcloud.com",
+  "name": "Helix Cloud",
+  "employees": 101,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "oracle",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixhealth.com",
+  "name": "Helix Health Systems",
+  "employees": 1500,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "shopify"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixlearning.io",
+  "name": "Helix Learning Pvt Ltd",
+  "employees": 148,
+  "industry": "education",
+  "country": "BR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "marketo",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixpartners.com.br",
+  "name": "Helix Partners Corp",
+  "employees": 27,
+  "industry": "consulting",
+  "country": "BR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "segment",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixretail.io",
+  "name": "Helix Retail Tech Ltd",
+  "employees": 7767,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixshop.com",
+  "name": "Helix Shop LLC",
+  "employees": 616,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "marketo"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixsoftware.com",
+  "name": "Helix Software Pvt Ltd",
+  "employees": 2,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "postgres"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixstudios.io",
+  "name": "Helix Studios LLC",
+  "employees": 101,
+  "industry": "media",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "salesforce",
+   "slack",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "helixsystems.com",
+  "name": "Helix Systems Corp",
+  "employees": 30,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "salesforce",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonadvisory.com",
+  "name": "Horizon Advisory Pvt Ltd",
+  "employees": 15,
+  "industry": "consulting",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonbroadcast.ai",
+  "name": "Horizon Broadcast Inc",
+  "employees": 34,
+  "industry": "media",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "postgres",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonlearning.io",
+  "name": "Horizon Learning Pvt Ltd",
+  "employees": 164,
+  "industry": "education",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "salesforce",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonmedical.com",
+  "name": "Horizon Medical LLC",
+  "employees": 116,
+  "industry": "healthcare_it",
+  "country": "GB",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "oracle",
+   "shopify",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonsoftware.de",
+  "name": "Horizon Software",
+  "employees": 3698,
+  "industry": "saas",
+  "country": "DE",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "segment",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonsupply.ai",
+  "name": "Horizon Supply LLC",
+  "employees": 718,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "salesforce",
+   "segment"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "horizonsystems.io",
+  "name": "Horizon Systems",
+  "employees": 96,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "salesforce",
+   "sap"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "indigocloud.fr",
+  "name": "Indigo Cloud Ltd",
+  "employees": 186,
+  "industry": "saas",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "postgres",
+   "salesforce",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "indigoindustries.io",
+  "name": "Indigo Industries Pvt Ltd",
+  "employees": 178,
+  "industry": "manufacturing",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "oracle",
+   "salesforce",
+   "zendesk"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "indigomarket.com",
+  "name": "Indigo Market Ltd",
+  "employees": 78,
+  "industry": "ecommerce",
+  "country": "CA",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "azure"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "indigostack.com",
+  "name": "Indigo Stack LLC",
+  "employees": 392,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "sap"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionbrands.io",
+  "name": "Ion Brands Ltd",
+  "employees": 6,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "sap",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionestates.com",
+  "name": "Ion Estates LLC",
+  "employees": 191,
+  "industry": "real_estate",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "marketo",
+   "salesforce",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionfabrication.ai",
+  "name": "Ion Fabrication GmbH",
+  "employees": 126,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "marketo",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionfreight.io",
+  "name": "Ion Freight",
+  "employees": 6,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "sap",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionlabs.com",
+  "name": "Ion Labs Ltd",
+  "employees": 407,
+  "industry": "saas",
+  "country": "AE",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionlogistics.com",
+  "name": "Ion Logistics Ltd",
+  "employees": 12,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "postgres",
+   "sap",
+   "segment",
+   "slack",
+   "snowflake"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionlogistics.com.au",
+  "name": "Ion Logistics GmbH",
+  "employees": 469,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "shopify",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionpartners.io",
+  "name": "Ion Partners Ltd",
+  "employees": 148,
+  "industry": "consulting",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "postgres",
+   "salesforce",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionproperties.com",
+  "name": "Ion Properties",
+  "employees": 20,
+  "industry": "real_estate",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "segment",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionretail.com",
+  "name": "Ion Retail Tech LLC",
+  "employees": 263,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "kubernetes",
+   "segment",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionrobotics.com",
+  "name": "Ion Robotics Pvt Ltd",
+  "employees": 10,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "postgres",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "ionsoftware.com",
+  "name": "Ion Software",
+  "employees": 2604,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "azure",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "jadeai.com",
+  "name": "Jade AI Pvt Ltd",
+  "employees": 10,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "hubspot",
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "jadeconsulting.io",
+  "name": "Jade Consulting Pvt Ltd",
+  "employees": 5,
+  "industry": "consulting",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "oracle",
+   "postgres",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "jaderetail.com",
+  "name": "Jade Retail Tech LLC",
+  "employees": 37,
+  "industry": "ecommerce",
+  "country": "JP",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "oracle",
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "jadesoftware.com",
+  "name": "Jade Software Corp",
+  "employees": 26,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "sap",
+   "segment",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "jadesystems.in",
+  "name": "Jade Systems Pvt Ltd",
+  "employees": 95,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "postgres"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "juniperbio.ai",
+  "name": "Juniper Bio IT Ltd",
+  "employees": 67,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "juniperbroadcast.com",
+  "name": "Juniper Broadcast GmbH",
+  "employees": 6,
+  "industry": "media",
+  "country": "CA",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "juniperclinic.nl",
+  "name": "Juniper Clinic Systems Ltd",
+  "employees": 34,
+  "industry": "healthcare_it",
+  "country": "NL",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "junipergroup.de",
+  "name": "Juniper Group Pvt Ltd",
+  "employees": 160,
+  "industry": "consulting",
+  "country": "DE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "postgres",
+   "sap"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "juniperlabs.sg",
+  "name": "Juniper Labs Inc",
+  "employees": 62,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "postgres",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "juniperstack.in",
+  "name": "Juniper Stack LLC",
+  "employees": 10,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "postgres",
+   "salesforce",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "junipersupply.com",
+  "name": "Juniper Supply Inc",
+  "employees": 962,
+  "industry": "logistics",
+  "country": "FR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "postgres",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelindustries.com",
+  "name": "Kestrel Industries",
+  "employees": 6,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce",
+   "segment",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelledger.com",
+  "name": "Kestrel Ledger LLC",
+  "employees": 85,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "slack"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelmedical.com.br",
+  "name": "Kestrel Medical Pvt Ltd",
+  "employees": 47,
+  "industry": "healthcare_it",
+  "country": "BR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "postgres",
+   "segment"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelmoney.ai",
+  "name": "Kestrel Money GmbH",
+  "employees": 16,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelpartners.io",
+  "name": "Kestrel Partners Corp",
+  "employees": 591,
+  "industry": "consulting",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "slack"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelshop.com.br",
+  "name": "Kestrel Shop Pvt Ltd",
+  "employees": 4,
+  "industry": "ecommerce",
+  "country": "BR",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "zendesk"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelstack.co.za",
+  "name": "Kestrel Stack Pvt Ltd",
+  "employees": 10,
+  "industry": "saas",
+  "country": "ZA",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelsupply.io",
+  "name": "Kestrel Supply GmbH",
+  "employees": 183,
+  "industry": "logistics",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "salesforce",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelsystems.io",
+  "name": "Kestrel Systems Ltd",
+  "employees": 3988,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "shopify"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "kestrelworks.com",
+  "name": "Kestrel Works LLC",
+  "employees": 149,
+  "industry": "manufacturing",
+  "country": "CA",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "marketo",
+   "salesforce",
+   "sap",
+   "shopify"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "keystoneestates.io",
+  "name": "Keystone Estates GmbH",
+  "employees": 21,
+  "industry": "real_estate",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "keystonehealth.com",
+  "name": "Keystone Health Corp",
+  "employees": 47,
+  "industry": "healthcare_it",
+  "country": "SG",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "keystonepay.com",
+  "name": "Keystone Pay Pvt Ltd",
+  "employees": 924,
+  "industry": "fintech",
+  "country": "ID",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "oracle",
+   "postgres",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "keystonesoftware.in",
+  "name": "Keystone Software Corp",
+  "employees": 5374,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "sap"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "keystonestack.com",
+  "name": "Keystone Stack",
+  "employees": 4,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "kubernetes",
+   "salesforce",
+   "sap",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "latticeacademy.com",
+  "name": "Lattice Academy",
+  "employees": 42,
+  "industry": "education",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "kubernetes",
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "latticepublishing.com",
+  "name": "Lattice Publishing",
+  "employees": 291,
+  "industry": "media",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "latticeshipping.com",
+  "name": "Lattice Shipping",
+  "employees": 27,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "latticeshipping.com.au",
+  "name": "Lattice Shipping Corp",
+  "employees": 345,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "sap",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "latticesoftware.com",
+  "name": "Lattice Software GmbH",
+  "employees": 7,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "salesforce",
+   "sap",
+   "slack"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "lighthousecloud.ai",
+  "name": "Lighthouse Cloud",
+  "employees": 19,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "oracle",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "lighthouseindustries.com",
+  "name": "Lighthouse Industries Ltd",
+  "employees": 348,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "salesforce",
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "lighthouselabs.io",
+  "name": "Lighthouse Labs Corp",
+  "employees": 38,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "lighthousemarket.com",
+  "name": "Lighthouse Market Pvt Ltd",
+  "employees": 349,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "salesforce",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumenlabs.com",
+  "name": "Lumen Labs GmbH",
+  "employees": 331,
+  "industry": "saas",
+  "country": "JP",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "oracle",
+   "postgres",
+   "sap"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumenretail.sg",
+  "name": "Lumen Retail Tech Ltd",
+  "employees": 259,
+  "industry": "ecommerce",
+  "country": "SG",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "sap",
+   "segment"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumenshop.io",
+  "name": "Lumen Shop Pvt Ltd",
+  "employees": 29,
+  "industry": "ecommerce",
+  "country": "AU",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "oracle",
+   "salesforce"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumenstack.com",
+  "name": "Lumen Stack GmbH",
+  "employees": 7,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "postgres"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumensupply.com",
+  "name": "Lumen Supply Ltd",
+  "employees": 376,
+  "industry": "logistics",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "marketo"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "lumensystems.de",
+  "name": "Lumen Systems",
+  "employees": 72,
+  "industry": "saas",
+  "country": "DE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "salesforce",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "meridiancare.com",
+  "name": "Meridian Care Inc",
+  "employees": 894,
+  "industry": "healthcare_it",
+  "country": "GB",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "meridiansystems.com",
+  "name": "Meridian Systems Ltd",
+  "employees": 13,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "postgres",
+   "salesforce",
+   "segment",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbusai.com",
+  "name": "Nimbus AI Corp",
+  "employees": 848,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "kubernetes",
+   "postgres"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbusai.io",
+  "name": "Nimbus AI Ltd",
+  "employees": 6133,
+  "industry": "saas",
+  "country": "SG",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "oracle",
+   "sap"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbuscapital.ai",
+  "name": "Nimbus Capital",
+  "employees": 797,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "marketo"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbuscloud.com",
+  "name": "Nimbus Cloud Corp",
+  "employees": 153,
+  "industry": "saas",
+  "country": "DE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "postgres",
+   "salesforce"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbusproperties.io",
+  "name": "Nimbus Properties",
+  "employees": 1228,
+  "industry": "real_estate",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbusrealty.de",
+  "name": "Nimbus Realty Corp",
+  "employees": 119,
+  "industry": "real_estate",
+  "country": "DE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbusretail.de",
+  "name": "Nimbus Retail Tech Ltd",
+  "employees": 21,
+  "industry": "ecommerce",
+  "country": "DE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "slack"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "nimbustransit.io",
+  "name": "Nimbus Transit GmbH",
+  "employees": 153,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "postgres",
+   "salesforce"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindacademy.in",
+  "name": "Northwind Academy GmbH",
+  "employees": 58,
+  "industry": "education",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindbio.io",
+  "name": "Northwind Bio IT LLC",
+  "employees": 334,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindcart.io",
+  "name": "Northwind Cart Inc",
+  "employees": 764,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "segment",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindclinic.ai",
+  "name": "Northwind Clinic Systems GmbH",
+  "employees": 41,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "oracle",
+   "postgres",
+   "shopify"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindclinic.jp",
+  "name": "Northwind Clinic Systems",
+  "employees": 90,
+  "industry": "healthcare_it",
+  "country": "JP",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "oracle",
+   "postgres",
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindfreight.nl",
+  "name": "Northwind Freight LLC",
+  "employees": 2,
+  "industry": "logistics",
+  "country": "NL",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "sap",
+   "segment",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindlogistics.com",
+  "name": "Northwind Logistics",
+  "employees": 650,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "postgres",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindmanufacturing.co.uk",
+  "name": "Northwind Manufacturing Corp",
+  "employees": 43,
+  "industry": "manufacturing",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "northwindrobotics.com",
+  "name": "Northwind Robotics Inc",
+  "employees": 87,
+  "industry": "manufacturing",
+  "country": "GB",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "novalabs.co.uk",
+  "name": "Nova Labs",
+  "employees": 976,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "hubspot",
+   "segment"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "novamanufacturing.in",
+  "name": "Nova Manufacturing Pvt Ltd",
+  "employees": 44,
+  "industry": "manufacturing",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "postgres",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "novamedical.com",
+  "name": "Nova Medical Corp",
+  "employees": 5,
+  "industry": "healthcare_it",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "hubspot",
+   "oracle"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "novapayments.ai",
+  "name": "Nova Payments Pvt Ltd",
+  "employees": 9,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "novaretail.io",
+  "name": "Nova Retail Tech LLC",
+  "employees": 12,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "sap",
+   "slack",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "novastack.io",
+  "name": "Nova Stack Corp",
+  "employees": 172,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "kubernetes",
+   "zendesk"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "onyxlogistics.com",
+  "name": "Onyx Logistics Ltd",
+  "employees": 767,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "onyxmedical.io",
+  "name": "Onyx Medical Inc",
+  "employees": 152,
+  "industry": "healthcare_it",
+  "country": "SG",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "kubernetes",
+   "postgres"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "onyxpay.com.br",
+  "name": "Onyx Pay Corp",
+  "employees": 131,
+  "industry": "fintech",
+  "country": "BR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "onyxsupply.com.au",
+  "name": "Onyx Supply GmbH",
+  "employees": 30,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "marketo",
+   "postgres"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "onyxtransit.ai",
+  "name": "Onyx Transit LLC",
+  "employees": 19,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "marketo",
+   "segment",
+   "slack"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "orbitlearning.io",
+  "name": "Orbit Learning GmbH",
+  "employees": 23,
+  "industry": "education",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "oracle",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "orbitmanufacturing.com",
+  "name": "Orbit Manufacturing Ltd",
+  "employees": 42,
+  "industry": "manufacturing",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "kubernetes",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "orbitmoney.com",
+  "name": "Orbit Money Inc",
+  "employees": 2870,
+  "industry": "fintech",
+  "country": "AE",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "postgres",
+   "salesforce",
+   "slack"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "orbitrealty.co.id",
+  "name": "Orbit Realty Inc",
+  "employees": 20,
+  "industry": "real_estate",
+  "country": "ID",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "pioneersoftware.com",
+  "name": "Pioneer Software",
+  "employees": 151,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "postgres",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "pioneertransit.io",
+  "name": "Pioneer Transit",
+  "employees": 8,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "salesforce",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "prismfinance.com.au",
+  "name": "Prism Finance Corp",
+  "employees": 53,
+  "industry": "fintech",
+  "country": "AU",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "kubernetes",
+   "segment"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "prismmedical.com.au",
+  "name": "Prism Medical Inc",
+  "employees": 9,
+  "industry": "healthcare_it",
+  "country": "AU",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce",
+   "shopify",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "prismsoftware.com",
+  "name": "Prism Software Pvt Ltd",
+  "employees": 193,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "marketo",
+   "segment"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantumfreight.io",
+  "name": "Quantum Freight Inc",
+  "employees": 2,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "salesforce",
+   "slack"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantumhealth.com",
+  "name": "Quantum Health LLC",
+  "employees": 7148,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "marketo",
+   "oracle",
+   "snowflake"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantummanufacturing.mx",
+  "name": "Quantum Manufacturing GmbH",
+  "employees": 48,
+  "industry": "manufacturing",
+  "country": "MX",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "sap",
+   "snowflake"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantummedia.com.au",
+  "name": "Quantum Media",
+  "employees": 170,
+  "industry": "media",
+  "country": "AU",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "shopify",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantumproperties.io",
+  "name": "Quantum Properties Corp",
+  "employees": 49,
+  "industry": "real_estate",
+  "country": "SG",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce",
+   "segment",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "quantumsoftware.in",
+  "name": "Quantum Software LLC",
+  "employees": 10,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "aws",
+   "postgres",
+   "salesforce",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "quillclinic.io",
+  "name": "Quill Clinic Systems Inc",
+  "employees": 18,
+  "industry": "healthcare_it",
+  "country": "SG",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "sap",
+   "segment",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "quilledtech.com",
+  "name": "Quill EdTech Inc",
+  "employees": 7486,
+  "industry": "education",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "quillsoftware.co.uk",
+  "name": "Quill Software GmbH",
+  "employees": 20,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "postgres",
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "quillsystems.com",
+  "name": "Quill Systems Inc",
+  "employees": 203,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "oracle"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodcare.com",
+  "name": "Redwood Care Inc",
+  "employees": 7,
+  "industry": "healthcare_it",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "salesforce",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodedtech.com",
+  "name": "Redwood EdTech Pvt Ltd",
+  "employees": 41,
+  "industry": "education",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodfreight.io",
+  "name": "Redwood Freight GmbH",
+  "employees": 595,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "sap",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodlabs.io",
+  "name": "Redwood Labs Corp",
+  "employees": 168,
+  "industry": "saas",
+  "country": "SE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "postgres",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodlearning.co.uk",
+  "name": "Redwood Learning Ltd",
+  "employees": 139,
+  "industry": "education",
+  "country": "GB",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "postgres",
+   "salesforce"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodmarket.com",
+  "name": "Redwood Market GmbH",
+  "employees": 32,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "sap",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "redwoodmoney.io",
+  "name": "Redwood Money",
+  "employees": 152,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "oracle",
+   "slack"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "sablebrands.io",
+  "name": "Sable Brands Pvt Ltd",
+  "employees": 8,
+  "industry": "retail",
+  "country": "SG",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "oracle",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "sablecart.co.uk",
+  "name": "Sable Cart LLC",
+  "employees": 3819,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "gcp",
+   "kubernetes"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "sablecommerce.ca",
+  "name": "Sable Commerce GmbH",
+  "employees": 5,
+  "industry": "ecommerce",
+  "country": "CA",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "hubspot",
+   "sap",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "sableindustries.com.au",
+  "name": "Sable Industries Inc",
+  "employees": 11,
+  "industry": "manufacturing",
+  "country": "AU",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "sableretail.in",
+  "name": "Sable Retail Tech Corp",
+  "employees": 24,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "shopify"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "sableretail.io",
+  "name": "Sable Retail Corp",
+  "employees": 73,
+  "industry": "retail",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "marketo",
+   "oracle",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "sablesystems.in",
+  "name": "Sable Systems GmbH",
+  "employees": 731,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "salesforce",
+   "sap",
+   "segment"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitbio.fr",
+  "name": "Summit Bio IT",
+  "employees": 144,
+  "industry": "healthcare_it",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "oracle",
+   "shopify",
+   "slack",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitcloud.io",
+  "name": "Summit Cloud LLC",
+  "employees": 12,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitfinance.de",
+  "name": "Summit Finance Corp",
+  "employees": 488,
+  "industry": "fintech",
+  "country": "DE",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "segment",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitlogistics.io",
+  "name": "Summit Logistics LLC",
+  "employees": 17,
+  "industry": "logistics",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "marketo",
+   "sap",
+   "shopify",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitmanufacturing.in",
+  "name": "Summit Manufacturing GmbH",
+  "employees": 100,
+  "industry": "manufacturing",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "marketo",
+   "salesforce",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitsoftware.com.br",
+  "name": "Summit Software Corp",
+  "employees": 511,
+  "industry": "saas",
+  "country": "BR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "hubspot",
+   "kubernetes",
+   "shopify",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "summitstack.io",
+  "name": "Summit Stack GmbH",
+  "employees": 31,
+  "industry": "saas",
+  "country": "SE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "oracle",
+   "postgres",
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalfreight.ca",
+  "name": "Tidal Freight Pvt Ltd",
+  "employees": 888,
+  "industry": "logistics",
+  "country": "CA",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "gcp"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalhealth.in",
+  "name": "Tidal Health Corp",
+  "employees": 20,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "sap",
+   "slack"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidallabs.ai",
+  "name": "Tidal Labs LLC",
+  "employees": 5,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalledger.com",
+  "name": "Tidal Ledger LLC",
+  "employees": 87,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "postgres",
+   "shopify",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalmarket.io",
+  "name": "Tidal Market LLC",
+  "employees": 20,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "marketo",
+   "segment"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalmoney.ai",
+  "name": "Tidal Money LLC",
+  "employees": 5,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "marketo",
+   "postgres",
+   "salesforce",
+   "shopify"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalretail.ai",
+  "name": "Tidal Retail Ltd",
+  "employees": 4187,
+  "industry": "retail",
+  "country": "US",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "salesforce",
+   "sap",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalretail.com",
+  "name": "Tidal Retail Tech",
+  "employees": 175,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "kubernetes",
+   "marketo",
+   "sap",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalstack.in",
+  "name": "Tidal Stack LLC",
+  "employees": 7220,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "oracle",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "tidalworks.com.br",
+  "name": "Tidal Works Ltd",
+  "employees": 760,
+  "industry": "manufacturing",
+  "country": "BR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "segment",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbraconsulting.fr",
+  "name": "Umbra Consulting",
+  "employees": 16,
+  "industry": "consulting",
+  "country": "FR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "hubspot",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbrafinance.co.uk",
+  "name": "Umbra Finance Inc",
+  "employees": 4988,
+  "industry": "fintech",
+  "country": "GB",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "sap",
+   "slack",
+   "snowflake"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbrafinance.com",
+  "name": "Umbra Finance",
+  "employees": 265,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle",
+   "segment",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbrafinance.com.br",
+  "name": "Umbra Finance GmbH",
+  "employees": 43,
+  "industry": "fintech",
+  "country": "BR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "postgres",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbrapublishing.in",
+  "name": "Umbra Publishing Corp",
+  "employees": 33,
+  "industry": "media",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "salesforce"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "umbraretail.com",
+  "name": "Umbra Retail Tech Pvt Ltd",
+  "employees": 81,
+  "industry": "ecommerce",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagecommerce.jp",
+  "name": "Vantage Commerce GmbH",
+  "employees": 45,
+  "industry": "ecommerce",
+  "country": "JP",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "segment",
+   "slack"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagehealth.io",
+  "name": "Vantage Health",
+  "employees": 547,
+  "industry": "healthcare_it",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "shopify",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagelogistics.com",
+  "name": "Vantage Logistics Corp",
+  "employees": 978,
+  "industry": "logistics",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "oracle",
+   "sap",
+   "segment",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagemoney.com",
+  "name": "Vantage Money Corp",
+  "employees": 4,
+  "industry": "fintech",
+  "country": "DE",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "postgres",
+   "salesforce",
+   "sap",
+   "slack",
+   "snowflake"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagepayments.io",
+  "name": "Vantage Payments Pvt Ltd",
+  "employees": 811,
+  "industry": "fintech",
+  "country": "SG",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "azure",
+   "marketo",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagesoftware.in",
+  "name": "Vantage Software Ltd",
+  "employees": 746,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "sap",
+   "shopify",
+   "slack"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "vantagetransit.com",
+  "name": "Vantage Transit LLC",
+  "employees": 49,
+  "industry": "logistics",
+  "country": "DE",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "salesforce",
+   "segment"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexcare.io",
+  "name": "Vertex Care Inc",
+  "employees": 62,
+  "industry": "healthcare_it",
+  "country": "NL",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "salesforce"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexcart.io",
+  "name": "Vertex Cart Ltd",
+  "employees": 42,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "salesforce",
+   "stripe"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexcloud.com",
+  "name": "Vertex Cloud Corp",
+  "employees": 790,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "postgres",
+   "salesforce"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexfinance.io",
+  "name": "Vertex Finance Inc",
+  "employees": 490,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "stripe"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexgroup.ai",
+  "name": "Vertex Group Ltd",
+  "employees": 31,
+  "industry": "consulting",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "kubernetes",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexmarket.com",
+  "name": "Vertex Market GmbH",
+  "employees": 860,
+  "industry": "ecommerce",
+  "country": "ID",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "aws",
+   "postgres",
+   "salesforce",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexmarket.io",
+  "name": "Vertex Market Inc",
+  "employees": 4,
+  "industry": "ecommerce",
+  "country": "SE",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexmedical.io",
+  "name": "Vertex Medical Inc",
+  "employees": 6,
+  "industry": "healthcare_it",
+  "country": "US",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "sap",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexpay.io",
+  "name": "Vertex Pay LLC",
+  "employees": 4,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "marketo",
+   "oracle",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexshipping.com",
+  "name": "Vertex Shipping Pvt Ltd",
+  "employees": 47,
+  "industry": "logistics",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "marketo",
+   "oracle",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "vertexstack.de",
+  "name": "Vertex Stack Pvt Ltd",
+  "employees": 294,
+  "industry": "saas",
+  "country": "DE",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "salesforce",
+   "snowflake",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "willowfabrication.de",
+  "name": "Willow Fabrication Pvt Ltd",
+  "employees": 117,
+  "industry": "manufacturing",
+  "country": "DE",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "kubernetes",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "xenonadvisory.in",
+  "name": "Xenon Advisory GmbH",
+  "employees": 26,
+  "industry": "consulting",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "salesforce",
+   "shopify",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "xenonlabs.com",
+  "name": "Xenon Labs GmbH",
+  "employees": 20,
+  "industry": "saas",
+  "country": "FR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "salesforce",
+   "snowflake",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "xenonledger.com",
+  "name": "Xenon Ledger Pvt Ltd",
+  "employees": 308,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "marketo",
+   "postgres",
+   "sap",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowacademy.com",
+  "name": "Yarrow Academy Corp",
+  "employees": 17,
+  "industry": "education",
+  "country": "FR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "azure",
+   "oracle",
+   "postgres",
+   "salesforce",
+   "snowflake"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowai.ai",
+  "name": "Yarrow AI",
+  "employees": 184,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "gcp",
+   "sap"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowbrands.com",
+  "name": "Yarrow Brands Corp",
+  "employees": 89,
+  "industry": "retail",
+  "country": "CA",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "shopify"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowfreight.com",
+  "name": "Yarrow Freight Corp",
+  "employees": 837,
+  "industry": "logistics",
+  "country": "FR",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "oracle",
+   "sap"
+  ],
+  "funding_stage": "series_b",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowretail.io",
+  "name": "Yarrow Retail",
+  "employees": 183,
+  "industry": "retail",
+  "country": "AU",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "segment",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "yarrowsupply.io",
+  "name": "Yarrow Supply",
+  "employees": 1382,
+  "industry": "logistics",
+  "country": "BR",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "aws",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithai.com",
+  "name": "Zenith AI GmbH",
+  "employees": 40,
+  "industry": "saas",
+  "country": "FR",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "snowflake",
+   "stripe",
+   "zendesk"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithindustries.com",
+  "name": "Zenith Industries Pvt Ltd",
+  "employees": 79,
+  "industry": "manufacturing",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "shopify"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithlabs.com",
+  "name": "Zenith Labs LLC",
+  "employees": 781,
+  "industry": "saas",
+  "country": "US",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "series_c",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithlogistics.com.au",
+  "name": "Zenith Logistics Pvt Ltd",
+  "employees": 539,
+  "industry": "logistics",
+  "country": "AU",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "postgres",
+   "shopify"
+  ],
+  "funding_stage": "public",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithpay.in",
+  "name": "Zenith Pay Pvt Ltd",
+  "employees": 468,
+  "industry": "fintech",
+  "country": "IN",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "kubernetes",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithpublishing.de",
+  "name": "Zenith Publishing LLC",
+  "employees": 409,
+  "industry": "media",
+  "country": "DE",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "kubernetes",
+   "oracle"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithrealty.co.uk",
+  "name": "Zenith Realty GmbH",
+  "employees": 40,
+  "industry": "real_estate",
+  "country": "GB",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "oracle",
+   "segment",
+   "slack",
+   "stripe"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithshop.io",
+  "name": "Zenith Shop Inc",
+  "employees": 45,
+  "industry": "ecommerce",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "aws",
+   "gcp",
+   "salesforce",
+   "sap",
+   "snowflake"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithsoftware.co.uk",
+  "name": "Zenith Software",
+  "employees": 10,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "gcp",
+   "postgres",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "zenithstudios.fr",
+  "name": "Zenith Studios LLC",
+  "employees": 154,
+  "industry": "media",
+  "country": "FR",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrcloud.com",
+  "name": "Zephyr Cloud LLC",
+  "employees": 250,
+  "industry": "saas",
+  "country": "GB",
+  "revenue_band": "50-250M",
+  "tech_stack": [
+   "gcp",
+   "oracle",
+   "salesforce",
+   "segment"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrcommerce.co.uk",
+  "name": "Zephyr Commerce Inc",
+  "employees": 6374,
+  "industry": "ecommerce",
+  "country": "GB",
+  "revenue_band": "250M+",
+  "tech_stack": [
+   "hubspot",
+   "kubernetes",
+   "slack",
+   "zendesk"
+  ],
+  "funding_stage": "seed",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrlabs.io",
+  "name": "Zephyr Labs Ltd",
+  "employees": 49,
+  "industry": "saas",
+  "country": "NL",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "salesforce",
+   "zendesk"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrmoney.io",
+  "name": "Zephyr Money Pvt Ltd",
+  "employees": 2,
+  "industry": "fintech",
+  "country": "AU",
+  "revenue_band": "<1M",
+  "tech_stack": [
+   "azure",
+   "postgres",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrpayments.io",
+  "name": "Zephyr Payments",
+  "employees": 26,
+  "industry": "fintech",
+  "country": "US",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "gcp",
+   "segment",
+   "shopify"
+  ],
+  "funding_stage": "bootstrapped",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrrobotics.in",
+  "name": "Zephyr Robotics Corp",
+  "employees": 69,
+  "industry": "manufacturing",
+  "country": "IN",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "kubernetes",
+   "oracle",
+   "sap",
+   "zendesk"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrstack.in",
+  "name": "Zephyr Stack Inc",
+  "employees": 34,
+  "industry": "saas",
+  "country": "IN",
+  "revenue_band": "1-10M",
+  "tech_stack": [
+   "segment",
+   "shopify",
+   "slack",
+   "snowflake",
+   "stripe"
+  ],
+  "funding_stage": "series_a",
+  "mx_valid": true
+ },
+ {
+  "domain": "zephyrstudios.io",
+  "name": "Zephyr Studios",
+  "employees": 126,
+  "industry": "media",
+  "country": "US",
+  "revenue_band": "10-50M",
+  "tech_stack": [
+   "azure",
+   "gcp",
+   "hubspot",
+   "marketo",
+   "slack"
+  ],
+  "funding_stage": "growth",
+  "mx_valid": true
+ }
+]

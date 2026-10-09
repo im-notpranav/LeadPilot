@@ -1,0 +1,163 @@
+"""Runtime: wires SimClock + Scheduler + Simulator + Processor. Owns reset (history + warm-up) and stepping."""
+from __future__ import annotations
+
+import random
+from datetime import datetime, timedelta
+
+from .clock import SimClock
+from .engine.types import iso, parse_ts
+from .persistence import NullPersistence
+from .processor import Processor
+from .scheduler import Scheduler
+from .simulator import scenarios
+from .simulator.generator import Simulator
+from .simulator.history import generate_history
+from .store import Store
+
+
+class Runtime:
+    def __init__(self, cfg, persistence=None):
+        self.cfg = cfg
+        sc = cfg.simulator
+        self.db = persistence or NullPersistence()
+        self.clock = SimClock(sc.start_time, speed=sc.default_speed, paused=True)
+        self.store = Store(cfg)
+        self.processor = Processor(cfg, self.store, self.clock, self.db)
+        self.scheduler = Scheduler()
+        self.sim = Simulator(cfg, self.store, self.scheduler)
+        self.processor.hooks.append(self._on_hook)
+        self.tick_minutes = sc.tick_minutes
+        self.seed = sc.seed
+        self.scenario_runs: dict[str, int] = {}
+        self.status = "idle"
+        self.started_at: datetime | None = None
+
+    # ------------------------------------------------------------------ lifecycle
+    def reset(self, seed: int | None = None, warmup: bool = True, background: bool = True,
+              rep_actions: bool | None = None, start: datetime | str | None = None) -> dict:
+        sc = self.cfg.simulator
+        self.status = "resetting"
+        self.seed = sc.seed if seed is None else seed
+        start_dt = parse_ts(start or sc.start_time)
+        self.store.reset_all()
+        self.db.reset()
+        self.scheduler.clear()
+        self.scenario_runs = {}
+        self.sim.reset(self.seed)
+        self.sim.background = background
+        self.sim.rep_actions = bool(sc.rep_actions if rep_actions is None else rep_actions)
+        hist = generate_history(self.cfg, random.Random(f"history-{self.seed}"), start_dt)
+        self.store.historical = hist
+        self.store.load_history(hist)
+        for d in hist:
+            self.db.add("historical_deals", d)
+        for r in self.cfg.data.reps:
+            self.db.upsert("reps", {k: r.get(k) for k in ("rep_id", "name", "territories", "industries", "segments",
+                                                           "languages", "capacity_points", "active", "profile")})
+        for s in self.cfg.data.sources:
+            self.db.upsert("sources", dict(s))
+        self.db.flush()
+
+        t0 = start_dt - timedelta(days=sc.warmup_days) if warmup else start_dt
+        self.clock.reset(t0)
+        self.sim.bootstrap(t0)
+        if warmup:
+            self.tick_minutes = sc.warmup_tick_minutes
+            self._schedule_next_tick(t0)
+            proc = self.processor
+            proc.broadcast, proc.autoflush = False, False
+            try:
+                self.run_until(start_dt, flush_every=400)
+            finally:
+                proc.broadcast, proc.autoflush = True, True
+                self.db.flush()
+            self.scheduler_drop_kind("tick")
+        self.tick_minutes = sc.tick_minutes
+        self.clock.reset(start_dt)
+        self._schedule_next_tick(start_dt)
+        self.processor.handle({"event_id": f"tick_{start_dt:%Y%m%d%H%M}_init", "type": "time_tick", "ts": iso(start_dt),
+                               "actor": "system"})
+        self.processor.drain_outbox()
+        self.started_at = start_dt
+        self.status = "ready"
+        return self.stats()
+
+    def scheduler_drop_kind(self, kind: str) -> None:
+        import heapq
+        self.scheduler._heap = [i for i in self.scheduler._heap if i.kind != kind]
+        heapq.heapify(self.scheduler._heap)
+
+    def _schedule_next_tick(self, after: datetime) -> None:
+        step = timedelta(minutes=self.tick_minutes)
+        epoch = after.replace(hour=0, minute=0, second=0, microsecond=0)
+        n = int((after - epoch) / step) + 1
+        self.scheduler.schedule(epoch + n * step, "tick")
+
+    # ------------------------------------------------------------------ stepping
+    def run_until(self, target: datetime, flush_every: int | None = None, max_items: int | None = None) -> int:
+        done = 0
+        while True:
+            ts = self.scheduler.peek_ts()
+            if ts is None or ts > target:
+                break
+            item = self.scheduler.pop()
+            if item.ts > self.clock.now():
+                self.clock.set(item.ts)
+            self._dispatch(item)
+            done += 1
+            if flush_every and done % flush_every == 0:
+                self.db.flush()
+            if max_items and done >= max_items:
+                return done
+        self.clock.set(target)
+        return done
+
+    def step(self, minutes: float) -> int:
+        return self.run_until(self.clock.now() + timedelta(minutes=minutes))
+
+    def _dispatch(self, item) -> None:
+        now = self.clock.now()
+        if item.kind == "tick":
+            self.processor.handle({"event_id": f"tick_{item.ts:%Y%m%d%H%M}", "type": "time_tick", "ts": iso(item.ts),
+                                   "actor": "system"})
+            self._schedule_next_tick(item.ts)
+        elif item.kind == "sla_check":
+            self.processor.handle({"event_id": f"sla_{item.data}_{item.ts:%Y%m%d%H%M%S}_{item.seq}",
+                                   "type": "sla_check", "ts": iso(max(item.ts, now)), "actor": "system",
+                                   "payload": {"lead_id": item.data}})
+        elif item.kind == "sim":
+            for ev in self.sim.fire(item.data, max(item.ts, now)):
+                self.emit(ev)
+        elif item.kind == "scenario":
+            self.emit(item.data)
+
+    def emit(self, event: dict) -> dict:
+        return self.processor.handle(event)
+
+    def schedule_event(self, ts: datetime, event: dict) -> None:
+        self.scheduler.schedule(ts, "scenario", event)
+
+    def launch_scenario(self, name: str) -> dict:
+        return scenarios.launch(self, name)
+
+    # ------------------------------------------------------------------ hooks
+    def _on_hook(self, kind: str, **data) -> None:
+        if kind == "sla_deadline":
+            self.scheduler.schedule(data["deadline"] + timedelta(minutes=1), "sla_check", data["lead_id"])
+        self.sim.on_hook(kind, **data)
+
+    # ------------------------------------------------------------------ introspection
+    def stats(self) -> dict:
+        st = self.store
+        leads = [l for l in st.leads.values() if l.ev is not None and l.status != "merged"]
+        open_leads = [l for l in leads if st.is_open(l)]
+        return {
+            "status": self.status, "seed": self.seed, "clock": self.clock.state(),
+            "events": len(st.log), "raw_events": len(st.raw_log), "leads": len(leads), "open_leads": len(open_leads),
+            "stalled": sum(1 for l in open_leads if l.is_stalled), "quarantined": sum(1 for l in leads if l.status == "quarantined"),
+            "merged": sum(1 for l in st.leads.values() if l.status == "merged"),
+            "won": sum(1 for l in leads if l.stage == "won"), "lost": sum(1 for l in leads if l.stage == "lost"),
+            "scheduled": len(self.scheduler), "latency": st.latency_stats(),
+            "background": self.sim.background, "rep_actions": self.sim.rep_actions,
+            "historical_deals": len(st.historical), "sim_counts": dict(self.sim.counts.most_common(12)),
+        }

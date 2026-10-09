@@ -1,0 +1,12 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+SQLAlchemy>=2.0
+rapidfuzz>=3.9
+phonenumbers>=8.13
+email-validator>=2.1
+scikit-learn>=1.5
+numpy>=1.26
+PyYAML>=6.0
+pytest>=8.0
+httpx>=0.27

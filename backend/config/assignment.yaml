@@ -1,0 +1,41 @@
+# Territories, routing, workload, reassignment.
+regions:
+  NA: [US, CA, MX]
+  EMEA: [GB, DE, FR, NL, ES, IT, IE, SE, AE, ZA, CH, PL]
+  APAC: [SG, AU, JP, ID, MY, PH, NZ, HK, KR, VN, TH]
+  India: [IN]
+  LATAM: [BR, AR, CL, CO, PE]
+
+# Locale facts per region: languages spoken, representative UTC offset (hours)
+locale:
+  NA: {languages: [en, es], tz: -6}
+  EMEA: {languages: [en, de, fr, es], tz: 1}
+  APAC: {languages: [en, ja, zh], tz: 8}
+  India: {languages: [en, hi], tz: 5.5}
+  LATAM: {languages: [es, pt, en], tz: -4}
+
+segments:            # by employee count (upper bound inclusive)
+  - {name: smb, max: 50}
+  - {name: mid_market, max: 1000}
+  - {name: enterprise, max: null}
+
+load_weight: {A: 3, B: 2, C: 1, D: 1}
+
+score_weights:
+  skill_match: 0.35
+  win_rate_segment: 0.25
+  capacity_headroom: 0.25
+  locale_fit: 0.15
+skill: {industry: 0.6, segment: 0.4}
+locale_fit: {language: 0.5, tz_close: 0.5, tz_close_hours: 3, tz_near: 0.25, tz_near_hours: 6}
+win_rate_prior_strength: 2       # Bayesian smoothing: (wins + s) / (closed + s / team_rate)
+
+enterprise_preference:
+  min_employees: 200             # grade A or hot intent at companies larger than this prefer enterprise-tagged reps
+
+reassignment:
+  first_touch_sla_minutes: {A: 60, B: 240, C: 1440, D: 4320}   # R1
+  open_deal_neglect_days: 7                                     # R2 (qualified+)
+  max_auto_reassignments: 2                                     # R3: after this many, escalate
+  manager_queue_id: manager_queue
+  stages_r2: [qualified, meeting, proposal, negotiation]

@@ -1,0 +1,78 @@
+# Pipeline stages, evidence rules, stall detection, deal prediction.
+stages: [new, contacted, engaged, qualified, meeting, proposal, negotiation, won, lost, nurture, disqualified]
+forward_order: [new, contacted, engaged, qualified, meeting, proposal, negotiation, won]
+terminal: [won, lost, disqualified]
+
+# Prospect activity that counts as "inbound" (resets staleness / inactivity clocks)
+inbound_types: [lead_created, page_view, content_download, webinar_registered, webinar_attended, demo_request,
+                contact_sales, trial_signup, proposal_viewed, email_clicked, email_replied, meeting_held]
+# Conversation responses (break an unanswered outbound streak)
+response_types: [email_replied, meeting_held]
+rep_outbound_types: [email_sent, call_logged]
+rep_activity_types: [email_sent, call_logged, meeting_scheduled, meeting_held, proposal_sent, contract_sent, task_completed]
+
+rules:
+  P3_qualify:
+    min_fit: 25
+    min_intent: 12
+    signal_window_days: 30     # demo_request / contact_sales / bant_qualified must be this recent
+  P8_lost_after_negative_days: 30
+  P9_nurture:
+    max_stage: engaged
+    max_score: 30
+    inactive_days: 30
+  P10_revive_score: 45
+  P4_meeting_types: [discovery, demo]
+
+rule_labels:
+  P1: First rep touch
+  P2: Prospect engaged in conversation
+  P3: Qualified on fit + intent evidence
+  P4: Meeting held
+  P5: Proposal sent
+  P6: Negotiation started
+  P7: Deal won
+  P8: Deal lost
+  P9: Recycled to nurture (inactive, low score)
+  P10: Revived from nurture (score recovered)
+  P11: Disqualified
+  M1: Manual stage override
+  Q1: Restored after quality review
+
+stall:
+  sla_days: {contacted: 5, engaged: 7, qualified: 7, meeting: 5, proposal: 7, negotiation: 10}
+  weights: {S1: 30, S2: 20, S3: 15, S4: 25, S5: 20}
+  per_day_over_sla: 3
+  max_risk: 100
+  overdue_task_hours: 24
+  expired_action_lookback_days: 7
+  velocity_ratio: 0.4
+  velocity_min_prev: 3
+  no_next_step_days: 5
+  grace_hours_after_inbound: 24     # S2/S3/S5 suppressed right after an inbound (stall clears on inbound)
+  labels:
+    S1: Inactivity beyond stage SLA
+    S2: Missed follow-up
+    S3: Engagement velocity drop
+    S4: Ghosting (unanswered follow-ups)
+    S5: No next step after meeting
+
+prediction:
+  base_acv: {"1-10": 3000, "11-50": 8000, "51-200": 20000, "201-1000": 45000, "1000+": 90000}
+  default_band: "11-50"
+  industry_multiplier: {fintech: 1.3, healthcare_it: 1.2, saas: 1.1, manufacturing: 1.0, retail: 0.9, other: 0.9}
+  enterprise_plan_multiplier: 1.4
+  per_seat_price: 600
+  budget_cap_ratio: 1.5
+  range: {p10: 0.7, p90: 1.3}
+
+close_probability:
+  stage_prior: {new: 0.02, contacted: 0.05, engaged: 0.10, qualified: 0.20, meeting: 0.35, proposal: 0.50, negotiation: 0.70, nurture: 0.03}
+  coef:
+    score: 0.03            # x (score - 50)
+    intent_level: 0.35     # x (intent_level_index - 2)
+    rep_win_rate: 4.0      # x (rep_segment_win_rate - team_win_rate)
+    stalled: -0.8
+    days_over_sla: -0.05
+    source_quality: 0.5    # x (source_quality_index - 0.5)
+  use_model: false         # when true and a trained model exists, use it instead of the rule formula

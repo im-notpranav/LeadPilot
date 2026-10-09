@@ -1,0 +1,50 @@
+[
+ {
+  "source_id": "website",
+  "name": "Website forms",
+  "channel": "inbound",
+  "cost_per_lead": 40
+ },
+ {
+  "source_id": "google_ads",
+  "name": "Google Ads",
+  "channel": "paid",
+  "cost_per_lead": 85
+ },
+ {
+  "source_id": "referral",
+  "name": "Customer referrals",
+  "channel": "referral",
+  "cost_per_lead": 20
+ },
+ {
+  "source_id": "trade_show",
+  "name": "Trade shows",
+  "channel": "event",
+  "cost_per_lead": 120
+ },
+ {
+  "source_id": "partner",
+  "name": "Partner network",
+  "channel": "partner",
+  "cost_per_lead": 60
+ },
+ {
+  "source_id": "webinar",
+  "name": "Webinars",
+  "channel": "inbound",
+  "cost_per_lead": 30
+ },
+ {
+  "source_id": "cold_outreach",
+  "name": "Cold outreach lists",
+  "channel": "outbound",
+  "cost_per_lead": 15
+ },
+ {
+  "source_id": "list_vendor_x",
+  "name": "List vendor X",
+  "channel": "purchased",
+  "cost_per_lead": 8
+ }
+]

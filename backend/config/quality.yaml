@@ -1,0 +1,48 @@
+# Fake / low-quality detection, dedupe thresholds, source quality.
+signals:
+  disposable_email: 40
+  no_mx: 30
+  test_pattern: 30
+  ip_velocity: 30
+  gibberish_name: 25
+  fast_form: 20
+  invalid_phone: 15
+  ip_country_mismatch: 10
+  role_mailbox: 5
+
+thresholds: {suspicious: 40, fake: 70}
+
+ip_velocity: {max_per_hour: 5}
+fast_form_seconds: 3
+test_patterns: [test, asdf, qwerty, aaa, xyz, dummy, sample, fake]
+role_mailboxes: [info, admin, sales, support, contact, hello, office, noreply, no-reply, marketing, team]
+gibberish:
+  min_vowel_ratio: 0.2
+  max_vowel_ratio: 0.8
+  repeated_chars: 3
+  keyboard_runs: [qwer, wert, asdf, sdfg, zxcv, xcvb, hjkl, uiop, jkl, 1234]
+
+free_mail_domains: [gmail.com, googlemail.com, yahoo.com, yahoo.co.in, outlook.com, hotmail.com, live.com, msn.com,
+                    proton.me, protonmail.com, icloud.com, me.com, aol.com, rediffmail.com, gmx.com, zoho.com, mail.com, yandex.com]
+gmail_domains: [gmail.com, googlemail.com]
+legal_suffixes: [inc, incorporated, llc, ltd, limited, pvt, private, gmbh, corp, corporation, co, plc, sa, ag, bv, pte, pty, srl]
+
+dedupe:
+  auto_merge: 0.90
+  review: 0.75
+  rules:
+    same_email: 1.00
+    phone_and_name: {confidence: 0.95, min_jw: 0.85}
+    domain_and_name: {confidence: 0.92, min_jw: 0.92}
+    company_and_name: {confidence: 0.85, min_jw: 0.90}
+    phone_only: 0.75
+
+source_quality:
+  weights: {sql_rate: 0.30, win_rate: 0.25, fake_free: 0.20, dup_free: 0.15, avg_score: 0.10}
+  flags:
+    max_fake_rate: 0.20
+    max_dup_rate: 0.30
+    min_sql_ratio: 0.5        # flag if sql_rate < ratio x overall sql_rate ...
+    min_volume_for_sql: 30    # ... and volume >= this
+  windows_days: [7, 30]
+  default_index: 0.5

@@ -1,0 +1,126 @@
+# Next-best-action rules. Ordered: first match = primary action, next two = alternates.
+# due_minutes: null means "per first-touch SLA for the lead's grade".
+expire_grace_hours: 24
+recent_windows:
+  demo_hours: 24
+  pricing_hours: 72
+  pricing_min_views: 3
+  no_contact_hours: 48
+  trial_days: 7
+  competitor_days: 7
+  inactive_days: 30
+
+rules:
+  - id: N1
+    action: Quarantine; do not contact
+    channel: none
+    due_minutes: 0
+    urgency: low
+    template: none
+  - id: N2
+    action: Call now and book a demo
+    channel: call
+    due_minutes: 15
+    urgency: critical
+    template: demo_booking_call
+    completion: {type: call_logged, payload: {outcome: connected}}
+  - id: N3
+    action: Reply with pricing + ROI calculator; propose a call
+    channel: email
+    due_minutes: 60
+    urgency: high
+    template: pricing_reply
+    completion: {type: email_sent, payload: {template: pricing_reply}}
+  - id: N4
+    action: Call, then send pricing guide and an industry case study
+    channel: call
+    due_minutes: 120
+    urgency: high
+    template: pricing_guide
+    completion: {type: call_logged, payload: {outcome: connected}}
+  - id: N5
+    action: Send onboarding email; schedule check-in in 3 days
+    channel: email
+    due_minutes: 240
+    urgency: high
+    template: trial_onboarding
+    completion: {type: email_sent, payload: {template: trial_onboarding}}
+  - id: N6
+    action: Send recap and proposal
+    channel: email
+    due_minutes: 1440
+    urgency: high
+    template: recap_proposal
+    completion: {type: proposal_sent, payload: {}}
+  - id: N7
+    action: "Multi-thread: contact a second stakeholder; offer a time-bound incentive"
+    channel: email
+    due_minutes: 1440
+    urgency: high
+    template: multithread
+    completion: {type: email_sent, payload: {template: multithread}}
+  - id: N8
+    action: "Switch channel: call or LinkedIn"
+    channel: call
+    due_minutes: 1440
+    urgency: medium
+    template: channel_switch
+    completion: {type: call_logged, payload: {outcome: voicemail}}
+  - id: N9
+    action: Reschedule with two time options
+    channel: email
+    due_minutes: 240
+    urgency: high
+    template: reschedule
+    completion: {type: email_sent, payload: {template: reschedule}}
+  - id: N10
+    action: Send competitive battlecard
+    channel: email
+    due_minutes: 1440
+    urgency: medium
+    template: battlecard
+    completion: {type: email_sent, payload: {template: battlecard}}
+  - id: N11
+    action: Propose a group demo for all stakeholders
+    channel: email
+    due_minutes: 1440
+    urgency: medium
+    template: group_demo
+    completion: {type: email_sent, payload: {template: group_demo}}
+  - id: N12
+    action: First-touch email personalized to industry
+    channel: email
+    due_minutes: null
+    urgency: medium
+    template: first_touch
+    completion: {type: email_sent, payload: {template: first_touch}}
+  - id: N13
+    action: Move to nurture sequence
+    channel: task
+    due_minutes: 10080
+    urgency: low
+    template: nurture
+    completion: {type: task_completed, payload: {task_type: nurture_enroll}}
+  - id: N14
+    action: Send objection-handling content
+    channel: email
+    due_minutes: 1440
+    urgency: medium
+    template: objection_handling
+    completion: {type: email_sent, payload: {template: objection_handling}}
+  - id: N15
+    action: Follow up with relevant content
+    channel: email
+    due_minutes: 4320
+    urgency: low
+    template: follow_up
+    completion: {type: email_sent, payload: {template: follow_up}}
+
+# Priority (queue order)
+priority:
+  weights: {score: 0.40, expected_value: 0.25, urgency: 0.20, stall_rescue: 0.15}
+  ev_percentile: 95
+  urgency_full_minutes: 60        # 100 urgency if due within this
+  urgency_zero_minutes: 4320      # 0 urgency at 3 days
+  sla_breach_bonus: 15
+  sla_breach_window_minutes: 30

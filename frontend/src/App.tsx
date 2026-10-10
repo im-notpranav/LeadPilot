@@ -11,19 +11,28 @@ import LiveFeed from "./pages/LiveFeed";
 import Analytics from "./pages/Analytics";
 import Quality from "./pages/Quality";
 import Simulator from "./pages/Simulator";
+import Access from "./pages/Access";
+import { can, useAuth } from "./lib/auth";
+import type { Me } from "./lib/api";
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: string; show?: (me: Me | null, live: boolean) => boolean };
+const NAV: NavItem[] = [
   { to: "/queue", label: "My Queue", icon: "M4 6h16M4 12h16M4 18h10" },
   { to: "/pipeline", label: "Pipeline", icon: "M4 5h4v14H4zM10 5h4v9h-4zM16 5h4v5h-4z" },
   { to: "/feed", label: "Live Feed", icon: "M4 12h4l3-7 4 14 3-7h2" },
-  { to: "/analytics", label: "Analytics", icon: "M5 19V9M12 19V5M19 19v-7" },
-  { to: "/quality", label: "Quality", icon: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" },
-  { to: "/simulator", label: "Simulator", icon: "M7 4v16l13-8z" },
+  { to: "/analytics", label: "Analytics", icon: "M5 19V9M12 19V5M19 19v-7", show: can.manage },
+  { to: "/quality", label: "Quality", icon: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z", show: can.manage },
+  { to: "/simulator", label: "Simulator", icon: "M7 4v16l13-8z", show: (me, live) => can.manage(me) && !live },
+  { to: "/access", label: "Access", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0", show: can.admin },
 ];
+const visibleNav = (me: Me | null, live: boolean) => NAV.filter((n) => !n.show || n.show(me, live));
 
 export default function App() {
   const { clock } = useLive();
-  const nav = clock.live ? NAV.filter((n) => n.to !== "/simulator") : NAV;
+  const { me } = useAuth();
+  const nav = visibleNav(me, !!clock.live);
+  const allowed = (path: string) => nav.some((n) => n.to === path);
+  const guard = (path: string, el: JSX.Element) => (allowed(path) ? el : <Navigate to="/queue" replace />);
   return (
     <div className="flex h-full">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-line bg-surface md:flex">
@@ -53,9 +62,11 @@ export default function App() {
             <Route path="/leads/:id" element={<LeadDetail />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/feed" element={<LiveFeed />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/quality" element={<Quality />} />
-            <Route path="/simulator" element={clock.live ? <Navigate to="/queue" replace /> : <Simulator />} />
+            <Route path="/analytics" element={guard("/analytics", <Analytics />)} />
+            <Route path="/quality" element={guard("/quality", <Quality />)} />
+            <Route path="/simulator" element={guard("/simulator", <Simulator />)} />
+            <Route path="/access" element={guard("/access", <Access />)} />
+            <Route path="*" element={<Navigate to="/queue" replace />} />
           </Routes>
         </main>
       </div>
@@ -66,13 +77,15 @@ export default function App() {
 
 function TopBar() {
   const { clock, connected, eventsPerMin } = useLive();
+  const { me } = useAuth();
+  const controls = !clock.live && can.manage(me);
   const qc = useQueryClient();
   const act = async (path: string, body?: unknown) => { await api.post(path, body); qc.invalidateQueries({ queryKey: ["sim"] }); };
   const resetting = clock.status === "resetting";
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5 md:px-6">
       <div className="flex items-center gap-2 md:hidden">
-        {NAV.filter((n) => !clock.live || n.to !== "/simulator").map((n) => <NavLink key={n.to} to={n.to} className="text-xs text-ink-2">{n.label.split(" ").pop()}</NavLink>)}
+        {visibleNav(me, !!clock.live).map((n) => <NavLink key={n.to} to={n.to} className="text-xs text-ink-2">{n.label.split(" ").pop()}</NavLink>)}
       </div>
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${connected ? "bg-good" : "bg-critical"}`} aria-hidden />
@@ -81,7 +94,7 @@ function TopBar() {
       <div className="text-sm font-medium tabular text-ink">{resetting ? (clock.live ? "Rebuilding from the event log…" : "Generating 6 months of history + warm-up…") : dateTime(clock.now)} <span className="text-xs font-normal text-ink-3">UTC · {clock.live ? "live" : "sim"}</span></div>
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <span className="hidden text-xs tabular text-ink-3 lg:inline">{eventsPerMin} events/min</span>
-        {!clock.live && <>
+        {controls && <>
         <button disabled={resetting} onClick={() => act(clock.paused ? "/api/sim/start" : "/api/sim/pause")}
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-surface-2 disabled:opacity-50">
           {clock.paused ? "▶ Run" : "❚❚ Pause"}
@@ -90,8 +103,25 @@ function TopBar() {
           options={[1, 10, 60, 600].map((s) => ({ value: s, label: `${s}×` }))} />
         <button disabled={resetting} onClick={() => act("/api/sim/step", { minutes: 60 })} className="h-8 rounded-lg px-2 text-xs text-ink-2 hover:bg-surface-2 disabled:opacity-50" title="Advance 1 simulated hour">+1h</button>
         </>}
+        <UserChip />
       </div>
     </header>
+  );
+}
+
+function UserChip() {
+  const { me, signOut, status } = useAuth();
+  if (status !== "signed-in" || !me) return null;
+  const who = me.name || me.email || "Signed in";
+  const detail = me.role === "rep" ? me.rep_name ?? "rep" : me.role;
+  return (
+    <div className="flex items-center gap-2 border-l border-line pl-3">
+      <div className="hidden text-right leading-tight sm:block">
+        <div className="max-w-[180px] truncate text-xs font-medium text-ink" title={me.email ?? undefined}>{who}</div>
+        <div className="text-[11px] capitalize text-ink-3">{detail}</div>
+      </div>
+      <button onClick={() => signOut()} className="h-8 rounded-lg px-2 text-xs text-ink-2 hover:bg-surface-2" title="Sign out">Sign out</button>
+    </div>
   );
 }
 

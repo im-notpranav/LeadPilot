@@ -90,6 +90,7 @@ def live_client(tmp_path, monkeypatch):
     from app.main import app
     monkeypatch.setenv("LEADPILOT_MODE", "live")
     monkeypatch.setenv("LEADPILOT_PERSIST", "1")
+    monkeypatch.setenv("LEADPILOT_AUTH", "off")
     monkeypatch.setenv("LEADPILOT_DB_URL", f"sqlite:///{tmp_path / 'api.db'}")
     with TestClient(app) as c:
         for _ in range(100):
@@ -115,6 +116,7 @@ def test_env_mode_is_validated(monkeypatch):
     with pytest.raises(ValueError):
         get_settings()
     monkeypatch.setenv("LEADPILOT_MODE", "live")
+    monkeypatch.setenv("LEADPILOT_AUTH", "off")
     assert get_settings().live
     assert os.environ["LEADPILOT_MODE"] == "live"
 

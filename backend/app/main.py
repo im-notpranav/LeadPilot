@@ -6,10 +6,12 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import routes_analytics, routes_leads, routes_pipeline, routes_reps, routes_sim, ws
+from .api import routes_analytics, routes_auth, routes_leads, routes_pipeline, routes_reps, routes_sim, ws
+from .api.security import manager, user
+from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
 from .api.deps import state
 from .bus import AsyncQueueBus
@@ -83,6 +85,12 @@ async def lifespan(app: FastAPI):
     cfg = load_config(overrides=overrides)
     db = Persistence(settings.db_url, schema=settings.db_schema) if settings.persist else NullPersistence()
     state.settings = settings
+    state.accounts = AccountStore(db, settings.admin_emails)
+    state.verifier = TokenVerifier(settings.supabase_url, settings.jwt_secret) if settings.auth else None
+    if not settings.auth:
+        log.warning("authentication is OFF: every request is treated as an admin")
+    elif not settings.admin_emails:
+        log.warning("auth is on but LEADPILOT_ADMIN_EMAILS is empty: new sign-ups stay pending until an admin exists")
     state.runtime = Runtime(cfg, db, live=settings.live)
     state.runtime.ensure_mode(settings.allow_mode_switch)
     state.lock = asyncio.Lock()
@@ -99,6 +107,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="LeadPilot", version="1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-for r in (routes_leads.router, routes_pipeline.router, routes_reps.router, routes_analytics.router,
-          routes_sim.router, ws.router):
+# Public: health + auth config. Self: /api/me (pending users too). Admin: people + API keys.
+for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router):
     app.include_router(r)
+for r in (routes_leads.router, routes_pipeline.router, routes_reps.router, routes_sim.router):
+    app.include_router(r, dependencies=[Depends(user)])
+app.include_router(routes_analytics.router, dependencies=[Depends(manager)])

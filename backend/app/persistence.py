@@ -25,6 +25,7 @@ log = logging.getLogger("leadpilot.persistence")
 
 SEED_TABLES = {"historical_deals", "reps", "sources", "meta"}
 LOG_TABLES = {"raw_events", "events"}
+ACCOUNT_TABLES = {"profiles", "api_keys"}       # people and keys: survive demo resets and replays
 
 
 def jsonable(obj):
@@ -224,6 +225,11 @@ class Persistence:
                 conn.execute(update(T.events).where(T.events.c.event_id.in_(ids)).values(lead_id=lead_id))
         self.written_batches += len(batches)
 
+    def write_now(self, table: str, row: dict) -> None:
+        """Upsert one row synchronously, outside the event batches (accounts: rare, must be durable at once)."""
+        with self.engine.begin() as conn:
+            conn.execute(self._upsert_stmt(table), [self._clean(table, row)])
+
     def _writer_loop(self) -> None:
         backoff = 0.5
         while True:
@@ -270,11 +276,11 @@ class Persistence:
                 conn.execute(text("TRUNCATE " + ", ".join(f'"{t.name}"' for t in tables)))
 
     def reset(self) -> None:
-        self._clear(list(reversed(T.metadata.sorted_tables)))
+        self._clear([t for t in reversed(T.metadata.sorted_tables) if t.name not in ACCOUNT_TABLES])
 
     def clear_projections(self) -> None:
         """Everything except the event logs and seed tables (used by /replay)."""
-        keep = LOG_TABLES | SEED_TABLES
+        keep = LOG_TABLES | SEED_TABLES | ACCOUNT_TABLES
         self._clear([t for t in reversed(T.metadata.sorted_tables) if t.name not in keep])
 
     def clear_events(self) -> None:

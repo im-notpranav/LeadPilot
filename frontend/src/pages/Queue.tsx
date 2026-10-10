@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type LeadView, type Rep } from "../lib/api";
 import { useLive } from "../lib/live";
+import { useAuth } from "../lib/auth";
 import { human, minutes, minutesUntil, money, pct } from "../lib/format";
 import { Button, Card, Chip, Empty, GradePill, IntentBadge, Loading, PageHeader, Select, Sparkline, StageBadge, StallFlag } from "../components/ui";
 
@@ -11,10 +12,16 @@ function readRep(): string {
 }
 
 export default function Queue() {
-  const [rep, setRep] = useState<string>(readRep);
+  const { me: user } = useAuth();
+  const isRep = user?.role === "rep";
+  const [chosen, setRep] = useState<string>(readRep);
   const choose = (v: string) => { setRep(v); try { localStorage.setItem("lp.rep", v); } catch { /* storage blocked */ } };
   const reps = useQuery({ queryKey: ["reps"], queryFn: () => api.get<{ items: Rep[] }>("/api/reps") });
-  const q = useQuery({ queryKey: ["queue", rep], queryFn: () => api.get<{ items: LeadView[]; total: number; rep_name: string }>(`/api/queue/${rep}`) });
+  // Reps always work their own queue. Others keep their last pick while it is still a rep they can see.
+  const visible = reps.data ? new Set(["all", "manager_queue", ...reps.data.items.map((r) => r.rep_id)]) : null;
+  const rep = isRep ? user?.rep_id ?? "" : visible && !visible.has(chosen) ? "all" : chosen;
+  const q = useQuery({ queryKey: ["queue", rep], enabled: rep !== "" && (isRep || !!visible),
+    queryFn: () => api.get<{ items: LeadView[]; total: number; rep_name: string }>(`/api/queue/${rep}`) });
   const me = reps.data?.items.find((r) => r.rep_id === rep);
 
   return (
@@ -23,11 +30,13 @@ export default function Queue() {
         title="My Queue"
         subtitle="Leads ordered by priority: score, expected value, urgency of the next action, stall rescue and SLA risk."
         right={
-          <Select label="Rep" value={rep} onChange={choose}>
-            <option value="all">All reps</option>
-            {reps.data?.items.map((r) => <option key={r.rep_id} value={r.rep_id}>{r.name} ({r.profile})</option>)}
-            <option value="manager_queue">Manager queue</option>
-          </Select>
+          isRep ? null : (
+            <Select label="Rep" value={rep} onChange={choose}>
+              <option value="all">All reps</option>
+              {reps.data?.items.map((r) => <option key={r.rep_id} value={r.rep_id}>{r.name} ({r.profile})</option>)}
+              <option value="manager_queue">Manager queue (unassigned)</option>
+            </Select>
+          )
         }
       />
       {me && (
@@ -48,7 +57,7 @@ export default function Queue() {
         </div>
       )}
       <Card pad={false} title={`${q.data?.total ?? 0} leads`} subtitle="Click a lead for its full explanation">
-        {q.isLoading ? <Loading /> : !q.data?.items.length ? <Empty>No open leads in this queue yet.</Empty> : <QueueTable rows={q.data.items} />}
+        {isRep && !user?.rep_id ? <Empty>Your account isn't linked to a sales rep yet. Ask an admin to link it on the Access page.</Empty> : q.isLoading ? <Loading /> : !q.data?.items.length ? <Empty>No open leads in this queue yet.</Empty> : <QueueTable rows={q.data.items} />}
       </Card>
     </div>
   );

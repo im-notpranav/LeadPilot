@@ -1,10 +1,12 @@
 """Kanban pipeline with per-column totals, stalled overlay and stage history per card."""
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from ..engine.types import iso
+from ..auth import Principal
 from .deps import state
+from .security import user
 
 router = APIRouter(prefix="/api")
 
@@ -13,7 +15,7 @@ COLUMNS = ["new", "contacted", "engaged", "qualified", "meeting", "proposal", "n
 
 @router.get("/pipeline")
 async def pipeline(rep_id: str | None = None, source: str | None = None, include_disqualified: bool = False,
-                   closed_limit: int = 40):
+                   closed_limit: int = 40, who: Principal = Depends(user)):
     async with state.lock:
         store = state.runtime.store
         cols = {c: [] for c in COLUMNS + (["disqualified"] if include_disqualified else [])}
@@ -22,6 +24,8 @@ async def pipeline(rep_id: str | None = None, source: str | None = None, include
                 continue
             p = l.profile
             if rep_id and l.owner != rep_id:
+                continue
+            if not who.can_see(l):
                 continue
             if source and p.source_primary != source:
                 continue

@@ -4,12 +4,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api, EVENT_TYPES, REP_EVENTS, STAGES, type Factor, type LeadDetail as Lead, type Rep, type ScorePoint } from "../lib/api";
 import { useLive } from "../lib/live";
+import { can, useAuth } from "../lib/auth";
 import { ago, dateTime, human, minutes, minutesUntil, money, pct, signed, titleCase } from "../lib/format";
 import { AXIS, GRID } from "../components/charts";
 import { Button, Card, Chip, Delta, Empty, GradePill, IntentBadge, Loading, Select, StageBadge, StallFlag, Stat, StatusTag } from "../components/ui";
 
 export default function LeadDetail() {
   const { id = "" } = useParams();
+  const { me } = useAuth();
   const lead = useQuery({ queryKey: ["lead", id], queryFn: () => api.get<Lead>(`/api/leads/${id}`) });
   const hist = useQuery({ queryKey: ["lead", id, "score"], queryFn: () => api.get<{ points: ScorePoint[] }>(`/api/leads/${id}/score-history`) });
   const tl = useQuery({ queryKey: ["lead", id, "timeline"], queryFn: () => api.get<{ items: any[] }>(`/api/leads/${id}/timeline`) });
@@ -36,7 +38,7 @@ export default function LeadDetail() {
           <QualityPanel l={l} />
           <Assignments l={l} />
           <ManualControls l={l} />
-          <InjectEvent l={l} />
+          {can.manage(me) && <InjectEvent l={l} />}
         </div>
       </div>
     </div>
@@ -333,6 +335,8 @@ function Assignments({ l }: { l: Lead }) {
 }
 
 function ManualControls({ l }: { l: Lead }) {
+  const { me } = useAuth();
+  const manager = can.manage(me);          // reassignment and stage overrides are manager actions
   const qc = useQueryClient();
   const reps = useQuery({ queryKey: ["reps"], queryFn: () => api.get<{ items: Rep[] }>("/api/reps") });
   const [rep, setRep] = useState(l.owner_rep_id ?? "");
@@ -342,6 +346,7 @@ function ManualControls({ l }: { l: Lead }) {
   return (
     <Card title="Manual actions" subtitle="Logged as events with mode=manual">
       <div className="space-y-2">
+        {manager && <>
         <div className="flex items-center gap-2">
           <Select value={rep} onChange={setRep}><option value="">Pick rep</option>{reps.data?.items.map((r) => <option key={r.rep_id} value={r.rep_id}>{r.name}</option>)}</Select>
           <Button size="sm" disabled={!rep} onClick={() => run(api.post(`/api/leads/${l.lead_id}/assign`, { rep_id: rep }), "Reassigned")}>Assign</Button>
@@ -350,6 +355,7 @@ function ManualControls({ l }: { l: Lead }) {
           <Select value={stage} onChange={setStage}>{STAGES.map((s) => <option key={s} value={s}>{human(s)}</option>)}</Select>
           <Button size="sm" onClick={() => run(api.post(`/api/leads/${l.lead_id}/override-stage`, { to_stage: stage, reason: "Manual override from dashboard" }), "Stage overridden")}>Override stage</Button>
         </div>
+        </>}
         <Button size="sm" variant="danger" onClick={() => run(api.post(`/api/leads/${l.lead_id}/disqualify`, { reason: "Disqualified from dashboard" }), "Disqualified")}>Disqualify</Button>
         {msg && <div className="text-xs text-ink-3">{msg}</div>}
       </div>

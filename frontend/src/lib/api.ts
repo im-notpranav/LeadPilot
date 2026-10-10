@@ -40,20 +40,49 @@ export type FeedItem = { ts: string; event_id: string; type: string; lead_id: st
 export type Rep = { rep_id: string; name: string; profile: string; territories: string[]; industries: string[]; segments: string[]; tags: string[]; open_leads: number; load: number; capacity: number; pipeline_ev: number; stalled: number; won_live: number; lost_live: number; wins_total: number; closed_total: number; win_rate: number | null; revenue: number; median_first_response_min: number | null; sla_attainment: number | null; neglect_count: number; reassigned_away: number; assigned: number };
 export type SimStatus = { status: string; seed: number; clock: { now: string; speed: number; paused: boolean }; events: number; raw_events: number; leads: number; open_leads: number; stalled: number; quarantined: number; merged: number; won: number; lost: number; scheduled: number; latency: { count: number; p50_ms?: number; p95_ms?: number; max_ms?: number }; background: boolean; rep_actions: boolean; historical_deals: number; sim_counts: Record<string, number> };
 
+// Session hooks, set by AuthProvider: the current access token, and what to do when the server rejects it.
+let tokenSource: () => string | null = () => null;
+let onUnauthorized: () => void = () => {};
+export function configureAuth(getToken: () => string | null, unauthorized: () => void) {
+  tokenSource = getToken;
+  onUnauthorized = unauthorized;
+}
+export const currentToken = () => tokenSource();
+
+export class ApiError extends Error {
+  constructor(public status: number, public detail: string) { super(`${status}: ${detail}`); }
+}
+
 async function handle<T>(r: Response): Promise<T> {
   if (!r.ok) {
     let detail = r.statusText;
     try { detail = (await r.json()).detail ?? detail; } catch { /* not json */ }
-    throw new Error(`${r.status}: ${detail}`);
+    if (r.status === 401) onUnauthorized();
+    throw new ApiError(r.status, detail);
   }
   return r.json() as Promise<T>;
 }
 
+function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = tokenSource();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  return fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }).then((r) => handle<T>(r));
+}
+
 export const api = {
-  get: <T,>(path: string) => fetch(path).then((r) => handle<T>(r)),
-  post: <T,>(path: string, body?: unknown) =>
-    fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) }).then((r) => handle<T>(r)),
+  get: <T,>(path: string) => request<T>("GET", path),
+  post: <T,>(path: string, body?: unknown) => request<T>("POST", path, body),
+  patch: <T,>(path: string, body?: unknown) => request<T>("PATCH", path, body),
+  del: <T,>(path: string) => request<T>("DELETE", path),
 };
+
+export type Role = "admin" | "manager" | "rep" | "pending";
+export type Me = { kind: string; role: Role; user_id: string | null; email: string | null; name: string | null; rep_id: string | null; rep_name: string | null; team_rep_ids: string[] | null; auth: boolean };
+export type AuthConfig = { enabled: boolean; supabase_url: string | null; anon_key: string | null; login_ready: boolean };
+export type Profile = { user_id: string; email: string | null; name: string | null; role: Role; rep_id: string | null; team_rep_ids: string[] | null; created_at: string | null; updated_at: string | null; last_seen_at: string | null };
+export type ApiKey = { id: string; name: string; prefix: string; created_by: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null; secret?: string; note?: string };
 
 export const STAGES = ["new", "contacted", "engaged", "qualified", "meeting", "proposal", "negotiation", "won", "lost", "nurture", "disqualified"];
 export const EVENT_TYPES = ["page_view", "content_download", "webinar_registered", "webinar_attended", "demo_request", "contact_sales", "trial_signup", "proposal_viewed", "email_sent", "email_opened", "email_clicked", "email_replied", "email_bounced", "unsubscribed", "call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show", "proposal_sent", "contract_sent", "deal_won", "deal_lost", "task_created", "task_completed", "bant_qualified"];

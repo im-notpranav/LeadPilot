@@ -10,7 +10,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E?logo=supabase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-160%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-175%20%2B%208%20e2e-brightgreen)
 
 </div>
 
@@ -42,6 +42,7 @@ live out of the box with no external accounts.
 - [API](#-api)
 - [Configuration](#-configuration)
 - [Database (Supabase / Postgres)](#-database-supabase--postgres)
+- [Sign-in, roles and API keys](#-sign-in-roles-and-api-keys)
 - [Testing & performance](#-testing--performance)
 - [Using real data instead of the simulator](#-using-real-data-instead-of-the-simulator)
 - [Project structure](#-project-structure)
@@ -79,9 +80,9 @@ On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/p
 | Command | What it does |
 |---|---|
 | `make dev` | Backend (FastAPI + in-process simulator) and frontend (Vite) together |
-| `make test` | 160 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode |
+| `make test` | 175 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode, auth |
 | `make test-pg` | Postgres / Supabase tests, run in a throwaway `leadpilot_test` schema |
-| `make e2e` | Playwright browser tests: every page renders, lead drill-down, ingestion, mobile width |
+| `make e2e` | 8 Playwright browser tests: every page, lead drill-down, ingestion, mobile width, login and roles |
 | `make perf` | Sustained 50 events/s load test, prints p50 / p95 / p99 latency |
 | `make build` | Production frontend build |
 
@@ -294,12 +295,16 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/sim/start` · `/pause` · `/step` · `/speed` · `/reset` · `/scenario/{name}` | Simulator controls |
 | `POST` | `/api/replay` | Rebuild all state from the event log |
 | `GET` | `/api/health` · `/api/feed` | Health check and recent event feed |
+| `GET` | `/api/auth/config` · `/api/me` | Login configuration (public) and the signed-in user's role and scope |
+| `GET/PATCH` | `/api/admin/users` · `/api/admin/users/{id}` | People: roles, rep links, manager teams (admin) |
+| `GET/POST/DELETE` | `/api/admin/api-keys` | Create, list and revoke ingestion keys (admin) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
 
 ```json
 POST /api/events
+X-API-Key: lp_…            (or a signed-in admin / manager session)
 {
   "type": "page_view",
   "ts": "2026-10-08T10:42:00Z",
@@ -330,6 +335,10 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 | `LEADPILOT_DB_URL` | — | Postgres URL (Supabase session pooler). Empty means SQLite at `LEADPILOT_DB` |
 | `LEADPILOT_DB_SCHEMA` | `public` | Postgres schema for LeadPilot's tables |
 | `LEADPILOT_ALLOW_MODE_SWITCH` | `0` | Override the guard that stops demo mode from wiping live data |
+| `LEADPILOT_AUTH` | `auto` | `auto` requires logins whenever Supabase is configured; `on` / `off` to force |
+| `SUPABASE_URL` | derived | Supabase project URL; worked out from a Supabase `LEADPILOT_DB_URL` |
+| `SUPABASE_ANON_KEY` | — | Anon / publishable key for the login screen |
+| `LEADPILOT_ADMIN_EMAILS` | — | Comma-separated emails that are always admins |
 | `LEADPILOT_PERSIST` | `1` | Set to `0` to run fully in memory |
 | `LEADPILOT_WARMUP_DAYS` | `21` | Length of the simulated warm-up |
 | `USE_LLM` | `false` | Optional LLM reply-classifier hook (core logic never depends on it) |
@@ -368,10 +377,35 @@ live restart of the same world takes ~12 s, all of it engine replay.
 
 ---
 
+## 🔐 Sign-in, roles and API keys
+
+When Supabase is configured, every endpoint except `/api/health` and `/api/auth/config` needs a login or an API key.
+People sign in with Supabase Auth (email + password); LeadPilot verifies the session token against the project's
+published signing keys and keeps its own role for each person.
+
+| Role | Sees | Can also |
+|---|---|---|
+| **admin** | Everything | Approve people, set roles and teams, create and revoke API keys, replay the log |
+| **manager** | Leads owned by their team (or every rep) plus unassigned leads; analytics and quality | Reassign within their team, override stages, run the simulator (demo) |
+| **rep** | Only their own leads: queue, pipeline, lead pages, live feed | Mark actions done, disqualify their own leads |
+| **pending** | Nothing: a "waiting for access" page | |
+
+- **Getting the first admin in:** put your email in `LEADPILOT_ADMIN_EMAILS`, sign up on the login page, confirm the
+  email, sign in. Everyone else signs up and waits as *pending* until an admin gives them a role on **Access**.
+- **Scope is enforced on the server.** Lists are filtered, and a lead outside your scope answers 404, so its
+  existence is not revealed. The WebSocket feed is filtered per connection the same way.
+- **API keys** (`lp_…`) are for machines: they can only call `POST /api/events`. Send one as `X-API-Key` or
+  `Authorization: Bearer`. The key is shown once; LeadPilot stores only its SHA-256 hash, records when it was last
+  used, and tags every event it sends (`ingested_via`) in the raw log.
+- **Setup in Supabase:** Authentication → URL Configuration → set **Site URL** to where the dashboard runs (e.g.
+  `http://localhost:5173`) so confirmation and password-reset links come back to LeadPilot.
+
+---
+
 ## ✅ Testing & performance
 
 ```bash
-make test   # 160 tests (4 Postgres tests skip unless enabled)
+make test   # 175 tests (4 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -416,7 +450,7 @@ To run on real data in production, you would also need to:
 - [x] Load state from the database on startup (live mode replays the durable `raw_events` log)
 - [ ] Replace the mock enrichment provider with a real one (Clearbit, Apollo, …)
 - [ ] Load your real sales team instead of `backend/data/reps.json`
-- [ ] Add authentication (an API key or webhook signatures, plus a dashboard login)
+- [x] Add authentication: dashboard login with roles, and API keys for ingestion (see [Sign-in](#-sign-in-roles-and-api-keys))
 - [x] Move to Postgres (Supabase): set `LEADPILOT_DB_URL`, see [Database](#-database-supabase--postgres)
 
 ---

@@ -3,6 +3,7 @@ uvicorn[standard]>=0.30
 pydantic>=2.7
 SQLAlchemy>=2.0
 psycopg[binary]>=3.2
+PyJWT[crypto]>=2.9
 rapidfuzz>=3.9
 phonenumbers>=8.13
 email-validator>=2.1

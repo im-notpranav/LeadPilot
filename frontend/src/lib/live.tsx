@@ -1,7 +1,7 @@
 // WebSocket live layer: keeps the sim clock, a rolling feed, toasts, and invalidates queries (throttled).
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { FeedItem } from "./api";
+import { currentToken, type FeedItem } from "./api";
 
 type Clock = { now: string | null; speed: number; paused: boolean; status: string; live?: boolean };
 export type Toast = { id: number; kind: string; text: string; lead_id?: string };
@@ -29,9 +29,10 @@ export function LiveProvider({ children }: { children: ReactNode }) {
     let retry: number | undefined;
     const connect = () => {
       const proto = location.protocol === "https:" ? "wss" : "ws";
-      ws = new WebSocket(`${proto}://${location.host}/ws`);
+      const token = currentToken();          // read at every (re)connect, so refreshed sessions are picked up
+      ws = new WebSocket(`${proto}://${location.host}/ws${token ? `?token=${encodeURIComponent(token)}` : ""}`);
       ws.onopen = () => setConnected(true);
-      ws.onclose = () => { setConnected(false); if (!stop) retry = window.setTimeout(connect, 1500); };
+      ws.onclose = (e) => { setConnected(false); if (!stop) retry = window.setTimeout(connect, e.code === 4401 ? 5000 : 1500); };
       ws.onmessage = (ev) => {
         const env = JSON.parse(ev.data);
         const msgs: { type: string; data: any }[] = env.type === "batch" ? env.messages : [env];

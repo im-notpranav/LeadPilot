@@ -1,37 +1,48 @@
 """Leads, timeline, score history, manual actions, event ingestion, per-rep queue."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
+from ..auth import Principal
 from ..engine.types import iso
-from .deps import lead_or_404, state
+from .deps import state
+from .security import ingest as ingest_auth
+from .security import manager, user, visible_lead
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api")             # mounted behind security.user
+ingest_router = APIRouter(prefix="/api")      # API keys allowed
 
 SORTS = {"priority": lambda v: -v.get("priority", 0), "score": lambda v: -v.get("score", 0),
          "created": lambda v: v.get("created_at") or "", "ev": lambda v: -v.get("expected_value", 0)}
 
 
-@router.post("/events")
-async def ingest(body=Body(...)):
+@ingest_router.post("/events")
+async def ingest(body=Body(...), p: Principal = Depends(ingest_auth)):
     events = body if isinstance(body, list) else [body]
+    if len(events) > 1000:
+        raise HTTPException(413, "send at most 1000 events per request")
     results = []
+    via = f"key:{p.key_id}" if p.kind == "api_key" else (p.email or p.kind)
     for ev in events:
         if not isinstance(ev, dict) or not ev.get("type"):
             raise HTTPException(422, "each event needs a 'type'")
+        ev.setdefault("ingested_via", via)       # audit trail, kept in the raw log
         results.append(await state.bus.publish(ev))
     return {"results": results}
 
 
 @router.get("/events")
-async def list_events(lead_id: str | None = None, type: str | None = None, limit: int = 100):
+async def list_events(lead_id: str | None = None, type: str | None = None, limit: int = 100,
+                      p: Principal = Depends(user)):
     async with state.lock:
-        log = state.runtime.store.log
+        store = state.runtime.store
         out = []
-        for e in reversed(log):
+        for e in reversed(store.log):
             if lead_id and e.lead_id != lead_id:
                 continue
             if type and e.type != type:
+                continue
+            if not (p.can_see(store.leads.get(e.lead_id)) if e.lead_id else p.role in ("admin", "manager")):
                 continue
             out.append(e.to_dict())
             if len(out) >= limit:
@@ -43,10 +54,11 @@ async def list_events(lead_id: str | None = None, type: str | None = None, limit
 async def list_leads(rep_id: str | None = None, stage: str | None = None, grade: str | None = None,
                      stalled: bool | None = None, q: str | None = None, source: str | None = None,
                      status: str | None = None, include_closed: bool = True, sort: str = "priority",
-                     limit: int = 200, offset: int = 0):
+                     limit: int = 200, offset: int = 0, p: Principal = Depends(user)):
     async with state.lock:
         store = state.runtime.store
-        rows = [store.lead_view(l) for l in store.leads.values() if l.ev is not None and l.status != "merged"]
+        rows = [store.lead_view(l) for l in store.leads.values()
+                if l.ev is not None and l.status != "merged" and p.can_see(l)]
     if rep_id:
         rows = [r for r in rows if r["owner_rep_id"] == rep_id]
     if stage:
@@ -70,13 +82,15 @@ async def list_leads(rep_id: str | None = None, stage: str | None = None, grade:
 
 
 @router.get("/leads/{lead_id}")
-async def get_lead(lead_id: str):
+async def get_lead(lead_id: str, p: Principal = Depends(user)):
     async with state.lock:
         store = state.runtime.store
         raw = store.leads.get(lead_id)
         if raw is not None and raw.status == "merged":
-            return {"lead_id": lead_id, "status": "merged", "merged_into": store.resolve_lead_id(lead_id)}
-        lead = lead_or_404(lead_id)
+            survivor = store.resolve_lead_id(lead_id)
+            visible_lead(p, survivor)
+            return {"lead_id": lead_id, "status": "merged", "merged_into": survivor}
+        lead = visible_lead(p, lead_id)
         view = store.lead_view(lead, detail=True)
         view["transitions"] = [_ser(t) for t in lead.transitions]
         view["assignments"] = [_ser({k: v for k, v in a.items()}) for a in lead.assignments]
@@ -87,10 +101,10 @@ async def get_lead(lead_id: str):
 
 
 @router.get("/leads/{lead_id}/timeline")
-async def timeline(lead_id: str):
+async def timeline(lead_id: str, p: Principal = Depends(user)):
     async with state.lock:
         store = state.runtime.store
-        lead = lead_or_404(lead_id)
+        lead = visible_lead(p, lead_id)
         items = []
         for e in lead.events:
             items.append({"kind": "event", "ts": iso(e.ts), "event_id": e.event_id, "type": e.type, "actor": e.actor,
@@ -120,9 +134,9 @@ async def timeline(lead_id: str):
 
 
 @router.get("/leads/{lead_id}/score-history")
-async def score_history(lead_id: str):
+async def score_history(lead_id: str, p: Principal = Depends(user)):
     async with state.lock:
-        lead = lead_or_404(lead_id)
+        lead = visible_lead(p, lead_id)
         return {"lead_id": lead.lead_id, "points": [
             {"id": r["id"], "ts": iso(r["ts"]), "score": round(r["new_score"], 2), "old": round(r["old_score"], 2),
              "delta": round(r["delta"], 2), "event_id": r["event_id"], "event_type": r["event_type"],
@@ -130,39 +144,44 @@ async def score_history(lead_id: str):
              "parts": r.get("parts"), "contributions": _contribs(r["contributions"])} for r in lead.score_history]}
 
 
-async def _manual(lead_id: str, type_: str, payload: dict, actor: str = "rep", rep_id: str | None = None) -> dict:
-    lead = lead_or_404(lead_id)
+async def _manual(p: Principal, lead_id: str, type_: str, payload: dict, actor: str = "rep",
+                  rep_id: str | None = None) -> dict:
+    lead = visible_lead(p, lead_id)
     ev = {"type": type_, "actor": actor, "rep_id": rep_id or lead.owner, "lead_ref": {"lead_id": lead.lead_id},
-          "payload": payload}
+          "payload": {**payload, "by": p.email or p.name}}
     return await state.bus.publish(ev)
 
 
 @router.post("/leads/{lead_id}/override-stage")
-async def override_stage(lead_id: str, body: dict = Body(...)):
+async def override_stage(lead_id: str, body: dict = Body(...), p: Principal = Depends(manager)):
     if body.get("to_stage") not in state.runtime.cfg.pipeline.stages:
         raise HTTPException(422, "invalid to_stage")
-    return await _manual(lead_id, "stage_override", {"to_stage": body["to_stage"], "reason": body.get("reason")},
+    return await _manual(p, lead_id, "stage_override", {"to_stage": body["to_stage"], "reason": body.get("reason")},
                          actor="manager")
 
 
 @router.post("/leads/{lead_id}/disqualify")
-async def disqualify(lead_id: str, body: dict = Body(default={})):
-    return await _manual(lead_id, "lead_disqualified", {"reason": body.get("reason") or "Disqualified by rep"})
+async def disqualify(lead_id: str, body: dict = Body(default={}), p: Principal = Depends(user)):
+    return await _manual(p, lead_id, "lead_disqualified", {"reason": body.get("reason") or "Disqualified by rep"})
 
 
 @router.post("/leads/{lead_id}/assign")
-async def assign(lead_id: str, body: dict = Body(...)):
+async def assign(lead_id: str, body: dict = Body(...), p: Principal = Depends(manager)):
     rep = body.get("rep_id")
     if rep not in state.runtime.store.reps:
         raise HTTPException(422, "unknown rep_id")
-    return await _manual(lead_id, "manual_assign", {"rep_id": rep, "reason": body.get("reason")}, actor="manager",
+    if not p.can_see_rep(rep):
+        raise HTTPException(403, "you can only assign leads to reps on your team")
+    return await _manual(p, lead_id, "manual_assign", {"rep_id": rep, "reason": body.get("reason")}, actor="manager",
                          rep_id=rep)
 
 
 @router.post("/actions/{action_id}/done")
-async def action_done(action_id: str):
+async def action_done(action_id: str, p: Principal = Depends(user)):
     store = state.runtime.store
     for lead in store.leads.values():
+        if not p.can_see(lead):
+            continue
         for a in lead.actions:
             if a["id"] == action_id:
                 comp = a.get("completion") or {}
@@ -171,13 +190,20 @@ async def action_done(action_id: str):
                 if a["status"] != "open":
                     raise HTTPException(409, f"action is {a['status']}")
                 ev = {"type": comp["type"], "actor": "rep", "rep_id": lead.owner or a.get("rep_id"),
-                      "lead_ref": {"lead_id": lead.lead_id}, "payload": {**comp.get("payload", {}), "action_id": action_id}}
+                      "lead_ref": {"lead_id": lead.lead_id},
+                      "payload": {**comp.get("payload", {}), "action_id": action_id, "by": p.email or p.name}}
                 return await state.bus.publish(ev)
     raise HTTPException(404, "action not found")
 
 
 @router.get("/queue/{rep_id}")
-async def queue(rep_id: str, limit: int = 100):
+async def queue(rep_id: str, limit: int = 100, p: Principal = Depends(user)):
+    if p.role == "rep":
+        if not p.rep_id:
+            raise HTTPException(403, "your account is not linked to a sales rep yet; ask an admin")
+        rep_id = p.rep_id                       # a rep always gets their own queue
+    elif rep_id not in ("all", "manager_queue") and not p.can_see_rep(rep_id):
+        raise HTTPException(403, "that rep is not on your team")
     async with state.lock:
         store = state.runtime.store
         now = state.runtime.clock.now()
@@ -185,7 +211,11 @@ async def queue(rep_id: str, limit: int = 100):
         for l in store.leads.values():
             if l.ev is None or not store.is_open(l):
                 continue
-            if rep_id != "all" and l.owner != rep_id:
+            if rep_id == "manager_queue" and l.owner is not None:
+                continue
+            if rep_id not in ("all", "manager_queue") and l.owner != rep_id:
+                continue
+            if not p.can_see(l):
                 continue
             v = store.lead_view(l)
             act = l.open_action()

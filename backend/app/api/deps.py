@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 class AppState:
     runtime: object = None
     settings: object = None
+    accounts: object = None          # auth.AccountStore
+    verifier: object = None          # auth.TokenVerifier
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     bus: object = None
     ws: object = None

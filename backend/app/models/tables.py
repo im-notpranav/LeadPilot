@@ -156,3 +156,27 @@ meta = Table(
     # Small key/value facts about the stored projections, e.g. which config fingerprint produced them.
     Column("key", String, primary_key=True), Column("value", JSON),
 )
+
+
+# ---- Accounts: who may use LeadPilot. Not projections: never rebuilt from the event log, never reset by demo mode.
+
+profiles = Table(
+    "profiles", metadata,
+    # One row per Supabase Auth user (user_id = auth.users.id). Roles: admin | manager | rep | pending.
+    Column("user_id", String, primary_key=True),
+    Column("email", String, index=True), Column("name", String), Column("role", String, nullable=False),
+    Column("rep_id", String),                 # the sales rep this user works as (reps only)
+    Column("team_rep_ids", JSON),             # managers: the reps they oversee; null = every rep
+    Column("created_at", DateTime(timezone=True)), Column("updated_at", DateTime(timezone=True)),
+    Column("last_seen_at", DateTime(timezone=True)),
+)
+
+api_keys = Table(
+    "api_keys", metadata,
+    # Machine credentials for event ingestion. Only a SHA-256 hash of the secret is stored.
+    Column("id", String, primary_key=True),
+    Column("name", String, nullable=False), Column("prefix", String, nullable=False),
+    Column("key_hash", String, nullable=False, unique=True), Column("created_by", String),
+    Column("created_at", DateTime(timezone=True)), Column("last_used_at", DateTime(timezone=True)),
+    Column("revoked_at", DateTime(timezone=True)),
+)

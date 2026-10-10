@@ -29,7 +29,9 @@ class Settings:
     mode: str                 # demo: seeded simulator on a SimClock · live: wall clock, real events only
     persist: bool
     db_url: str | None        # None → SQLite file at LEADPILOT_DB (default backend/var/leadpilot.db)
+    db_schema: str            # Postgres schema for LeadPilot's tables (tests use their own)
     warmup_days: int | None
+    allow_mode_switch: bool   # override the demo/live database guard (runtime.ensure_mode)
 
     @property
     def live(self) -> bool:
@@ -46,5 +48,7 @@ def get_settings() -> Settings:
         mode=mode,
         persist=os.environ.get("LEADPILOT_PERSIST", "1") != "0",
         db_url=os.environ.get("LEADPILOT_DB_URL") or None,
+        db_schema=os.environ.get("LEADPILOT_DB_SCHEMA", "public"),
         warmup_days=int(warmup) if warmup else None,
+        allow_mode_switch=os.environ.get("LEADPILOT_ALLOW_MODE_SWITCH") == "1",
     )

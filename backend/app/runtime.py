@@ -19,6 +19,11 @@ from .simulator.history import generate_history
 from .store import Store
 
 
+class ModeMismatch(RuntimeError):
+    """The database holds data from the other run mode (demo would wipe live data; live would treat simulated
+    events as real)."""
+
+
 class Runtime:
     def __init__(self, cfg, persistence=None, live: bool = False):
         self.cfg = cfg
@@ -38,6 +43,15 @@ class Runtime:
         self.started_at: datetime | None = None
 
     # ------------------------------------------------------------------ lifecycle
+    def ensure_mode(self, allow_switch: bool = False) -> None:
+        mode, stored = ("live" if self.live else "demo"), self.db.get_meta("mode")
+        if stored and stored != mode and not allow_switch:
+            raise ModeMismatch(
+                f"This database holds {stored}-mode data, so LeadPilot will not start in {mode} mode "
+                f"({'demo resets wipe every table' if mode == 'demo' else 'simulated events would count as real'}). "
+                "Point LEADPILOT_DB_SCHEMA (or LEADPILOT_DB_URL) at a separate database for each mode, "
+                "or set LEADPILOT_ALLOW_MODE_SWITCH=1 if this is intended.")
+
     def reset(self, seed: int | None = None, warmup: bool = True, background: bool = True,
               rep_actions: bool | None = None, start: datetime | str | None = None) -> dict:
         sc = self.cfg.simulator
@@ -61,6 +75,8 @@ class Runtime:
                                                            "languages", "capacity_points", "active", "profile")})
         for s in self.cfg.data.sources:
             self.db.upsert("sources", dict(s))
+        self.db.set_meta("projection_config", self.cfg.fingerprint)
+        self.db.set_meta("mode", "demo")
         self.db.flush()
 
         t0 = start_dt - timedelta(days=sc.warmup_days) if warmup else start_dt
@@ -99,11 +115,15 @@ class Runtime:
                                                            "languages", "capacity_points", "active", "profile")})
         for s in self.cfg.data.sources:
             self.db.upsert("sources", dict(s))
+        self.db.set_meta("mode", "live")
         self.db.flush()
         self.store.historical = self.db.load_historical()   # replay's reset_projections folds it into rep stats
         self.store.raw_log = self.db.load_raw_events()
         self.processor.restore_api_seq()
-        result = self.processor.replay()
+        # Projections are committed in the same batch as their raw events, so they are current unless the
+        # rules changed since they were written: only then rewrite them.
+        rewrite = self.db.get_meta("projection_config") != self.cfg.fingerprint
+        result = self.processor.replay(write=rewrite)
         now = self.clock.now()
         for lead in self.store.leads.values():      # replay runs with hooks off: re-arm pending first-touch SLAs
             if lead.first_touch_deadline is not None and lead.status == "active":

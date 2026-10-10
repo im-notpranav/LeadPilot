@@ -1,6 +1,7 @@
 """Config loader: every weight, threshold, half-life and SLA lives in backend/config/*.yaml."""
 from __future__ import annotations
 
+import hashlib
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -52,9 +53,17 @@ def load_config(config_dir: Path = CONFIG_DIR, data_dir: Path = DATA_DIR, overri
     }
     for section, values in (overrides or {}).items():
         _deep_update(raw.setdefault(section, {}), values)
+    fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True, default=_jsonable).encode()).hexdigest()[:16]
     cfg = Cfg.wrap(raw)
+    cfg["fingerprint"] = fingerprint          # identifies the rules + reference data that produce projections
     _derive(cfg)
     return cfg
+
+
+def _jsonable(obj):
+    if isinstance(obj, (set, frozenset)):
+        return sorted(obj)
+    raise TypeError(type(obj).__name__)
 
 
 def _deep_update(dst: dict, src: dict) -> None:

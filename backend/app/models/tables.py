@@ -1,7 +1,12 @@
-"""SQLAlchemy Core tables (SQLite here; schema is Postgres-compatible)."""
+"""SQLAlchemy Core tables. SQLite locally; Postgres (Supabase) in production, where the DDL lives in
+supabase/migrations/ and must be kept in step with this file (tests/test_migrations.py checks that)."""
 from __future__ import annotations
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, MetaData, String, Table, Text
+from sqlalchemy import JSON as _JSON
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, MetaData, String, Table, Text
+from sqlalchemy.dialects.postgresql import JSONB
+
+JSON = _JSON().with_variant(JSONB(), "postgresql")   # jsonb on Postgres, JSON text on SQLite
 
 metadata = MetaData()
 
@@ -144,4 +149,10 @@ historical_deals = Table(
     Column("industry", String), Column("created_at", DateTime(timezone=True)),
     Column("closed_at", DateTime(timezone=True)), Column("won", Boolean), Column("amount", Float),
     Column("score", Float), Column("grade", String), Column("features", JSON),
+)
+
+meta = Table(
+    "meta", metadata,
+    # Small key/value facts about the stored projections, e.g. which config fingerprint produced them.
+    Column("key", String, primary_key=True), Column("value", JSON),
 )

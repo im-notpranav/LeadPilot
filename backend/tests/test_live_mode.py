@@ -117,3 +117,37 @@ def test_env_mode_is_validated(monkeypatch):
     monkeypatch.setenv("LEADPILOT_MODE", "live")
     assert get_settings().live
     assert os.environ["LEADPILOT_MODE"] == "live"
+
+
+def test_restart_skips_projection_rewrite_unless_config_changed(tmp_path):
+    url = f"sqlite:///{tmp_path / 'lp.db'}"
+    first = live_runtime(url)
+    for e in live_events(first.clock.now()):
+        first.emit(e)
+    counts = {t: first.db.count(t) for t in ("events", "score_changes", "leads", "stage_transitions")}
+    expected = snapshot(first)
+
+    same = Runtime(load_config(), Persistence(url), live=True)
+    assert same.rebuild()["rewrote_projections"] is False          # same rules: stored projections are current
+    assert snapshot(same) == expected
+    assert {t: same.db.count(t) for t in counts} == counts
+
+    changed_cfg = load_config(overrides={"scoring": {"grades": {"A": 81}}})
+    assert changed_cfg.fingerprint != same.cfg.fingerprint
+    changed = Runtime(changed_cfg, Persistence(url), live=True)
+    assert changed.rebuild()["rewrote_projections"] is True         # new rules: rewrite from the raw log
+    assert changed.db.get_meta("projection_config") == changed_cfg.fingerprint
+    assert changed.db.count("events") == counts["events"]
+
+
+def test_mode_guard_protects_live_data_from_demo_resets(tmp_path):
+    from app.runtime import ModeMismatch
+    url = f"sqlite:///{tmp_path / 'lp.db'}"
+    live = live_runtime(url)
+    live.emit(live_events(live.clock.now())[0])
+    demo = Runtime(load_config(overrides=FAST), Persistence(url))
+    with pytest.raises(ModeMismatch, match="live-mode data"):
+        demo.ensure_mode()
+    demo.ensure_mode(allow_switch=True)                              # explicit override
+    assert demo.db.count("raw_events") == 1                         # nothing was wiped by the check
+    Runtime(load_config(), Persistence(f"sqlite:///{tmp_path / 'fresh.db'}"), live=True).ensure_mode()

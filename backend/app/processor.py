@@ -125,15 +125,20 @@ class Processor:
             self.store.latencies.append((time.perf_counter() - t0) * 1000)
         return result
 
-    def replay(self) -> dict:
-        """Rebuild every projection from the raw event log (same code path as live processing)."""
+    def replay(self, write: bool = True) -> dict:
+        """Rebuild every projection from the raw event log (same code path as live processing).
+
+        write=False rebuilds memory only: used on restart when the stored projections were produced by this
+        same config, so rewriting them would change nothing.
+        """
         raw = [dict(r) for r in self.store.raw_log]
         self.store.reset_projections()
-        self.db.clear_projections()
-        if hasattr(self.db, "engine"):
-            from .models import tables as T
-            with self.db.engine.begin() as conn:
-                conn.execute(T.events.delete())
+        db = self.db
+        if write:
+            db.clear_projections()
+            db.clear_events()
+        else:
+            self.db = NullPersistence()
         hooks, bc, af = self.hooks_enabled, self.broadcast, self.autoflush
         self.hooks_enabled, self.broadcast, self.autoflush = False, False, False
         self._replaying = True
@@ -146,8 +151,12 @@ class Processor:
         finally:
             self._replaying = False
             self.hooks_enabled, self.broadcast, self.autoflush = hooks, bc, af
+            self.db = db
+        if write:
+            db.set_meta("projection_config", self.cfg.fingerprint)
+            db.flush()
         self.store.raw_log = raw
-        return {"replayed_events": len(raw), "leads": len(self.store.leads)}
+        return {"replayed_events": len(raw), "leads": len(self.store.leads), "rewrote_projections": write}
 
     def restore_api_seq(self) -> None:
         """Continue generated `api_` ids after the highest one in the raw log, so a restart never reuses one."""

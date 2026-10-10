@@ -117,4 +117,5 @@ async def replay():
 @router.get("/health")
 async def health():
     rt = state.runtime
-    return {"ok": True, "status": rt.status if rt else "starting", "mode": ("live" if rt.live else "demo") if rt else None}
+    return {"ok": True, "status": rt.status if rt else "starting", "mode": ("live" if rt.live else "demo") if rt else None,
+            "db": rt.db.status() if rt else None}

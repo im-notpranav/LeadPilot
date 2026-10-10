@@ -81,9 +81,10 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     overrides = {"simulator": {"warmup_days": settings.warmup_days}} if settings.warmup_days is not None else {}
     cfg = load_config(overrides=overrides)
-    db = Persistence(settings.db_url) if settings.persist else NullPersistence()
+    db = Persistence(settings.db_url, schema=settings.db_schema) if settings.persist else NullPersistence()
     state.settings = settings
     state.runtime = Runtime(cfg, db, live=settings.live)
+    state.runtime.ensure_mode(settings.allow_mode_switch)
     state.lock = asyncio.Lock()
     state.ws = ws.ConnectionManager()
     state.bus = AsyncQueueBus(state.runtime.emit, state.lock)
@@ -93,6 +94,7 @@ async def lifespan(app: FastAPI):
     yield
     state.loop_task.cancel()
     await state.bus.stop()
+    await asyncio.to_thread(db.close)          # commit everything still queued before exit
 
 
 app = FastAPI(title="LeadPilot", version="1.0", lifespan=lifespan)

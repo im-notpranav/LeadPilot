@@ -9,8 +9,8 @@
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-storage-003B57?logo=sqlite&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-154%20passing-brightgreen)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E?logo=supabase&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-160%20passing-brightgreen)
 
 </div>
 
@@ -41,6 +41,7 @@ live out of the box with no external accounts.
 - [Dashboard tour (5-minute demo)](#-dashboard-tour-5-minute-demo)
 - [API](#-api)
 - [Configuration](#-configuration)
+- [Database (Supabase / Postgres)](#-database-supabase--postgres)
 - [Testing & performance](#-testing--performance)
 - [Using real data instead of the simulator](#-using-real-data-instead-of-the-simulator)
 - [Project structure](#-project-structure)
@@ -78,7 +79,8 @@ On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/p
 | Command | What it does |
 |---|---|
 | `make dev` | Backend (FastAPI + in-process simulator) and frontend (Vite) together |
-| `make test` | 154 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode |
+| `make test` | 160 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode |
+| `make test-pg` | Postgres / Supabase tests, run in a throwaway `leadpilot_test` schema |
 | `make e2e` | Playwright browser tests: every page renders, lead drill-down, ingestion, mobile width |
 | `make perf` | Sustained 50 events/s load test, prints p50 / p95 / p99 latency |
 | `make build` | Production frontend build |
@@ -222,7 +224,7 @@ flowchart LR
   BUS --> P[Processor]
   P --> ENG[engine/*<br/>pure functions]
   P --> STORE[(In-memory projections)]
-  P --> DB[(SQLite<br/>events + projections)]
+  P --> DB[(Postgres / Supabase or SQLite<br/>raw event log + projections)]
   P --> WS[WebSocket] --> UI[React dashboard]
 ```
 
@@ -248,7 +250,7 @@ Each event goes through an 11-step pipeline, one event at a time and ordered per
 - **Inactivity is an event.** Hourly `time_tick` events decay scores and check stalls, and are explained like any
   other change.
 
-**Tech stack:** FastAPI · SQLAlchemy Core · SQLite · scikit-learn · React 18 · TypeScript · Vite 5 · Tailwind CSS v4 ·
+**Tech stack:** FastAPI · SQLAlchemy Core · Postgres (Supabase) / SQLite · scikit-learn · React 18 · TypeScript · Vite 5 · Tailwind CSS v4 ·
 TanStack Query · Recharts.
 
 ---
@@ -325,17 +327,52 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 |---|---|---|
 | `LEADPILOT_DB` | `backend/var/leadpilot.db` | SQLite file path |
 | `LEADPILOT_MODE` | `demo` | `demo`: seeded simulator on a simulated clock. `live`: wall-clock time, simulator off, state rebuilt from the event log on start |
-| `LEADPILOT_DB_URL` | — | SQLAlchemy database URL (e.g. Supabase Postgres). Empty means SQLite at `LEADPILOT_DB` |
+| `LEADPILOT_DB_URL` | — | Postgres URL (Supabase session pooler). Empty means SQLite at `LEADPILOT_DB` |
+| `LEADPILOT_DB_SCHEMA` | `public` | Postgres schema for LeadPilot's tables |
+| `LEADPILOT_ALLOW_MODE_SWITCH` | `0` | Override the guard that stops demo mode from wiping live data |
 | `LEADPILOT_PERSIST` | `1` | Set to `0` to run fully in memory |
 | `LEADPILOT_WARMUP_DAYS` | `21` | Length of the simulated warm-up |
 | `USE_LLM` | `false` | Optional LLM reply-classifier hook (core logic never depends on it) |
 
 ---
 
+## 🗄 Database (Supabase / Postgres)
+
+LeadPilot runs on local SQLite with no setup, and on Postgres (built and tested on Supabase) in production.
+
+1. In Supabase: **Project Settings → Database → Connection string → Session pooler** (port 5432).
+2. Copy `backend/.env.example` to `backend/.env` and set `LEADPILOT_DB_URL` (a plain `postgresql://` URL is fine).
+3. Start the server. Pending migrations in `supabase/migrations/` are applied automatically (recorded in
+   `leadpilot_migrations`, guarded by an advisory lock). The files are idempotent, so `supabase db push` works too.
+
+How it is stored:
+
+- **`raw_events` is the source of truth.** Every accepted event, exactly as ingested. Every other table is a
+  projection that LeadPilot can rebuild from it, and a live-mode restart does exactly that.
+- **Writes never block processing.** The engine works in memory; a single writer thread commits each step's rows in
+  order, merging whatever is queued into one statement per table. Raw events and their projections commit in the
+  same transaction, so the database is always consistent with its log. Failed writes are retried, never dropped,
+  and `GET /api/health` reports `pending_batches` and `last_error`.
+- **Restarts are cheap when the rules are unchanged.** The `meta` table records the config fingerprint that produced
+  the stored projections. If the YAML rules are the same, a restart rebuilds memory only; if they changed, it
+  rewrites the projections from the raw log.
+- **Row level security is on for every table** with no policies, so Supabase's public `anon` / `authenticated` API
+  keys can read nothing. The backend connects as the database owner.
+- **Demo and live data are kept apart.** Demo mode wipes its tables on every start, so the server refuses to start
+  demo mode on a database that holds live data (and vice versa). Use `LEADPILOT_DB_SCHEMA=demo` for a demo
+  alongside real data.
+
+Measured against a Supabase project (ap-south-1, ~56 ms round trip): step latency p95 12 ms with writes in the
+background; a full 21-day demo world (4,161 events) uploads in ~26 s while the dashboard is already usable; a
+live restart of the same world takes ~12 s, all of it engine replay.
+
+---
+
 ## ✅ Testing & performance
 
 ```bash
-make test   # 154 tests
+make test   # 160 tests (4 Postgres tests skip unless enabled)
+make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
 ```
@@ -380,7 +417,7 @@ To run on real data in production, you would also need to:
 - [ ] Replace the mock enrichment provider with a real one (Clearbit, Apollo, …)
 - [ ] Load your real sales team instead of `backend/data/reps.json`
 - [ ] Add authentication (an API key or webhook signatures, plus a dashboard login)
-- [ ] Move to Postgres for larger teams
+- [x] Move to Postgres (Supabase): set `LEADPILOT_DB_URL`, see [Database](#-database-supabase--postgres)
 
 ---
 

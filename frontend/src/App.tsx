@@ -12,6 +12,8 @@ import Analytics from "./pages/Analytics";
 import Quality from "./pages/Quality";
 import Simulator from "./pages/Simulator";
 import Access from "./pages/Access";
+import Connectors from "./pages/Connectors";
+import Import from "./pages/Import";
 import { can, useAuth } from "./lib/auth";
 import type { Me } from "./lib/api";
 
@@ -23,6 +25,8 @@ const NAV: NavItem[] = [
   { to: "/analytics", label: "Analytics", icon: "M5 19V9M12 19V5M19 19v-7", show: can.manage },
   { to: "/quality", label: "Quality", icon: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z", show: can.manage },
   { to: "/simulator", label: "Simulator", icon: "M7 4v16l13-8z", show: (me, live) => can.manage(me) && !live },
+  { to: "/import", label: "Import", icon: "M12 4v11M7 10l5 5 5-5M5 20h14", show: can.manage },
+  { to: "/connectors", label: "Connectors", icon: "M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0zM12 17v4", show: can.admin },
   { to: "/access", label: "Access", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0", show: can.admin },
 ];
 const visibleNav = (me: Me | null, live: boolean) => NAV.filter((n) => !n.show || n.show(me, live));
@@ -65,6 +69,8 @@ export default function App() {
             <Route path="/analytics" element={guard("/analytics", <Analytics />)} />
             <Route path="/quality" element={guard("/quality", <Quality />)} />
             <Route path="/simulator" element={guard("/simulator", <Simulator />)} />
+            <Route path="/import" element={guard("/import", <Import />)} />
+            <Route path="/connectors" element={guard("/connectors", <Connectors />)} />
             <Route path="/access" element={guard("/access", <Access />)} />
             <Route path="*" element={<Navigate to="/queue" replace />} />
           </Routes>
@@ -84,7 +90,7 @@ function TopBar() {
   const resetting = clock.status === "resetting";
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5 md:px-6">
-      <div className="flex items-center gap-2 md:hidden">
+      <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 md:hidden">
         {visibleNav(me, !!clock.live).map((n) => <NavLink key={n.to} to={n.to} className="text-xs text-ink-2">{n.label.split(" ").pop()}</NavLink>)}
       </div>
       <div className="flex items-center gap-2">

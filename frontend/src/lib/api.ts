@@ -84,6 +84,21 @@ export type AuthConfig = { enabled: boolean; supabase_url: string | null; anon_k
 export type Profile = { user_id: string; email: string | null; name: string | null; role: Role; rep_id: string | null; team_rep_ids: string[] | null; created_at: string | null; updated_at: string | null; last_seen_at: string | null };
 export type ApiKey = { id: string; name: string; prefix: string; created_by: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null; secret?: string; note?: string };
 
+export type ConnectorKind = "webhook" | "form" | "crm" | "email" | "tracker";
+export type Connector = {
+  id: string; kind: ConnectorKind; name: string; source: string | null; settings: Record<string, unknown>;
+  created_by: string | null; created_at: string; last_received_at: string | null; received_count: number;
+  revoked_at: string | null; status: "active" | "disabled"; endpoint: string;
+  secret_hint?: string; site_key?: string; secret?: string;
+  stats?: { visitors: number; identified: number; page_views: number };
+};
+export type ConnectorList = { items: Connector[]; kinds: ConnectorKind[]; form_kinds: string[]; capture_methods: string[]; fields: string[]; signature_tolerance_s: number };
+export type DeliveryResult = { event_id?: string; type?: string; status: string; lead_id?: string | null; reason?: string | null; index?: number };
+export type Delivery = { id: string; connector_id: string; received_at: string; status: string; http_status: number; reason: string | null; events: number; results: DeliveryResult[]; sample: string | null };
+export type ImportRow = { line: number; ok: boolean; error?: string; name?: string | null; email?: string | null; phone?: string | null; company?: string | null; title?: string | null; country?: string | null; source?: string; intent?: string | null; created_at?: string | null };
+export type ImportPreview = { batch_id: string; headers: string[]; columns: Record<string, string | null>; targets: string[]; counts: { rows: number; ok: number; skipped: number }; sample: ImportRow[]; errors: ImportRow[]; events: number };
+export type ImportResult = { batch_id: string; counts: ImportPreview["counts"]; leads: Record<string, number>; events: number; lead_ids: string[]; errors: ImportRow[]; seconds: number };
+
 export const STAGES = ["new", "contacted", "engaged", "qualified", "meeting", "proposal", "negotiation", "won", "lost", "nurture", "disqualified"];
 export const EVENT_TYPES = ["page_view", "content_download", "webinar_registered", "webinar_attended", "demo_request", "contact_sales", "trial_signup", "proposal_viewed", "email_sent", "email_opened", "email_clicked", "email_replied", "email_bounced", "unsubscribed", "call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show", "proposal_sent", "contract_sent", "deal_won", "deal_lost", "task_created", "task_completed", "bant_qualified"];
 export const REP_EVENTS = new Set(["email_sent", "call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show", "proposal_sent", "contract_sent", "deal_won", "deal_lost", "task_created", "task_completed", "bant_qualified"]);

@@ -5,7 +5,7 @@ outbound, so an action naturally completes when the rep acts and the next rule t
 """
 from __future__ import annotations
 
-from .intent import classify_reply, has_pricing_terms
+from .intent import has_pricing_terms, reply_class
 from .types import Event, Profile, ScoreResult, age_days, age_hours
 
 
@@ -71,7 +71,7 @@ def build_facts(stage: str, p: Profile, score: ScoreResult, metrics: dict, stall
                         and not (last_meeting_sched and last_meeting_sched.ts > last_demo.ts)
                         and not (last_connected and last_connected.ts > last_demo.ts))
     f["demo_event"] = last_demo
-    reply_cls = classify_reply((last_reply.payload or {}).get("body"), cfg) if last_reply else None
+    reply_cls = reply_class(last_reply.payload, cfg) if last_reply else None
     f["reply_cls"] = reply_cls if after_out(last_reply) else None
     f["reply_pricing"] = (f["reply_cls"] == "positive_intent"
                           and has_pricing_terms((last_reply.payload or {}).get("body"), cfg))

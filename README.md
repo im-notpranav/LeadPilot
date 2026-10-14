@@ -43,6 +43,7 @@ live out of the box with no external accounts.
 - [Configuration](#-configuration)
 - [Database (Supabase / Postgres)](#-database-supabase--postgres)
 - [Sign-in, roles and API keys](#-sign-in-roles-and-api-keys)
+- [Connectors: forms, CRM, email, website, CSV](#-connectors-forms-crm-email-website-csv)
 - [Testing & performance](#-testing--performance)
 - [Using real data instead of the simulator](#-using-real-data-instead-of-the-simulator)
 - [Project structure](#-project-structure)
@@ -298,6 +299,10 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `GET` | `/api/auth/config` · `/api/me` | Login configuration (public) and the signed-in user's role and scope |
 | `GET/PATCH` | `/api/admin/users` · `/api/admin/users/{id}` | People: roles, rep links, manager teams (admin) |
 | `GET/POST/DELETE` | `/api/admin/api-keys` | Create, list and revoke ingestion keys (admin) |
+| `GET/POST/PATCH/DELETE` | `/api/connectors` · `/{id}/rotate` · `/{id}/reveal` · `/{id}/deliveries` | Connectors and their delivery log (admin) |
+| `POST` | `/api/hooks/{id}` | Inbound webhook, form, CRM record or email (authenticated by the connector's secret) |
+| `GET` · `POST` | `/api/t.js` · `/api/track/{site key}` | Website tracker script and its page views / form captures |
+| `POST` | `/api/import/preview` · `/api/import/commit` | CSV import (manager) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -402,10 +407,58 @@ published signing keys and keeps its own role for each person.
 
 ---
 
+## 🔗 Connectors: forms, CRM, email, website, CSV
+
+Admins add connectors on the **Connectors** page. Each one has its own endpoint and secret, a lead source, and a
+delivery log showing every request it received, what it became and why anything was refused.
+
+| Connector | What it takes | How it authenticates |
+|---|---|---|
+| **Webhook** | LeadPilot events from your own systems (one, a list, or `{"events": [...]}`) | Signature (required) |
+| **Website form** | Any form post, JSON or form-encoded: Webflow, Typeform, WordPress, Zapier… Each submission becomes a lead; "demo", "trial" or "sales" in the form name adds the buying signal | `?token=` in the URL, or a signature |
+| **CRM** | Contact records from HubSpot, Pipedrive, Salesforce workflows (nested `properties`, multi-value fields understood) | Signature (required) |
+| **Inbound email** | Postmark, SendGrid Inbound Parse or Mailgun routes. Replies become `email_replied` with quoted history and signatures removed; bounces become `email_bounced`; out-of-office replies are marked and never count as engagement | `?token=` in the URL, or a signature |
+| **Website tracker** | Page views and form submissions from a script on your site | Public site key, optional allowed-sites list |
+
+**Signing** (webhook and CRM, optional for the others), in the style of Stripe:
+
+```
+X-LeadPilot-Timestamp: 1760086800                      (unix seconds, within 5 minutes of the server)
+X-LeadPilot-Signature: v1=<hex HMAC-SHA256 of "{timestamp}.{raw body}" keyed with the connector secret>
+```
+
+A wrong signature or an old timestamp gets 401, and the exact same signed request sent twice gets 409. During a
+secret rotation a sender may send several `v1=` values separated by commas. The Connectors page shows a ready-made
+Node example.
+
+**Retries are safe.** Every record gets a stable event id (from the form or CRM record id, the email Message-ID,
+or a hash of the content), so a re-sent webhook is recorded as a duplicate instead of creating a second lead.
+
+**Website tracker.** Paste the snippet the page gives you before `</body>`:
+
+```html
+<script async src="https://your-leadpilot/api/t.js" data-key="lpk_…"></script>
+```
+
+It records page views (categorized as pricing, enterprise, case study, comparison…; add your own rules per
+connector) under a random visitor id kept in `localStorage`, with no cookies. When the visitor fills in a form with an
+email address, the earlier anonymous visits are attached to that lead with their original times, so a lead who read
+the pricing page twice before signing up arrives already warm. Password and card fields are never read, Do Not
+Track / Global Privacy Control turn page views off, and known bots are ignored. Call
+`window.leadpilot.identify({email, name}, "Newsletter")` from your own code for forms the script can't see.
+
+**CSV import** (managers, **Import** page). Upload a spreadsheet or a CRM export of up to 5,000 rows. Columns are
+matched by name ("Email Address", "Company Name", "Lead Source", "Create Date"…) and each can be changed or ignored
+before importing. Rows without an email or phone, and repeats of the same person, are skipped and listed. A past
+"created" date is loaded as history at that date (no live SLA alarms for old leads), and importing the same file
+twice adds nothing the second time.
+
+---
+
 ## ✅ Testing & performance
 
 ```bash
-make test   # 175 tests (4 Postgres tests skip unless enabled)
+make test   # 214 tests (5 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -433,8 +486,9 @@ set `LEADPILOT_DB` to a local path to avoid fsync spikes.
 
 ## 🌐 Using real data instead of the simulator
 
-The engine doesn't care where events come from, so real sources can post to `POST /api/events` in the format shown
-above. Typical adapters:
+The engine doesn't care where events come from. Forms, CRMs, inbound email, your website and spreadsheets plug in
+through [Connectors](#-connectors-forms-crm-email-website-csv) with no code; anything else can post to
+`POST /api/events` in the format shown above. Typical sources:
 
 | Real source | Events | Connection |
 |---|---|---|
@@ -452,6 +506,7 @@ To run on real data in production, you would also need to:
 - [ ] Load your real sales team instead of `backend/data/reps.json`
 - [x] Add authentication: dashboard login with roles, and API keys for ingestion (see [Sign-in](#-sign-in-roles-and-api-keys))
 - [x] Move to Postgres (Supabase): set `LEADPILOT_DB_URL`, see [Database](#-database-supabase--postgres)
+- [x] Connect real sources: signed webhooks, forms, CRM records, inbound email, a website tracker and CSV import
 
 ---
 
@@ -466,12 +521,14 @@ backend/
                  explain · metrics · pipeline · stall · prediction · assignment · nba · priority
     simulator/   personas · generator · history · scenarios
     analytics/   funnel · response_time · source_quality · rep_performance · calibration
-    api/         leads · pipeline · reps · analytics · sim · websocket routes
+    connectors/  field mapping · signing · email parsing · CSV import · store · tracker.js
+    api/         leads · pipeline · reps · analytics · sim · auth · connectors · websocket routes
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
   src/pages/     Queue · LeadDetail · Pipeline · LiveFeed · Analytics · Quality · Simulator
+                 Access · Connectors · Import · Login
   src/components ui · charts
   src/lib        api client · live WebSocket · formatting
 scripts/dev.py   runs backend + frontend together

@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 
-from .intent import classify_reply, has_negotiation_terms
+from .intent import has_negotiation_terms, reply_class
 from .metrics import is_inbound
 from .profile import PROFILE_EVENT_TYPES, apply_profile_event
 from .scoring import compute_score
@@ -137,7 +137,7 @@ def fold_step(state: FoldState, e: Event, events_upto: list[Event], ctx: LeadCon
         s.last_qual_signal_at, s.last_qual_signal_id = e.ts, e.event_id
     reply_cls = None
     if e.type == "email_replied":
-        reply_cls = classify_reply((e.payload or {}).get("body"), cfg)
+        reply_cls = reply_class(e.payload, cfg)
         if reply_cls == "negative":
             s.negative_reply_at, s.negative_reply_id = e.ts, e.event_id
         elif reply_cls in ("positive_intent", "neutral", "objection"):

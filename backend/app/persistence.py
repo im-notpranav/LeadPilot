@@ -25,7 +25,8 @@ log = logging.getLogger("leadpilot.persistence")
 
 SEED_TABLES = {"historical_deals", "reps", "sources", "meta"}
 LOG_TABLES = {"raw_events", "events"}
-ACCOUNT_TABLES = {"profiles", "api_keys"}       # people and keys: survive demo resets and replays
+ACCOUNT_TABLES = {"profiles", "api_keys",         # people, keys and connectors: survive demo resets and replays
+                  "connectors", "connector_deliveries", "tracker_visitors"}
 
 
 def jsonable(obj):
@@ -227,8 +228,12 @@ class Persistence:
 
     def write_now(self, table: str, row: dict) -> None:
         """Upsert one row synchronously, outside the event batches (accounts: rare, must be durable at once)."""
+        self.write_rows(table, [row])
+
+    def write_rows(self, table: str, rows: list[dict]) -> None:
+        """Upsert rows synchronously in one statement, outside the event batches (blocking: not on the event loop)."""
         with self.engine.begin() as conn:
-            conn.execute(self._upsert_stmt(table), [self._clean(table, row)])
+            conn.execute(self._upsert_stmt(table), [self._clean(table, r) for r in rows])
 
     def _writer_loop(self) -> None:
         backoff = 0.5

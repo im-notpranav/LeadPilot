@@ -9,13 +9,15 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import routes_analytics, routes_auth, routes_leads, routes_pipeline, routes_reps, routes_sim, ws
+from .api import (routes_analytics, routes_auth, routes_connectors, routes_leads, routes_pipeline, routes_reps,
+                  routes_sim, ws)
 from .api.security import manager, user
 from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
 from .api.deps import state
 from .bus import AsyncQueueBus
 from .config import load_config
+from .connectors.store import ConnectorStore
 from .persistence import NullPersistence, Persistence
 from .runtime import Runtime
 from .settings import get_settings
@@ -52,6 +54,16 @@ async def run_rebuild() -> None:
     await asyncio.to_thread(train_model, rt.store)
 
 
+async def connector_flush_loop(every: float = 2.0) -> None:
+    """Write connector deliveries, visitor state and counters in the background (see ConnectorStore)."""
+    while True:
+        await asyncio.sleep(every)
+        try:
+            await asyncio.to_thread(state.connectors.flush)
+        except Exception:  # noqa: BLE001 - keep flushing
+            log.exception("connector flush failed")
+
+
 async def sim_loop() -> None:
     rt = state.runtime
     step = rt.cfg.simulator.real_step_ms / 1000
@@ -86,6 +98,7 @@ async def lifespan(app: FastAPI):
     db = Persistence(settings.db_url, schema=settings.db_schema) if settings.persist else NullPersistence()
     state.settings = settings
     state.accounts = AccountStore(db, settings.admin_emails)
+    state.connectors = ConnectorStore(db)
     state.verifier = TokenVerifier(settings.supabase_url, settings.jwt_secret) if settings.auth else None
     if not settings.auth:
         log.warning("authentication is OFF: every request is treated as an admin")
@@ -99,16 +112,21 @@ async def lifespan(app: FastAPI):
     state.bus.start()
     state.reset_task = asyncio.create_task(run_rebuild() if settings.live else run_reset())
     state.loop_task = asyncio.create_task(sim_loop())
+    flush_task = asyncio.create_task(connector_flush_loop())
     yield
     state.loop_task.cancel()
+    flush_task.cancel()
+    await asyncio.to_thread(state.connectors.flush)
     await state.bus.stop()
     await asyncio.to_thread(db.close)          # commit everything still queued before exit
 
 
 app = FastAPI(title="LeadPilot", version="1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-# Public: health + auth config. Self: /api/me (pending users too). Admin: people + API keys.
-for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router):
+# Public: health + auth config, and connector hooks / tracker (they check the connector's own secret).
+# Self: /api/me (pending users too). Admin: people, API keys, connectors. Managers: CSV import.
+for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router,
+          routes_connectors.public, routes_connectors.admin_router, routes_connectors.import_router):
     app.include_router(r)
 for r in (routes_leads.router, routes_pipeline.router, routes_reps.router, routes_sim.router):
     app.include_router(r, dependencies=[Depends(user)])

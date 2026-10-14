@@ -132,3 +132,24 @@ def test_demo_world_round_trips_through_postgres():
         print(f"\n  demo write {write_s:.1f}s, live rebuild {rebuild_s:.1f}s for {len(rebuilt.store.raw_log)} raw events")
     finally:
         db2.close()
+
+
+def test_connector_state_survives_a_restart_and_a_reset():
+    from app.connectors.store import ConnectorStore
+    db = pg()
+    try:
+        store = ConnectorStore(db)
+        con = store.create("tracker", "Site", None, {"allowed_origins": ["example.com"]}, "boss@test.dev")
+        store.visitor(con["id"], "vid12345678")
+        store.seen_page(con["id"], "vid12345678", {"event_id": "trk_1", "type": "page_view", "payload": {"path": "/"}})
+        store.record(con["id"], status="accepted", http_status=204, events=1, results=[{"status": "processed"}])
+        assert store.flush() == 3                                   # delivery, visitor, connector counters
+        db.reset()                                                  # a demo reset keeps account tables
+        again = ConnectorStore(db)
+        assert again.get(con["id"])["settings"]["allowed_origins"] == ["example.com"]
+        assert again.get(con["id"])["received_count"] == 1
+        assert again.by_site_key(con["secret"])["id"] == con["id"]
+        assert again.visitor(con["id"], "vid12345678")["pending"][0]["event_id"] == "trk_1"
+        assert again.recent(con["id"])[0]["status"] == "accepted"
+    finally:
+        db.close()

@@ -180,3 +180,36 @@ api_keys = Table(
     Column("created_at", DateTime(timezone=True)), Column("last_used_at", DateTime(timezone=True)),
     Column("revoked_at", DateTime(timezone=True)),
 )
+
+
+# ---- Connectors: how outside systems send events in. Like accounts, they survive demo resets and replays.
+
+connectors = Table(
+    "connectors", metadata,
+    # kind: webhook (LeadPilot events, HMAC) | form | crm | email | tracker (website snippet, public site key).
+    # The secret signs webhooks (or is the URL token for tools that cannot sign); a tracker's is its site key.
+    Column("id", String, primary_key=True),
+    Column("kind", String, nullable=False), Column("name", String, nullable=False), Column("source", String),
+    Column("secret", String, nullable=False, unique=True), Column("settings", JSON),
+    Column("created_by", String), Column("created_at", DateTime(timezone=True)),
+    Column("last_received_at", DateTime(timezone=True)), Column("received_count", Integer),
+    Column("revoked_at", DateTime(timezone=True)),
+)
+
+connector_deliveries = Table(
+    "connector_deliveries", metadata,
+    # One row per inbound request: what arrived, what LeadPilot did with it, and why it was refused.
+    Column("id", String, primary_key=True),
+    Column("connector_id", String, index=True), Column("received_at", DateTime(timezone=True)),
+    Column("status", String), Column("http_status", Integer), Column("reason", Text),
+    Column("events", Integer), Column("results", JSON), Column("sample", Text),
+)
+
+tracker_visitors = Table(
+    "tracker_visitors", metadata,
+    # Website visitors seen by a tracker. Page views wait in `pending` until a form tells us who the visitor is.
+    Column("id", String, primary_key=True),           # <connector id>:<visitor id>
+    Column("connector_id", String, index=True), Column("email", String),
+    Column("first_seen", DateTime(timezone=True)), Column("last_seen", DateTime(timezone=True)),
+    Column("page_views", Integer), Column("pending", JSON),
+)

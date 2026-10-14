@@ -57,6 +57,13 @@ def classify_reply(body: str | None, cfg) -> str:
     return KeywordReplyClassifier(cfg).classify(body)
 
 
+def reply_class(payload: dict | None, cfg) -> str:
+    """Class of an email_replied payload. Replies the inbound-email parser marked as automatic (auto-reply
+    headers, "Automatic reply:" subjects) are out of office whatever their text says."""
+    pl = payload or {}
+    return "out_of_office" if pl.get("auto_reply") else classify_reply(pl.get("body"), cfg)
+
+
 def has_negotiation_terms(body: str | None, cfg) -> bool:
     return bool(body) and _contains_any(" " + body.lower() + " ", cfg.scoring.reply_classifier.negotiation)
 

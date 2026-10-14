@@ -11,6 +11,7 @@ class AppState:
     settings: object = None
     accounts: object = None          # auth.AccountStore
     verifier: object = None          # auth.TokenVerifier
+    connectors: object = None        # connectors.store.ConnectorStore
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     bus: object = None
     ws: object = None

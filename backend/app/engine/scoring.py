@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 from collections import deque
 
-from .intent import active_intent_signals, classify_reply, intent_level
+from .intent import active_intent_signals, intent_level, reply_class
 from .metrics import is_inbound
 from .types import DAY, Event, Factor, LeadContext, Profile, ScoreResult, age_days, age_hours
 
@@ -96,7 +96,7 @@ def _event_signals(e: Event, cfg) -> tuple:
         out.append(("intent", t))
         out.append(("engagement", "high_intent_form"))
     elif t == "email_replied":
-        cls = classify_reply(pl.get("body"), cfg)
+        cls = reply_class(pl, cfg)
         if cls in ("positive_intent", "neutral", "objection"):
             out.append(("engagement", "email_replied"))
         if cls == "positive_intent":
@@ -324,7 +324,7 @@ def penalty_factors(p: Profile, events: list[Event], now, cfg) -> list[Factor]:
         elif e.type == "meeting_no_show":
             no_shows.append(e)
         elif e.type == "email_replied":
-            cls = classify_reply((e.payload or {}).get("body"), cfg)
+            cls = reply_class(e.payload, cfg)
             if cls == "negative":
                 negative = e
             elif cls in ("positive_intent", "neutral"):

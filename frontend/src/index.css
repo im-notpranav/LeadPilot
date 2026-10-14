@@ -4,6 +4,14 @@
    <html data-theme="light|dark">. Components only use the semantic roles below, so dark
    mode is a token swap; `dark:` utilities follow the same attribute. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* Laptop-height screens: the sidebar tightens its spacing so every module fits without scrolling. */
+@custom-variant short (@media (max-height: 800px));
+@media (max-height: 800px) {
+  nav[aria-label="Primary"] { margin-top: .375rem; }
+  nav[aria-label="Primary"] > div { margin-bottom: .25rem; }
+  nav[aria-label="Primary"] > div:last-child { margin-bottom: 0; }
+  aside .logo-tagline { display: none; }
+}
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;

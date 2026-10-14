@@ -119,7 +119,7 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
 
   return (
     <aside className={`relative m-3 mr-0 flex h-[calc(100%-1.5rem)] flex-col rounded-3xl shadow-card transition-[width] duration-200 ease-out ${drawer ? "card" : "glass"} ${collapsed ? "w-[76px]" : "w-64"}`}>
-      <div className={`flex items-center pt-5 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}>
+      <div className={`flex items-center pt-5 short:pt-3.5 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}>
         <NavLink to="/queue" aria-label="LeadPilot home" className="rounded-lg">
           {collapsed ? <LogoMark size={34} /> : <Logo size={34} tagline={!drawer} />}
         </NavLink>
@@ -131,22 +131,22 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
           <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={13} />
         </button>
       )}
-      <div className={`mx-4 mt-5 h-px bg-gradient-to-r from-transparent via-[var(--c-line)] to-transparent`} />
+      <div className={`mx-4 mt-5 short:mt-3 h-px bg-gradient-to-r from-transparent via-[var(--c-line)] to-transparent`} />
 
       <nav className="scroll-thin mt-3 flex-1 overflow-y-auto px-3" aria-label="Primary">
         {NAV.map((g) => (
           <div key={g.section} className="mb-3">
-            {collapsed ? <div className="mx-auto my-2 h-px w-6 bg-[var(--c-line)]" /> : <div className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{g.section}</div>}
-            <div className="flex flex-col gap-1">
+            {collapsed ? <div className="mx-auto my-2 h-px w-6 bg-[var(--c-line)]" /> : <div className="px-3 pb-1.5 pt-2 short:pb-0.5 short:pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{g.section}</div>}
+            <div className="flex flex-col gap-1 short:gap-0.5">
               {g.items.map((n) => {
                 const count = badge(n.badge);
                 return (
                   <NavLink key={n.to} to={n.to} title={collapsed ? n.label : undefined}
-                    className={({ isActive }) => `group relative flex items-center gap-3 rounded-xl text-sm transition duration-200 ${collapsed ? "h-11 justify-center" : "px-3 py-2.5"} ${isActive ? "bg-surface font-semibold text-ink shadow-card ring-1 ring-line" : "text-ink-2 hover:bg-surface/60 hover:text-ink"}`}>
+                    className={({ isActive }) => `group relative flex items-center gap-3 rounded-xl text-sm transition duration-200 ${collapsed ? "h-11 short:h-9 justify-center" : "px-3 py-2.5 short:py-1.5"} ${isActive ? "bg-surface font-semibold text-ink shadow-card ring-1 ring-line" : "text-ink-2 hover:bg-surface/60 hover:text-ink"}`}>
                     {({ isActive }) => (
                       <>
                         {isActive && <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand" style={{ animation: "fadein 300ms" }} aria-hidden />}
-                        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg transition ${isActive ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_4px_12px_-4px_rgb(37_99_235/.8)]" : "text-ink-3 group-hover:text-accent-ink"}`}>
+                        <span className={`grid h-7 w-7 short:h-6 short:w-6 shrink-0 place-items-center rounded-lg transition ${isActive ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_4px_12px_-4px_rgb(37_99_235/.8)]" : "text-ink-3 group-hover:text-accent-ink"}`}>
                           <Icon name={n.icon} size={15} />
                         </span>
                         {!collapsed && <span className="flex-1 truncate">{n.label}</span>}

@@ -74,7 +74,7 @@ export function Logo({ size = 32, tagline = false, className = "" }: { size?: nu
       <LogoMark size={size} />
       <span className="flex flex-col leading-none">
         <Wordmark className="text-[1.15rem]" />
-        {tagline && <Tagline className="mt-1 text-[11px] font-medium" />}
+        {tagline && <Tagline className="logo-tagline mt-1 text-[11px] font-medium" />}
       </span>
     </span>
   );

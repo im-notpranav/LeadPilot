@@ -1,5 +1,5 @@
 // Every lead, filterable. Most drill-downs in the app land here with filters already set in the URL.
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api, STAGES, type LeadView, type Rep } from "../lib/api";
@@ -13,6 +13,7 @@ const GRADES = ["A", "B", "C", "D"];
 const INTENTS = ["hot", "high", "medium", "low", "none"];
 const SORTS = [{ v: "priority", l: "Priority" }, { v: "score", l: "Score" }, { v: "ev", l: "Expected value" }, { v: "created", l: "Newest first" }];
 const LIMIT = 500;
+const PAGE = 100; // rows rendered at a time; more mount as you scroll, so the page stays light
 
 export default function Leads() {
   const [params, setParams] = useSearchParams();
@@ -101,6 +102,16 @@ export default function Leads() {
 function LeadsTable({ rows }: { rows: LeadView[] }) {
   const nav = useNavigate();
   const stop = (e: MouseEvent) => e.stopPropagation();
+  const [shown, setShown] = useState(PAGE);
+  const more = useRef<HTMLDivElement>(null);
+  useEffect(() => setShown(PAGE), [rows]);
+  useEffect(() => {
+    const el = more.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setShown((n) => n + PAGE); }, { rootMargin: "600px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown, rows]);
   return (
     <div className="scroll-thin overflow-x-auto">
       <table className="w-full min-w-[1080px] text-sm">
@@ -108,7 +119,7 @@ function LeadsTable({ rows }: { rows: LeadView[] }) {
           {["Lead", "Score", "Intent", "Stage", "Owner", "Source", "Deal", "Created"].map((h) => <th key={h} className="px-3 py-2.5 font-semibold first:pl-4">{h}</th>)}
         </tr></thead>
         <tbody>
-          {rows.map((l) => (
+          {rows.slice(0, shown).map((l) => (
             <tr key={l.lead_id} onClick={() => nav(to.lead(l.lead_id))} className="cursor-pointer border-b border-line align-top transition-colors last:border-0 hover:bg-accent-soft/40">
               <td className="max-w-[240px] py-3 pl-4 pr-3">
                 <Link to={to.lead(l.lead_id)} onClick={stop} className="font-medium text-ink hover:underline">{l.name}</Link>
@@ -138,6 +149,7 @@ function LeadsTable({ rows }: { rows: LeadView[] }) {
           ))}
         </tbody>
       </table>
+      {shown < rows.length && <div ref={more} className="px-4 py-3 text-center text-xs text-ink-3">Loading more rows…</div>}
     </div>
   );
 }

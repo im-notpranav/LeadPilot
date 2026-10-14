@@ -39,7 +39,7 @@ export default function Shell() {
   const arrive = Boolean(arrived);
   useEffect(() => {
     if (!arrive) return;
-    const t = window.setTimeout(() => notify(arrived, "welcome"), 900);
+    const t = window.setTimeout(() => notify(arrived, "welcome"), 250);
     nav(loc.pathname + loc.search, { replace: true, state: null });
     return () => clearTimeout(t);
   }, []); // mount only
@@ -56,8 +56,8 @@ export default function Shell() {
       </div>
       {drawer && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
-          <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" style={{ animation: "fadein 200ms ease-out" }} onClick={() => setDrawer(false)} />
-          <div className="relative h-full w-72" style={{ animation: "arrive-left 280ms cubic-bezier(.2,.8,.2,1)" }}>
+          <div className="absolute inset-0 bg-navy/50" style={{ animation: "fadein 150ms ease-out" }} onClick={() => setDrawer(false)} />
+          <div className="relative h-full w-72" style={{ animation: "arrive-left 200ms var(--ease-out)" }}>
             <Sidebar collapsed={false} drawer onClose={() => setDrawer(false)} />
           </div>
         </div>
@@ -118,7 +118,7 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
   const badge = (b?: NavItem["badge"]) => (b ? status.data?.[b.key] : undefined);
 
   return (
-    <aside className={`relative m-3 mr-0 flex h-[calc(100%-1.5rem)] flex-col rounded-3xl shadow-card transition-[width] duration-300 ease-out ${drawer ? "card" : "glass"} ${collapsed ? "w-[76px]" : "w-64"}`}>
+    <aside className={`relative m-3 mr-0 flex h-[calc(100%-1.5rem)] flex-col rounded-3xl shadow-card transition-[width] duration-200 ease-out ${drawer ? "card" : "glass"} ${collapsed ? "w-[76px]" : "w-64"}`}>
       <div className={`flex items-center pt-5 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}>
         <NavLink to="/queue" aria-label="LeadPilot home" className="rounded-lg">
           {collapsed ? <LogoMark size={34} /> : <Logo size={34} tagline={!drawer} />}

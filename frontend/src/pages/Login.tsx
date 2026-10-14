@@ -29,7 +29,7 @@ export default function Login() {
     const r = btn?.getBoundingClientRect();
     setOrigin(r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: innerWidth / 2, y: innerHeight / 2 });
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.setTimeout(() => nav(from, { replace: true, state: { arrived: message } }), reduce ? 150 : 1100);
+    window.setTimeout(() => nav(from, { replace: true, state: { arrived: message } }), reduce ? 0 : 340);
   };
   const vars = origin ? ({ "--x": `${origin.x}px`, "--y": `${origin.y}px` } as CSSProperties) : undefined;
 
@@ -224,10 +224,10 @@ function Notice({ tone, children }: { tone: "good" | "bad"; children: ReactNode 
 function SubmitButton({ btn, busy, idle, loading, done }: { btn: RefObject<HTMLButtonElement>; busy: Busy; idle: string; loading: string; done: string }) {
   return (
     <button ref={btn} type="submit" disabled={busy !== "idle"}
-      className={`relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl text-sm font-semibold text-white transition duration-300 active:scale-[0.98] ${busy === "success" ? "bg-good-ink" : "btn-brand"}`}>
+      className={`relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl text-sm font-semibold text-white transition active:scale-[0.98] ${busy === "success" ? "bg-good-ink" : "btn-brand"}`}>
       {busy === "idle" && <>{idle} <Icon name="arrowRight" /></>}
       {busy === "loading" && <><span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white" style={{ animation: "spin 700ms linear infinite" }} />{loading}</>}
-      {busy === "success" && <span className="flex items-center gap-2" style={{ animation: "pop 240ms" }}><Icon name="check" />{done}</span>}
+      {busy === "success" && <span className="flex items-center gap-2" style={{ animation: "pop 140ms" }}><Icon name="check" />{done}</span>}
     </button>
   );
 }
@@ -237,7 +237,7 @@ function SubmitButton({ btn, busy, idle, loading, done }: { btn: RefObject<HTMLB
 function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   return (
     <div role="tablist" aria-label="Sign in or create account" className="relative grid grid-cols-2 rounded-2xl border border-line bg-surface-2 p-1">
-      <span aria-hidden className="absolute bottom-1 top-1 w-[calc(50%-4px)] rounded-xl bg-surface shadow-sm ring-1 ring-line transition-transform duration-500 ease-[cubic-bezier(.7,0,.2,1)]"
+      <span aria-hidden className="absolute bottom-1 top-1 w-[calc(50%-4px)] rounded-xl bg-surface shadow-sm ring-1 ring-line transition-transform duration-200 ease-out"
         style={{ transform: mode === "signup" ? "translateX(calc(100% + 0px))" : "translateX(0)", left: 4 }} />
       {(["signin", "signup"] as Mode[]).map((m) => (
         <button key={m} role="tab" aria-selected={mode === m} onClick={() => onChange(m)}
@@ -259,8 +259,8 @@ function BrandPanel() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#2563eb] p-8 text-white shadow-pop lg:p-10">
-      <div className="login-orb left-[-10%] top-[-10%] h-72 w-72 bg-[#60a5fa]" />
-      <div className="login-orb bottom-[-15%] right-[-10%] h-80 w-80 bg-[#3b82f6]" style={{ animationDelay: "-3s" }} />
+      <div className="login-orb left-[-18%] top-[-18%] h-96 w-96" style={{ background: "radial-gradient(closest-side, #60a5fa, transparent)" }} />
+      <div className="login-orb bottom-[-22%] right-[-18%] h-[26rem] w-[26rem]" style={{ background: "radial-gradient(closest-side, #3b82f6, transparent)" }} />
       <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: "linear-gradient(rgb(255 255 255 / .6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .6) 1px, transparent 1px)", backgroundSize: "44px 44px", maskImage: "radial-gradient(circle at 50% 45%, black, transparent 75%)" }} />
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden>
         <path d="M-20 700 C 140 640, 220 600, 300 470 S 520 160, 640 120" fill="none" stroke="rgb(147 197 253 / .4)" strokeWidth="2" strokeDasharray="3 10" />
@@ -269,18 +269,18 @@ function BrandPanel() {
       {/* stacked logo, as on the brand sheet */}
       <div className="relative m-auto flex flex-col items-center text-center">
         <div className="relative">
-          <div className="absolute inset-0 -z-10 scale-150 rounded-full bg-[#60a5fa]/30 blur-3xl" aria-hidden />
-          <LogoMark size={148} tone="white" className="login-float drop-shadow-[0_20px_30px_rgb(15_23_42/.45)]" style={{ animationDuration: "5s" }} />
+          <div className="absolute inset-0 -z-10 scale-[2]" style={{ background: "radial-gradient(closest-side, rgb(96 165 250 / .35), transparent)" }} aria-hidden />
+          <LogoMark size={148} tone="white" className="drop-shadow-[0_20px_30px_rgb(15_23_42/.45)]" />
         </div>
-        <div className="mt-6 font-display text-5xl font-extrabold tracking-tight lg:text-6xl" style={{ animation: "rise 700ms cubic-bezier(.2,.8,.2,1) 150ms both" }}>
+        <div className="mt-6 font-display text-5xl font-extrabold tracking-tight lg:text-6xl" >
           Lead<span className="text-[#93c5fd]">Pilot</span>
         </div>
-        <div className="mt-3 text-lg font-medium text-white/80 lg:text-xl" style={{ animation: "rise 700ms cubic-bezier(.2,.8,.2,1) 280ms both" }}>
+        <div className="mt-3 text-lg font-medium text-white/80 lg:text-xl" >
           Smarter Leads. <span className="text-white">Bigger Deals.</span>
         </div>
       </div>
 
-      <div className="relative flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs text-white/80 backdrop-blur-xl" style={{ animation: "rise 700ms 400ms both" }}>
+      <div className="relative flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs text-white/80">
         <span className="inline-flex items-center gap-2 font-medium text-white">
           <span className={`h-2 w-2 rounded-full ${state === "live" ? "live-dot bg-[#86efac]" : state === "offline" ? "bg-[#fca5a5]" : "bg-[#fde68a]"}`} />{label}
         </span>

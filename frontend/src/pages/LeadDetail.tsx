@@ -53,7 +53,7 @@ export default function LeadDetail() {
 function Header({ l }: { l: Lead }) {
   return (
     <section className="card relative isolate overflow-hidden rounded-2xl p-5">
-      <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-56 w-56 rounded-full bg-[var(--c-glow-1)] blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-56 w-56 " style={{ background: "radial-gradient(closest-side, var(--c-glow-1), transparent)" }} aria-hidden />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

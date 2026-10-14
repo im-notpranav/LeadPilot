@@ -60,7 +60,7 @@ const toUser = (a: Pick<Account, "name" | "email" | "company">): User => ({
   initials: a.name.split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "?",
 });
 const normEmail = (e: string) => e.trim().toLowerCase();
-const pause = () => new Promise((r) => setTimeout(r, 650)); // lets the button show its busy state
+const pause = () => new Promise((r) => setTimeout(r, 250)); // long enough to register the busy state, short enough not to feel slow
 
 const AuthCtx = createContext<Auth>(null as unknown as Auth);
 

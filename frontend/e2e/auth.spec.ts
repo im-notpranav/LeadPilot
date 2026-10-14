@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { AUTH_API_PORT, AUTH_WEB_PORT, TEST_JWT_SECRET, TEST_SUPABASE_URL } from "../playwright.config";
 
@@ -6,10 +6,12 @@ import { AUTH_API_PORT, AUTH_WEB_PORT, TEST_JWT_SECRET, TEST_SUPABASE_URL } from
 // token signed with the test-only secret, so no real Supabase project or account is involved.
 const API = `http://127.0.0.1:${AUTH_API_PORT}`;
 const STORAGE_KEY = `sb-${new URL(TEST_SUPABASE_URL).hostname.split(".")[0]}-auth-token`;
+// Fixed ids: Playwright reloads this file in a fresh worker after a failure, and new ids would add a second
+// profile for the same email on the still-running server.
 const USERS = {
-  admin: { id: randomUUID(), email: "admin@e2e.test" },
-  rep: { id: randomUUID(), email: "rep@e2e.test" },
-  newbie: { id: randomUUID(), email: "new@e2e.test" },
+  admin: { id: "00000000-0000-4000-8000-00000000e2a1", email: "admin@e2e.test" },
+  rep: { id: "00000000-0000-4000-8000-00000000e2a2", email: "rep@e2e.test" },
+  newbie: { id: "00000000-0000-4000-8000-00000000e2a3", email: "new@e2e.test" },
 };
 type Who = keyof typeof USERS;
 
@@ -47,12 +49,14 @@ test.beforeAll(async ({ request }) => {
 
 test("signed-out visitors get the login screen and no data", async ({ page }) => {
   const apiCalls: string[] = [];
-  page.on("request", (r) => { if (r.url().includes("/api/") && !r.url().includes("/api/auth/config")) apiCalls.push(r.url()); });
+  const PUBLIC = ["/api/auth/config", "/api/health"];                     // no lead data in either
+  page.on("request", (r) => { if (r.url().includes("/api/") && !PUBLIC.some((p) => r.url().includes(p))) apiCalls.push(r.url()); });
   await page.goto("/queue");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.getByLabel("Work email")).toBeVisible();
-  await page.getByRole("button", { name: "Create an account" }).click();
-  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+  await page.getByRole("tab", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
+  await expect(page.getByLabel("Full name")).toBeVisible();
   expect(apiCalls).toEqual([]);
 });
 

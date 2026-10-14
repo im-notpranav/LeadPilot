@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🧭 LeadPilot
+# LeadPilot
 
-**Autonomous lead-to-deal intelligence: every lead scored, staged, assigned and explained in real time.**
+Lead scoring, pipeline staging and rep assignment for B2B sales, with the reason for every change.
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
@@ -16,81 +16,84 @@
 
 ---
 
-LeadPilot reads a live stream of lead and engagement events: form fills, page views, email opens and replies, calls,
-meetings, proposals. **On every single event** it:
+LeadPilot processes a stream of lead and engagement events (form fills, page views, email opens and replies, calls,
+meetings, proposals). For each event it:
 
-- re-scores the lead and detects buying intent
-- moves the pipeline stage when there is evidence
-- flags stalled deals
+- re-scores the lead and records which signals changed the score
+- moves the lead to a new pipeline stage when the event is evidence for it
+- flags deals that have stalled
 - predicts deal value and close probability
-- assigns the lead to the best rep, or reassigns it if the rep is neglecting it
-- recommends the next best action
+- assigns the lead to a rep, and reassigns it if the first-touch SLA is missed
+- recommends the next action for the rep
 
-…and it **explains every change**, so you always know *why* a lead is where it is.
+Each of these decisions is stored with the rule and the events behind it, and the dashboard shows them on the lead page.
 
-A built-in simulator generates a realistic world of leads, buyer personas and sales reps, so the whole system runs
-live out of the box with no external accounts.
+A built-in simulator generates leads, buyer personas and sales reps, so the system runs without any external accounts.
 
 ## Table of contents
 
-- [Quick start](#-quick-start)
-- [What goes in, what comes out](#-what-goes-in-what-comes-out)
-- [How scoring works](#-how-scoring-works)
-- [How leads move through the pipeline](#-how-leads-move-through-the-pipeline)
-- [Architecture](#-architecture)
-- [Dashboard tour (5-minute demo)](#-dashboard-tour-5-minute-demo)
-- [API](#-api)
-- [Configuration](#-configuration)
-- [Database (Supabase / Postgres)](#-database-supabase--postgres)
-- [Sign-in, roles and API keys](#-sign-in-roles-and-api-keys)
-- [Connectors: forms, CRM, email, website, CSV](#-connectors-forms-crm-email-website-csv)
-- [Testing & performance](#-testing--performance)
-- [Using real data instead of the simulator](#-using-real-data-instead-of-the-simulator)
-- [Project structure](#-project-structure)
-- [Known simplifications](#-known-simplifications)
+- [Quick start](#quick-start)
+- [What goes in, what comes out](#what-goes-in-what-comes-out)
+- [How scoring works](#how-scoring-works)
+- [How leads move through the pipeline](#how-leads-move-through-the-pipeline)
+- [Architecture](#architecture)
+- [Dashboard tour (5-minute demo)](#dashboard-tour-5-minute-demo)
+- [API](#api)
+- [Configuration](#configuration)
+- [Database (Supabase / Postgres)](#database-supabase--postgres)
+- [Sign-in, roles and API keys](#sign-in-roles-and-api-keys)
+- [Connectors: forms, CRM, email, website, CSV](#connectors-forms-crm-email-website-csv)
+- [Testing & performance](#testing--performance)
+- [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
+- [Project structure](#project-structure)
+- [Known simplifications](#known-simplifications)
 
 ---
 
-## 🚀 Quick start
+## Quick start
 
-**Requirements:** Python 3.12, Node.js 18+, and `make` (optional).
+**Requirements:** Python 3.10 or newer and Node.js 18 or newer. `make` is optional.
+
+From the project folder, on Windows, macOS or Linux:
 
 ```bash
-make install   # creates backend/.venv, installs Python + npm dependencies
-make dev       # starts the API (port 8000) and the dashboard (port 5173)
+python scripts/dev.py      # Windows; on macOS / Linux use python3
 ```
 
-Open **http://localhost:5173**. Interactive API docs are at **http://localhost:8000/docs**. Without Supabase
-configured there is no login: you are a local admin. With it, see [Sign-in, roles and API keys](#-sign-in-roles-and-api-keys).
+The first run creates `backend/.venv` and installs the Python and npm dependencies (about a minute). Later runs
+reinstall only when `requirements.txt` or `package-lock.json` changed, so pulling new code just works. When the
+terminal prints `ready`, open **http://localhost:5173**. API docs are at **http://localhost:8000/docs**. Ctrl-C stops
+both servers. Without Supabase configured there is no login: you are a local admin. With it, see
+[Sign-in, roles and API keys](#sign-in-roles-and-api-keys).
 
 On first start the backend generates 6 months of closed-deal history and simulates a 21-day warm-up (about 150 open
 leads). This takes 10–20 seconds. After that the simulator runs live at 60× speed (1 simulated minute per real second).
 
 <details>
-<summary><b>Without make (Windows)</b></summary>
+<summary><b>If it does not start</b></summary>
 
-```bash
-py -3.12 -m venv backend/.venv
-backend/.venv/Scripts/pip install -r backend/requirements.txt
-cd frontend && npm install && cd ..
-python scripts/dev.py
-```
-
-On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/pip`.
+- *Python 3.10 or newer is required* / *Node.js 18 or newer is required*: install from python.org / nodejs.org, open a
+  new terminal, and run the command again.
+- *port 8000 (or 5173) is already in use*: an earlier run is still going. Close that terminal or stop the process.
+- *setup step failed*: the lines above it show the pip or npm error. Delete `backend/.venv` (or
+  `frontend/node_modules`) and run again to start the install from scratch.
+- The dashboard shows *The LeadPilot API is not reachable*: the backend is not running or crashed; look for `[api]`
+  errors in the terminal.
 </details>
 
 | Command | What it does |
 |---|---|
-| `make dev` | Backend (FastAPI + in-process simulator) and frontend (Vite) together |
-| `make test` | 175 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode, auth |
+| `make dev` | Same as `python scripts/dev.py`: backend (FastAPI + simulator) and frontend (Vite) together |
+| `make install` | Install or refresh dependencies only (`python scripts/dev.py --setup`) |
+| `make test` | 220 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API, live mode, auth, connectors, deals |
 | `make test-pg` | Postgres / Supabase tests, run in a throwaway `leadpilot_test` schema |
-| `make e2e` | 8 Playwright browser tests: every page, lead drill-down, ingestion, mobile width, login and roles |
+| `make e2e` | Playwright browser tests: every page, lead drill-down, ingestion, mobile width, login and roles, connectors |
 | `make perf` | Sustained 50 events/s load test, prints p50 / p95 / p99 latency |
 | `make build` | Production frontend build |
 
 ---
 
-## 🔁 What goes in, what comes out
+## What goes in, what comes out
 
 ```mermaid
 flowchart LR
@@ -137,7 +140,7 @@ source quality, a quality review queue, and a live event feed pushed over WebSoc
 
 ---
 
-## 📊 How scoring works
+## How scoring works
 
 ```
 score = clamp( Fit[0..40] + Engagement[0..35] + Intent[0..25] − Penalties , 0, 100 )
@@ -177,7 +180,7 @@ model fitted on the simulated deal history is shown in Analytics for calibration
 
 ---
 
-## 🪜 How leads move through the pipeline
+## How leads move through the pipeline
 
 A lead only moves when an event proves it should. Every move records the **rule ID, the reason and the evidence
 event**.
@@ -216,7 +219,7 @@ drop, S4 ghosting (unanswered follow-ups), S5 no next step after a meeting.
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -258,11 +261,15 @@ TanStack Query · Recharts.
 
 ---
 
-## 🎬 Dashboard tour (5-minute demo)
+## Dashboard tour (5-minute demo)
 
-0. **Sign in.** The app opens with a short brand animation (click or press any key to skip), then the sign-in page
-   (skipped when Supabase is not configured). After sign-in the dashboard flies in. Toggle light / dark / system from
-   the top bar or the account menu; the choice is remembered. Press **Ctrl K** (or **/**) to search leads.
+0. **Sign in.** The app opens with a short brand animation (click or press any key to skip). Without Supabase configured
+   the sign-in page is skipped. On *Sign in* the form is on the right; on *Create account* the panels swap sides. The
+   brand panel shows whether the engine is running.
+   Toggle light / dark / system from the top bar or the account menu. Press **Ctrl K** (or **/**) to search leads.
+   Almost every number, chip, bar and name in the dashboard is a link: grades, stages, sources, signals, owners, KPI
+   tiles, chart bars and counters open the matching filtered view (usually the **Leads** page, whose filters live in
+   the URL so any view can be bookmarked or shared).
 1. **My Queue.** Leads ordered by priority for the selected rep. Each row shows a grade pill with a score sparkline,
    intent chips, the stage, stall flag, SLA countdown, the next best action (**Mark done**) and the top reasons.
 2. **Simulator → Reviver → Launch**, then set speed to 600×. Priya starts cold in *nurture* (score ~30). She visits
@@ -282,7 +289,7 @@ TanStack Query · Recharts.
 
 ---
 
-## 🔌 API
+## API
 
 Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 
@@ -324,7 +331,7 @@ X-API-Key: lp_…            (or a signed-in admin / manager session)
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 | File | Controls |
 |---|---|
@@ -354,7 +361,7 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 
 ---
 
-## 🗄 Database (Supabase / Postgres)
+## Database (Supabase / Postgres)
 
 LeadPilot runs on local SQLite with no setup, and on Postgres (built and tested on Supabase) in production.
 
@@ -386,7 +393,7 @@ live restart of the same world takes ~12 s, all of it engine replay.
 
 ---
 
-## 🔐 Sign-in, roles and API keys
+## Sign-in, roles and API keys
 
 When Supabase is configured, every endpoint except `/api/health` and `/api/auth/config` needs a login or an API key.
 People sign in with Supabase Auth (email + password); LeadPilot verifies the session token against the project's
@@ -411,7 +418,7 @@ published signing keys and keeps its own role for each person.
 
 ---
 
-## 🔗 Connectors: forms, CRM, email, website, CSV
+## Connectors: forms, CRM, email, website, CSV
 
 Admins add connectors on the **Connectors** page. Each one has its own endpoint and secret, a lead source, and a
 delivery log showing every request it received, what it became and why anything was refused.
@@ -459,7 +466,7 @@ twice adds nothing the second time.
 
 ---
 
-## ✅ Testing & performance
+## Testing & performance
 
 ```bash
 make test   # 214 tests (5 Postgres tests skip unless enabled)
@@ -488,10 +495,10 @@ set `LEADPILOT_DB` to a local path to avoid fsync spikes.
 
 ---
 
-## 🌐 Using real data instead of the simulator
+## Using real data instead of the simulator
 
 The engine doesn't care where events come from. Forms, CRMs, inbound email, your website and spreadsheets plug in
-through [Connectors](#-connectors-forms-crm-email-website-csv) with no code; anything else can post to
+through [Connectors](#connectors-forms-crm-email-website-csv) with no code; anything else can post to
 `POST /api/events` in the format shown above. Typical sources:
 
 | Real source | Events | Connection |
@@ -508,13 +515,13 @@ To run on real data in production, you would also need to:
 - [x] Load state from the database on startup (live mode replays the durable `raw_events` log)
 - [ ] Replace the mock enrichment provider with a real one (Clearbit, Apollo, …)
 - [ ] Load your real sales team instead of `backend/data/reps.json`
-- [x] Add authentication: dashboard login with roles, and API keys for ingestion (see [Sign-in](#-sign-in-roles-and-api-keys))
-- [x] Move to Postgres (Supabase): set `LEADPILOT_DB_URL`, see [Database](#-database-supabase--postgres)
+- [x] Add authentication: dashboard login with roles, and API keys for ingestion (see [Sign-in](#sign-in-roles-and-api-keys))
+- [x] Move to Postgres (Supabase): set `LEADPILOT_DB_URL`, see [Database](#database-supabase--postgres)
 - [x] Connect real sources: signed webhooks, forms, CRM records, inbound email, a website tracker and CSV import
 
 ---
 
-## 📁 Project structure
+## Project structure
 
 ```
 backend/
@@ -531,10 +538,11 @@ backend/
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
-  src/pages/     Login · Queue · LeadDetail · Pipeline · LiveFeed · Analytics · Quality · Simulator
-                 Access · Connectors · Import · NotFound (404)
-  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts
-  src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in)
+  src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline · LiveFeed · Analytics ·
+                 Quality · Simulator · Access · Connectors · Import · NotFound (404)
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals
+  src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
+                 links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest
 scripts/dev.py   runs backend + frontend together
 Makefile
@@ -542,7 +550,7 @@ Makefile
 
 ---
 
-## 📝 Known simplifications
+## Known simplifications
 
 - A lead and its opportunity are 1:1. A lead counts as a "deal" from *qualified* onward.
 - Enrichment, MX validation and IP geolocation are mocked from seed data in `backend/data`.

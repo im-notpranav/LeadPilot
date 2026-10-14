@@ -4,6 +4,7 @@ import { useAuth } from "./lib/auth";
 import Shell, { visibleNav } from "./components/Shell";
 import NotFound from "./pages/NotFound";
 import Queue from "./pages/Queue";
+import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import Pipeline from "./pages/Pipeline";
 import LiveFeed from "./pages/LiveFeed";
@@ -23,9 +24,11 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Navigate to="/queue" replace />} />
+      <Route path="/signup" element={<Navigate to="/queue" replace />} />
       <Route path="/" element={<Shell />}>
         <Route index element={<Navigate to="/queue" replace />} />
         <Route path="queue" element={<Queue />} />
+        <Route path="leads" element={<Leads />} />
         <Route path="leads/:id" element={<LeadDetail />} />
         <Route path="pipeline" element={<Pipeline />} />
         <Route path="feed" element={<LiveFeed />} />

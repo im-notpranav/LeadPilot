@@ -1,5 +1,6 @@
 // Shared chart tokens + tooltip so every chart reads as one system.
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 export const SERIES = Array.from({ length: 8 }, (_, i) => `var(--series-${i + 1})`);
 export const AXIS = { stroke: "var(--grid)", tick: { fill: "var(--c-ink-3)", fontSize: 11 }, tickLine: false, axisLine: false } as const;
@@ -21,14 +22,21 @@ export function ChartTooltip({ active, payload, label, format, labelFormat }: { 
   );
 }
 
-export function Legend({ items }: { items: { label: string; color: string }[] }) {
+export function Legend({ items }: { items: { label: string; color: string; href?: string }[] }) {
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2">
       {items.map((i) => (
-        <span key={i.label} className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: i.color }} />
-          {i.label}
-        </span>
+        i.href ? (
+          <Link key={i.label} to={i.href} className="drill inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: i.color }} />
+            {i.label}
+          </Link>
+        ) : (
+          <span key={i.label} className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: i.color }} />
+            {i.label}
+          </span>
+        )
       ))}
     </div>
   );

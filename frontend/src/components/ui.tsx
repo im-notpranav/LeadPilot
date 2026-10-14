@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { human } from "../lib/format";
 import { useTheme, type ThemePref } from "../lib/theme";
 import { Icon, type IconName } from "./icons";
 
-export function Card({ title, subtitle, right, children, className = "", pad = true }: { title?: ReactNode; subtitle?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
+export function Card({ title, subtitle, right, children, className = "", pad = true, id }: { title?: ReactNode; subtitle?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; pad?: boolean; id?: string }) {
   return (
-    <section className={`card rounded-2xl ${className}`}>
+    <section id={id} className={`card rounded-2xl ${className}`}>
       {(title || right) && (
         <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-3.5">
           <div className="min-w-0">
@@ -162,7 +163,7 @@ export function Meter({ value, max = 1 }: { value: number; max?: number }) {
 export function Empty({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-sm text-ink-3">
-      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-accent-soft text-accent-ink"><Icon name="sparkle" size={18} /></span>
+      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-accent-soft text-accent-ink"><Icon name="inbox" size={18} /></span>
       {children}
     </div>
   );
@@ -180,18 +181,22 @@ export function Loading({ rows = 3 }: { rows?: number }) {
 }
 
 /** KPI tile: label, headline number, optional icon and footnote. */
-export function StatTile({ label, value, icon, sub, tone = "accent" }: { label: string; value: ReactNode; icon?: IconName; sub?: ReactNode; tone?: "accent" | "critical" | "good" }) {
+export function StatTile({ label, value, icon, sub, tone = "accent", to }: { label: string; value: ReactNode; icon?: IconName; sub?: ReactNode; tone?: "accent" | "critical" | "good"; to?: string }) {
   const toneCls = { accent: "bg-accent-soft text-accent-ink", critical: "bg-[color-mix(in_srgb,var(--c-critical)_14%,transparent)] text-critical-ink", good: "bg-[color-mix(in_srgb,var(--c-good)_14%,transparent)] text-good-ink" }[tone];
-  return (
-    <div className="card group rounded-2xl px-4 py-3.5 transition duration-300 hover:-translate-y-0.5 hover:shadow-pop">
+  const body = (
+    <>
       <div className="flex items-center justify-between gap-2">
         <div className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">{label}</div>
         {icon && <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg transition group-hover:scale-110 ${toneCls}`}><Icon name={icon} size={14} /></span>}
       </div>
       <div className="mt-1.5 truncate font-display text-2xl font-bold tabular tracking-tight text-ink">{value}</div>
       {sub && <div className="mt-0.5 truncate text-xs text-ink-3">{sub}</div>}
-    </div>
+    </>
   );
+  const cls = "card group block rounded-2xl px-4 py-3.5 transition duration-300";
+  return to
+    ? <Link to={to} className={`${cls} hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-pop`}>{body}</Link>
+    : <div className={cls}>{body}</div>;
 }
 
 const THEME_OPTS: { value: ThemePref; icon: IconName; label: string }[] = [

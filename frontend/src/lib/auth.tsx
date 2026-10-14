@@ -138,3 +138,15 @@ export function profile(me: Me | null): { name: string; email: string; initials:
 let arriving = false;
 export const markArrival = () => { arriving = true; };
 export const takeArrival = () => { const a = arriving; arriving = false; return a; };
+
+export const MIN_PASSWORD = 8;
+
+/** 0–4: length and character variety. */
+export function passwordStrength(p: string): number {
+  if (!p) return 0;
+  let s = p.length >= MIN_PASSWORD ? 1 : 0;
+  if (p.length >= 12) s++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+  if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) s++;
+  return Math.min(4, s);
+}

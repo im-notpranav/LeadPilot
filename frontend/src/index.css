@@ -228,3 +228,26 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .skeleton { background: linear-gradient(90deg, var(--c-surface-2) 25%, color-mix(in srgb, var(--c-line) 70%, var(--c-surface)) 50%, var(--c-surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+
+/* ---------- Auth: brand and form slide past each other ---------- */
+.field-input { min-width: 0; flex: 1; background: transparent; font-size: .875rem; color: var(--c-ink); outline: none; }
+.field-input::placeholder { color: var(--c-ink-3); }
+.field-input:focus-visible { outline: none; }
+.auth-swap { animation: rise 520ms cubic-bezier(.2, .8, .2, 1) both; }
+@media (min-width: 768px) {
+  .auth { height: 100%; overflow: hidden; }
+  .auth-brand, .auth-form { position: absolute; top: 0; bottom: 0; left: 0; width: 50%; transition: transform 800ms cubic-bezier(.7, 0, .2, 1); }
+  .auth-brand { z-index: 20; }
+  .auth-form { transform: translateX(100%); overflow-y: auto; }
+  .auth[data-mode="signup"] .auth-brand { transform: translateX(100%); }
+  .auth[data-mode="signup"] .auth-form { transform: translateX(0); }
+  .auth-swap { animation-delay: 280ms; }
+}
+
+/* Drill-down target: the section a link pointed at glows once. */
+@keyframes target-flash { 0%, 30% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 55%, transparent), var(--sh-card); } 100% { box-shadow: 0 0 0 0 transparent, var(--sh-card); } }
+.target-flash { animation: target-flash 1.8s ease-out; scroll-margin-top: 96px; }
+[id] { scroll-margin-top: 96px; }
+/* Anything that drills down gets the same affordance. */
+.drill { cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }
+.drill:hover { color: var(--c-accent-ink); text-decoration-color: currentColor; }

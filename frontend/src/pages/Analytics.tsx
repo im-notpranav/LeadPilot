@@ -20,17 +20,17 @@ export default function Analytics() {
     <div className="mx-auto max-w-[1400px]">
       <PageHeader title="Analytics" subtitle="Conversion, speed to lead, engagement and whether the score actually predicts outcomes." />
       <div className="stagger grid gap-4 lg:grid-cols-2">
-        <Card id="funnel" title="Funnel" subtitle={funnel.data ? `${funnel.data.total} real leads (duplicates and fakes excluded) · bars = leads that ever reached the stage · click a stage to see who is in it now` : undefined}>
+        <Card id="funnel" title="Funnel" subtitle={funnel.data ? `${funnel.data.total} real leads (duplicates and fakes excluded) · bars = leads that ever reached the stage` : undefined}>
           {!funnel.data ? <Loading /> : <Funnel data={funnel.data} />}
         </Card>
-        <Card id="response" title="First response time by rep" subtitle={rt.data ? `Team median ${minutes(rt.data.overall.median_first_response_min)} · p90 ${minutes(rt.data.overall.p90_first_response_min)} · click a rep for their queue` : undefined}>
+        <Card id="response" title="First response time by rep" subtitle={rt.data ? `Team median ${minutes(rt.data.overall.median_first_response_min)} · p90 ${minutes(rt.data.overall.p90_first_response_min)}` : undefined}>
           {!rt.data ? <Loading /> : <ResponseChart reps={rt.data.reps} onRep={(id) => nav(to.queue(id))} />}
         </Card>
         <Card title="Prospect engagement" subtitle="Prospect events per simulated day (last 14 days)" right={<Link to={to.feed()} className="inline-flex items-center gap-1 text-xs font-medium text-accent-ink hover:underline">Live feed <Icon name="arrowRight" size={12} /></Link>}>
           {!rt.data ? <Loading /> : (
             <div className="h-56">
               <ResponsiveContainer>
-                <AreaChart data={rt.data.daily_engagement} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <AreaChart data={rt.data.daily_engagement} margin={{ top: 8, right: 8, left: -16, bottom: 0 }} className="cursor-pointer" onClick={() => nav(to.feed())}>
                   <CartesianGrid {...GRID} />
                   <XAxis dataKey="date" {...AXIS} tickFormatter={(d) => day(d)} minTickGap={24} />
                   <YAxis {...AXIS} allowDecimals={false} />
@@ -42,7 +42,7 @@ export default function Analytics() {
           )}
           {rt.data && <div className="mt-2 text-xs text-ink-3">Events per lead-week by grade: {Object.entries(rt.data.events_per_lead_week_by_grade).map(([g, v]) => `${g} ${v}`).join(" · ")}</div>}
         </Card>
-        <Card id="scores" title="Score distribution" subtitle="Open leads by score band · click a bar to list them">
+        <Card id="scores" title="Score distribution" subtitle="Open leads by score band">
           {!cal.data ? <Loading /> : (
             <div className="h-56">
               <ResponsiveContainer>
@@ -52,13 +52,13 @@ export default function Analytics() {
                   <YAxis {...AXIS} allowDecimals={false} />
                   <Tooltip cursor={{ fill: "var(--c-surface-2)" }} content={<ChartTooltip />} />
                   <Bar dataKey="count" name="Leads" fill="var(--series-1)" radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false} className="cursor-pointer"
-                    onClick={(d: any) => { const [lo, hi] = String(d.bin ?? d.payload?.bin).split("-").map(Number); nav(to.leads({ open: true, min: lo, max: hi + 0.99, sort: "score" })); }} />
+                    onClick={(d: any) => { const [lo, hi] = String(d.bin ?? d.payload?.bin).split("-").map(Number); nav(to.leads({ open: true, min: lo, max: hi >= 99 ? 100 : hi + 0.99, sort: "score" })); }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
         </Card>
-        <Card id="grades" title="Does the score work? Grade vs actual win rate" subtitle="Historical closed deals (6 months) and deals closed during this simulation · click a grade for its current leads">
+        <Card id="grades" title="Does the score work? Grade vs actual win rate" subtitle="Historical closed deals (6 months) and deals closed during this simulation">
           {!cal.data ? <Loading /> : (
             <>
               <Legend items={[{ label: "Historical", color: SERIES[0] }, { label: "Live", color: SERIES[1] }]} />
@@ -92,7 +92,7 @@ export default function Analytics() {
             </tbody></table>
           )}
         </Card>
-        <Card id="reps" title="Rep leaderboard" subtitle="Click a rep to open their queue" className="lg:col-span-2" pad={false}>
+        <Card id="reps" title="Rep leaderboard" className="lg:col-span-2" pad={false}>
           {!reps.data || !rt.data ? <Loading /> : (
             <div className="scroll-thin overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">

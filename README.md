@@ -2,9 +2,9 @@
 
 # LeadPilot
 
-**Autonomous lead-to-deal intelligence: every lead scored, staged, assigned and explained in real time.**
+Lead scoring, pipeline staging and rep assignment for B2B sales, with the reason for every change.
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
@@ -16,20 +16,19 @@
 
 ---
 
-LeadPilot reads a live stream of lead and engagement events: form fills, page views, email opens and replies, calls,
-meetings, proposals. **On every single event** it:
+LeadPilot processes a stream of lead and engagement events (form fills, page views, email opens and replies, calls,
+meetings, proposals). For each event it:
 
-- re-scores the lead and detects buying intent
-- moves the pipeline stage when there is evidence
-- flags stalled deals
+- re-scores the lead and records which signals changed the score
+- moves the lead to a new pipeline stage when the event is evidence for it
+- flags deals that have stalled
 - predicts deal value and close probability
-- assigns the lead to the best rep, or reassigns it if the rep is neglecting it
-- recommends the next best action
+- assigns the lead to a rep, and reassigns it if the first-touch SLA is missed
+- recommends the next action for the rep
 
-…and it **explains every change**, so you always know *why* a lead is where it is.
+Each of these decisions is stored with the rule and the events behind it, and the dashboard shows them on the lead page.
 
-A built-in simulator generates a realistic world of leads, buyer personas and sales reps, so the whole system runs
-live out of the box with no external accounts.
+A built-in simulator generates leads, buyer personas and sales reps, so the system runs without any external accounts.
 
 ## Table of contents
 
@@ -50,35 +49,38 @@ live out of the box with no external accounts.
 
 ## Quick start
 
-**Requirements:** Python 3.12, Node.js 18+, and `make` (optional).
+**Requirements:** Python 3.10 or newer and Node.js 18 or newer. `make` is optional.
+
+From the project folder, on Windows, macOS or Linux:
 
 ```bash
-make install   # creates backend/.venv, installs Python + npm dependencies
-make dev       # starts the API (port 8000) and the dashboard (port 5173)
+python scripts/dev.py      # Windows; on macOS / Linux use python3
 ```
 
-Open **http://localhost:5173**. Sign in with the demo account (**demo@leadpilot.io** / **pilot123**) or create your
-own account on the *Create account* page. Interactive API docs are at **http://localhost:8000/docs**.
+The first run creates `backend/.venv` and installs the Python and npm dependencies (about a minute). Later runs
+reinstall only when `requirements.txt` or `package-lock.json` changed, so pulling new code just works. When the
+terminal prints `ready`, open **http://localhost:5173** and sign in with **demo@leadpilot.io** / **pilot123**, or
+create an account. API docs are at **http://localhost:8000/docs**. Ctrl-C stops both servers.
 
 On first start the backend generates 6 months of closed-deal history and simulates a 21-day warm-up (about 150 open
 leads). This takes 10–20 seconds. After that the simulator runs live at 60× speed (1 simulated minute per real second).
 
 <details>
-<summary><b>Without make (Windows)</b></summary>
+<summary><b>If it does not start</b></summary>
 
-```bash
-py -3.12 -m venv backend/.venv
-backend/.venv/Scripts/pip install -r backend/requirements.txt
-cd frontend && npm install && cd ..
-python scripts/dev.py
-```
-
-On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/pip`.
+- *Python 3.10 or newer is required* / *Node.js 18 or newer is required*: install from python.org / nodejs.org, open a
+  new terminal, and run the command again.
+- *port 8000 (or 5173) is already in use*: an earlier run is still going. Close that terminal or stop the process.
+- *setup step failed*: the lines above it show the pip or npm error. Delete `backend/.venv` (or
+  `frontend/node_modules`) and run again to start the install from scratch.
+- The dashboard shows *The LeadPilot API is not reachable*: the backend is not running or crashed; look for `[api]`
+  errors in the terminal.
 </details>
 
 | Command | What it does |
 |---|---|
-| `make dev` | Backend (FastAPI + in-process simulator) and frontend (Vite) together |
+| `make dev` | Same as `python scripts/dev.py`: backend (FastAPI + simulator) and frontend (Vite) together |
+| `make install` | Install or refresh dependencies only (`python scripts/dev.py --setup`) |
 | `make test` | 149 pytest tests: engine units, invariants I1–I8, scenarios, analytics, API |
 | `make perf` | Sustained 50 events/s load test, prints p50 / p95 / p99 latency |
 | `make build` | Production frontend build |

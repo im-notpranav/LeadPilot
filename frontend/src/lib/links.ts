@@ -38,3 +38,11 @@ export function useHashScroll(ready = true) {
     el.classList.remove("target-flash"); void el.offsetWidth; el.classList.add("target-flash");
   }, [hash, ready]);
 }
+
+/** In-page jump to a section by id, with the same highlight as a #hash link. */
+export function jumpTo(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.remove("target-flash"); void el.offsetWidth; el.classList.add("target-flash");
+}

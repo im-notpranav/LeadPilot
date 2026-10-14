@@ -49,8 +49,8 @@ export default function Queue() {
           ))}
         </div>
       )}
-      <Card pad={false} title={`${q.data?.total ?? 0} leads to work`} subtitle="Ordered by priority. Click a lead for its full explanation.">
-        {q.isLoading ? <Loading /> : !q.data?.items.length ? <Empty>No open leads in this queue yet.</Empty> : <QueueTable rows={q.data.items} rep={rep} />}
+      <Card pad={false} title={`${q.data?.total ?? 0} leads to work`} subtitle="Highest priority first">
+        {q.isLoading ? <Loading /> : q.isError ? <Empty>Could not load this queue. <button onClick={() => q.refetch()} className="font-medium text-accent-ink hover:underline">Try again</button></Empty> : !q.data?.items.length ? <Empty>No open leads in this queue.</Empty> : <QueueTable rows={q.data.items} rep={rep} />}
       </Card>
     </div>
   );

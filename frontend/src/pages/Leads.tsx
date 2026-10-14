@@ -92,7 +92,7 @@ export default function Leads() {
       </div>
 
       <Card pad={false}>
-        {res.isLoading ? <Loading rows={6} /> : !rows.length ? <Empty>No leads match these filters.</Empty> : <LeadsTable rows={rows} />}
+        {res.isLoading ? <Loading rows={6} /> : res.isError ? <Empty>Could not load leads. <button onClick={() => res.refetch()} className="font-medium text-accent-ink hover:underline">Try again</button></Empty> : !rows.length ? <Empty>No leads match these filters.</Empty> : <LeadsTable rows={rows} />}
       </Card>
     </div>
   );

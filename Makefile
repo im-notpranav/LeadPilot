@@ -1,7 +1,7 @@
 # LeadPilot - one command: `make dev` (backend + simulator + frontend)
 
 ifeq ($(OS),Windows_NT)
-  PY_BOOT ?= py -3.12
+  PY_BOOT ?= py -3
   VENV_PY := backend/.venv/Scripts/python.exe
 else
   PY_BOOT ?= python3
@@ -10,10 +10,13 @@ endif
 
 .PHONY: dev install backend frontend test perf build seed clean
 
-dev: install
-	$(VENV_PY) scripts/dev.py
+# scripts/dev.py creates the venv and installs/refreshes dependencies itself, so these work on a fresh clone
+# and after pulls that change requirements.txt or package-lock.json.
+dev:
+	$(PY_BOOT) scripts/dev.py
 
-install: $(VENV_PY) frontend/node_modules
+install:
+	$(PY_BOOT) scripts/dev.py --setup
 
 $(VENV_PY):
 	$(PY_BOOT) -m venv backend/.venv

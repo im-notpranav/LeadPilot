@@ -1,11 +1,11 @@
 // Sign in (/login) and Create account (/signup) share one page so the brand panel and the form
 // can slide past each other: sign in = brand left, form right; create account = form left, brand right.
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type RefObject } from "react";
+import { useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type RefObject } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AuthError, DEMO, MIN_PASSWORD, passwordStrength, useAuth } from "../lib/auth";
-import { api, type FeedItem, type SimStatus } from "../lib/api";
-import { human, num, signed } from "../lib/format";
+import { api, type SimStatus } from "../lib/api";
+import { num } from "../lib/format";
 import { Logo, LogoMark } from "../components/Logo";
 import { Icon, type IconName } from "../components/icons";
 import { ThemeToggle } from "../components/ui";
@@ -36,15 +36,16 @@ export default function Login() {
   return (
     <div className="auth relative min-h-full bg-page" data-mode={mode}>
       <div className="app-backdrop" aria-hidden />
-      <div className="auth-brand relative z-10 hidden p-3 lg:block"><BrandPanel mode={mode} /></div>
+      <div className="auth-brand relative z-10 hidden p-3 md:block"><BrandPanel /></div>
 
       <div className="auth-form relative z-10 flex min-h-full flex-col px-6 py-6 sm:px-10">
         <div className="flex items-center justify-between">
-          <span className="lg:invisible"><Logo size={32} /></span>
+          <span className="md:invisible"><Logo size={32} /></span>
           <ThemeToggle />
         </div>
         <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-10">
-          <div key={mode} className="auth-swap">
+          <ModeSwitch mode={mode} onChange={switchTo} />
+          <div key={mode} className="auth-swap mt-8">
             {mode === "signin" ? <SignInForm onSwitch={() => switchTo("signup")} onDone={takeoff} /> : <SignUpForm onSwitch={() => switchTo("signin")} onDone={takeoff} />}
           </div>
           <p className="mt-8 text-center text-xs leading-relaxed text-ink-3">
@@ -115,20 +116,9 @@ function SignInForm({ onSwitch, onDone }: { onSwitch: () => void; onDone: (btn: 
       <h1 className="font-display text-[32px] font-extrabold leading-tight tracking-tight text-ink">{resetting ? "Reset password" : "Sign in"}</h1>
       <p className="mt-2 text-sm text-ink-2">
         {resetting ? <>Set a new password for an account in this browser. <button type="button" onClick={() => { setResetting(false); setError(null); }} className="font-semibold text-accent-ink hover:underline">Back to sign in</button></>
-          : <>New to LeadPilot? <button type="button" onClick={onSwitch} className="font-semibold text-accent-ink hover:underline">Create an account</button></>}
+          : <>Demo login: <button type="button" onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); setError(null); }} className="font-semibold text-accent-ink hover:underline" title="Fill in the demo account">{DEMO.email} / {DEMO.password}</button></>}
       </p>
 
-      {!resetting && (
-        <button type="button" onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); setError(null); }}
-          className="group mt-6 flex w-full items-center gap-3 rounded-2xl border border-dashed border-brand/40 bg-accent-soft/50 px-4 py-3 text-left transition hover:border-brand hover:bg-accent-soft">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface text-accent-ink shadow-sm"><Icon name="user" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-ink">Fill in the demo account</span>
-            <span className="block truncate text-xs text-ink-2">{DEMO.email} · {DEMO.password}</span>
-          </span>
-          <Icon name="arrowRight" className="text-accent-ink transition group-hover:translate-x-0.5" />
-        </button>
-      )}
 
       <form key={shake} onSubmit={submit} noValidate className={`mt-6 space-y-4 ${shake ? "shake" : ""}`}>
         <Field label="Email" icon="mail" invalid={error?.field === "email"}>
@@ -169,7 +159,7 @@ function SignUpForm({ onSwitch, onDone }: { onSwitch: () => void; onDone: (btn: 
   return (
     <>
       <h1 className="font-display text-[32px] font-extrabold leading-tight tracking-tight text-ink">Create account</h1>
-      <p className="mt-2 text-sm text-ink-2">Already have one? <button type="button" onClick={onSwitch} className="font-semibold text-accent-ink hover:underline">Sign in</button></p>
+      <p className="mt-2 text-sm text-ink-2">The account is saved in this browser. You can sign in with it straight away.</p>
 
       <form key={shake} onSubmit={submit} noValidate className={`mt-6 space-y-4 ${shake ? "shake" : ""}`}>
         <Field label="Full name" icon="user" invalid={error?.field === "name"}>
@@ -242,75 +232,62 @@ function SubmitButton({ btn, busy, idle, loading, done }: { btn: RefObject<HTMLB
   );
 }
 
-/* ---------------- brand panel: live numbers from the running engine ---------------- */
+/* ---------------- mode switch ---------------- */
 
-function BrandPanel({ mode }: { mode: Mode }) {
-  const status = useQuery({ queryKey: ["auth", "status"], queryFn: () => api.get<SimStatus>("/api/sim/status"), refetchInterval: 4000, retry: false });
-  const feed = useQuery({ queryKey: ["auth", "feed"], queryFn: () => api.get<{ items: FeedItem[] }>("/api/feed?limit=4"), refetchInterval: 4000, retry: false });
+function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
+  return (
+    <div role="tablist" aria-label="Sign in or create account" className="relative grid grid-cols-2 rounded-2xl border border-line bg-surface-2 p-1">
+      <span aria-hidden className="absolute bottom-1 top-1 w-[calc(50%-4px)] rounded-xl bg-surface shadow-sm ring-1 ring-line transition-transform duration-500 ease-[cubic-bezier(.7,0,.2,1)]"
+        style={{ transform: mode === "signup" ? "translateX(calc(100% + 0px))" : "translateX(0)", left: 4 }} />
+      {(["signin", "signup"] as Mode[]).map((m) => (
+        <button key={m} role="tab" aria-selected={mode === m} onClick={() => onChange(m)}
+          className={`relative z-10 h-10 rounded-xl text-sm font-semibold transition-colors ${mode === m ? "text-ink" : "text-ink-3 hover:text-ink"}`}>
+          {m === "signin" ? "Sign in" : "Create account"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- brand panel: the logo, large, with a live status line ---------------- */
+
+function BrandPanel() {
+  const status = useQuery({ queryKey: ["auth", "status"], queryFn: () => api.get<SimStatus>("/api/sim/status"), refetchInterval: 5000, retry: false });
   const s = status.data;
   const state = status.isError ? "offline" : !s ? "connecting" : s.status === "resetting" ? "building" : s.clock.paused ? "paused" : "live";
-  const label = { offline: "API unreachable", connecting: "Connecting…", building: "Generating history", paused: "Simulation paused", live: "Simulation running" }[state];
+  const label = { offline: "API not reachable", connecting: "Connecting…", building: "Generating history", paused: "Simulation paused", live: "Simulation running" }[state];
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#2563eb] p-10 text-white shadow-pop">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#2563eb] p-8 text-white shadow-pop lg:p-10">
       <div className="login-orb left-[-10%] top-[-10%] h-72 w-72 bg-[#60a5fa]" />
       <div className="login-orb bottom-[-15%] right-[-10%] h-80 w-80 bg-[#3b82f6]" style={{ animationDelay: "-3s" }} />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: "linear-gradient(rgb(255 255 255 / .6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .6) 1px, transparent 1px)", backgroundSize: "44px 44px", maskImage: "radial-gradient(circle at 50% 40%, black, transparent 75%)" }} />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: "linear-gradient(rgb(255 255 255 / .6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .6) 1px, transparent 1px)", backgroundSize: "44px 44px", maskImage: "radial-gradient(circle at 50% 45%, black, transparent 75%)" }} />
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden>
-        <path d="M-20 640 C 140 560, 260 520, 340 380 S 520 160, 640 120" fill="none" stroke="rgb(147 197 253 / .45)" strokeWidth="2" strokeDasharray="3 10" />
+        <path d="M-20 700 C 140 640, 220 600, 300 470 S 520 160, 640 120" fill="none" stroke="rgb(147 197 253 / .4)" strokeWidth="2" strokeDasharray="3 10" />
       </svg>
-      <div className="pointer-events-none absolute left-0 top-0" style={{ offsetPath: "path('M -20 640 C 140 560, 260 520, 340 380 S 520 160, 640 120')", offsetRotate: "auto 45deg", animation: "login-loop 9s cubic-bezier(.45,.05,.55,.95) infinite" } as CSSProperties} aria-hidden>
-        <LogoMark size={44} tone="white" />
+
+      {/* stacked logo, as on the brand sheet */}
+      <div className="relative m-auto flex flex-col items-center text-center">
+        <div className="relative">
+          <div className="absolute inset-0 -z-10 scale-150 rounded-full bg-[#60a5fa]/30 blur-3xl" aria-hidden />
+          <LogoMark size={148} tone="white" className="login-float drop-shadow-[0_20px_30px_rgb(15_23_42/.45)]" style={{ animationDuration: "5s" }} />
+        </div>
+        <div className="mt-6 font-display text-5xl font-extrabold tracking-tight lg:text-6xl" style={{ animation: "rise 700ms cubic-bezier(.2,.8,.2,1) 150ms both" }}>
+          Lead<span className="text-[#93c5fd]">Pilot</span>
+        </div>
+        <div className="mt-3 text-lg font-medium text-white/80 lg:text-xl" style={{ animation: "rise 700ms cubic-bezier(.2,.8,.2,1) 280ms both" }}>
+          Smarter Leads. <span className="text-white">Bigger Deals.</span>
+        </div>
       </div>
 
-      <div className="relative flex items-center justify-between">
-        <span className="flex items-center gap-2.5"><LogoMark size={36} tone="white" /><span className="font-display text-xl font-extrabold tracking-tight">Lead<span className="text-[#93c5fd]">Pilot</span></span></span>
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
+      <div className="relative flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs text-white/80 backdrop-blur-xl" style={{ animation: "rise 700ms 400ms both" }}>
+        <span className="inline-flex items-center gap-2 font-medium text-white">
           <span className={`h-2 w-2 rounded-full ${state === "live" ? "live-dot bg-[#86efac]" : state === "offline" ? "bg-[#fca5a5]" : "bg-[#fde68a]"}`} />{label}
         </span>
-      </div>
-
-      <div className="relative mt-auto">
-        <div className="mb-8 grid grid-cols-2 gap-3">
-          <GlassStat label="Open leads" value={s ? num(s.open_leads) : "–"} sub={s ? `${num(s.stalled)} stalled · ${num(s.quarantined)} quarantined` : " "} delay={150} />
-          <GlassStat label="Deals closed" value={s ? `${num(s.won)} won` : "–"} sub={s ? `${num(s.lost)} lost · ${num(s.historical_deals)} in history` : " "} delay={250} />
-          <div className="col-span-2 rounded-2xl border border-white/20 bg-white/10 p-4 shadow-[0_20px_40px_-20px_rgb(0_0_0/.5)] backdrop-blur-xl" style={{ animation: "rise 700ms cubic-bezier(.2,.8,.2,1) 350ms both" }}>
-            <div className="mb-2 flex items-baseline justify-between text-xs text-white/70"><span>Latest events</span><span className="tabular">{s ? `${num(s.events)} processed` : ""}</span></div>
-            <ul className="space-y-1.5">
-              {(feed.data?.items ?? []).slice(0, 4).map((f) => (
-                <li key={f.event_id} className="flex items-center gap-2.5 text-sm" style={{ animation: "rise 400ms both" }}>
-                  {f.grade ? <span className="w-12 shrink-0 rounded-md bg-white px-1.5 py-0.5 text-center text-[11px] font-bold tabular text-[#1d4ed8]">{f.grade} {Math.round(f.score ?? 0)}</span> : <span className="w-12 shrink-0" />}
-                  <span className="min-w-0 flex-1 truncate"><span className="font-medium">{f.name ?? f.lead_id}</span> <span className="text-white/65">· {human(f.type)}</span></span>
-                  <span className={`shrink-0 text-xs tabular ${f.delta >= 0.05 ? "text-[#86efac]" : f.delta <= -0.05 ? "text-[#fca5a5]" : "text-white/60"}`}>{Math.abs(f.delta) < 0.05 ? "±0" : signed(f.delta)}</span>
-                </li>
-              ))}
-              {!feed.data?.items.length && <li className="text-sm text-white/60">{state === "offline" ? "Start the backend to see live events here." : "Waiting for the first events…"}</li>}
-            </ul>
-          </div>
-        </div>
-        <h2 key={mode} className="font-display text-4xl font-extrabold leading-[1.1] tracking-tight" style={{ animation: "rise 600ms both" }}>
-          Smarter leads.<br /><span className="text-[#93c5fd]">Bigger deals.</span>
-        </h2>
-        <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75">
-          {mode === "signin"
-            ? "Your queue is ordered by score, deal value and SLA risk. Open any lead to see why its score moved."
-            : "Each lead is scored on every event, moved through the pipeline on evidence and routed to the rep most likely to close it."}
-        </p>
+        {s && <span className="tabular">{num(s.open_leads)} open leads</span>}
+        {s && <span className="tabular">{num(s.events)} events processed</span>}
+        {state === "offline" && <span>Start it with <code className="rounded bg-white/15 px-1">python scripts/dev.py</code></span>}
       </div>
     </div>
   );
 }
-
-function GlassStat({ label, value, sub, delay }: { label: string; value: string; sub: string; delay: number }) {
-  const [flash, setFlash] = useState(false);
-  const prev = useRef(value);
-  useEffect(() => { if (prev.current !== value) { prev.current = value; setFlash(true); const t = setTimeout(() => setFlash(false), 600); return () => clearTimeout(t); } }, [value]);
-  return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-[0_20px_40px_-20px_rgb(0_0_0/.5)] backdrop-blur-xl" style={{ animation: `rise 700ms cubic-bezier(.2,.8,.2,1) ${delay}ms both` }}>
-      <div className="text-xs text-white/70">{label}</div>
-      <div className={`mt-1 font-display text-3xl font-bold tabular transition-colors duration-500 ${flash ? "text-[#bfdbfe]" : ""}`}>{value}</div>
-      <div className="mt-0.5 truncate text-xs text-white/65">{sub}</div>
-    </div>
-  );
-}
-

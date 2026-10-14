@@ -23,7 +23,7 @@ export default function Quality() {
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
       <PageHeader title="Lead quality" subtitle="Fake and duplicate detection, the review queue, and which sources are worth paying for." />
-      <Card id="sources" title="Source quality" subtitle="Quality index = 0.30 SQL rate + 0.25 win rate + 0.20 (1 − fake) + 0.15 (1 − dup) + 0.10 avg score · click a source for its leads" pad={false}
+      <Card id="sources" title="Source quality" subtitle="Quality index = 0.30 SQL rate + 0.25 win rate + 0.20 (1 − fake) + 0.15 (1 − dup) + 0.10 avg score" pad={false}
         right={<Segmented value={win} onChange={setWin} options={[{ value: 7, label: "7 days" }, { value: 30, label: "30 days" }]} />}>
         {!sq.data ? <Loading /> : (
           <div className="scroll-thin overflow-x-auto">
@@ -132,7 +132,7 @@ function Trend({ trend, names }: { trend: Record<string, any[]>; names: Record<s
   const data = dates.map((d) => Object.fromEntries([["date", d], ...ids.map((id) => [id, trend[id].find((r) => r.date === d)?.quality_index ?? null])]));
   return (
     <>
-      <Legend items={ids.map((id, i) => ({ label: names[id] ?? id, color: SERIES[i] }))} />
+      <Legend items={ids.map((id, i) => ({ label: names[id] ?? id, color: SERIES[i], href: to.leads({ source: id }) }))} />
       <div className="mt-2 h-60">
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>

@@ -66,6 +66,7 @@ export default function Shell() {
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <div className="arrive-top relative z-30"><TopBar onMenu={() => setDrawer(true)} /></div>
         <main className="arrive-main scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-4 md:px-6 lg:px-8">
+          <ApiStatus />
           <div key={loc.pathname} className="page-enter">
             <Outlet />
           </div>
@@ -74,6 +75,39 @@ export default function Shell() {
       <Toasts />
     </div>
   );
+}
+
+/** Explains an empty dashboard instead of leaving skeletons spinning: API down, or still building history. */
+function ApiStatus() {
+  const { clock } = useLive();
+  const qc = useQueryClient();
+  const health = useQuery({ queryKey: ["health"], queryFn: () => api.get<unknown>("/api/health"), refetchInterval: (q) => (q.state.status === "error" ? 3000 : 15000), retry: false });
+  const recovered = useRef(false);
+  useEffect(() => {
+    if (health.isError) recovered.current = true;
+    else if (health.isSuccess && recovered.current) { recovered.current = false; qc.invalidateQueries(); }
+  }, [health.isError, health.isSuccess, qc]);
+  if (health.isError) {
+    return (
+      <div role="alert" className="pop mb-4 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 text-sm" style={{ borderColor: "color-mix(in srgb, var(--c-critical) 40%, transparent)", background: "color-mix(in srgb, var(--c-critical) 8%, var(--c-surface))" }}>
+        <Icon name="alert" className="shrink-0 text-critical-ink" />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-ink">The LeadPilot API is not reachable</div>
+          <div className="text-ink-2">Start it with <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">python scripts/dev.py</code> from the project folder (or <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">make dev</code>). This page reconnects on its own.</div>
+        </div>
+        <button onClick={() => health.refetch()} className="rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink shadow-sm hover:bg-surface-2">Retry now</button>
+      </div>
+    );
+  }
+  if (clock.status === "resetting" || clock.status === "starting") {
+    return (
+      <div role="status" className="pop mb-4 flex items-center gap-3 rounded-2xl border border-brand/30 bg-accent-soft/60 px-4 py-3 text-sm text-ink-2">
+        <span className="h-4 w-4 shrink-0 rounded-full border-2 border-brand/30 border-t-brand" style={{ animation: "spin 700ms linear infinite" }} />
+        {clock.status === "resetting" ? "Generating 6 months of simulated history. Numbers appear in about 20 seconds." : "Connecting to the live engine…"}
+      </div>
+    );
+  }
+  return null;
 }
 
 function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean; onToggle?: () => void; onClose?: () => void; drawer?: boolean }) {
@@ -140,7 +174,7 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
             </div>
             <div className="mt-1 font-display text-2xl font-bold tabular">{eventsPerMin}<span className="ml-1 text-xs font-medium text-white/75">events / min</span></div>
             <div className="mt-0.5 text-[11px] leading-snug text-white/80">
-              {status.data ? `${status.data.open_leads} open leads · ${status.data.events.toLocaleString()} events processed` : "Loading workspace numbers…"}
+              {status.data ? `${status.data.open_leads} open leads · ${status.data.events.toLocaleString()} events processed` : status.isError ? "No numbers while the API is offline" : "Loading…"}
             </div>
             <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/90 group-hover:text-white">Open live feed <Icon name="arrowRight" size={12} /></div>
           </div>
@@ -287,6 +321,9 @@ function SearchBox() {
   );
 }
 
+/** Where a notification leads: its lead if it has one, otherwise the page about it. */
+const toastHref = (t: Toast) => (t.lead_id ? to.lead(t.lead_id) : t.kind === "source.flagged" ? to.quality("sources") : t.kind === "lead.merged" ? to.quality("merges") : null);
+
 const KIND_ICON: Record<string, IconName> = { "lead.reassigned": "users", "stall.detected": "alert", "lead.merged": "merge", "source.flagged": "quality", "scenario.launched": "zap", welcome: "check" };
 
 function Notifications() {
@@ -307,7 +344,7 @@ function Notifications() {
           <div className="scroll-thin max-h-80 overflow-y-auto p-1.5">
             {!history.length ? <div className="px-3 py-6 text-center text-sm text-ink-3">No notifications yet. Reassignments, stalls and merges appear here.</div>
               : history.map((t) => (
-                <button key={t.id} onClick={() => { if (t.lead_id) nav(`/leads/${t.lead_id}`); setOpen(false); }} className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition hover:bg-surface-2">
+                <button key={t.id} onClick={() => { const h = toastHref(t); if (h) nav(h); setOpen(false); }} className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition hover:bg-surface-2">
                   <ToastIcon t={t} />
                   <span className="min-w-0 flex-1 text-ink-2">{t.text}</span>
                 </button>
@@ -371,7 +408,7 @@ function Toasts() {
         <div key={t.id} className="toastin card pointer-events-auto relative overflow-hidden rounded-2xl shadow-pop">
           <div className="flex items-start gap-2.5 px-3 py-3 text-sm">
             <ToastIcon t={t} />
-            <button className="flex-1 text-left text-ink" onClick={() => { if (t.lead_id) nav(`/leads/${t.lead_id}`); dismiss(t.id); }}>{t.text}</button>
+            <button className="flex-1 text-left text-ink" onClick={() => { const h = toastHref(t); if (h) nav(h); dismiss(t.id); }}>{t.text}</button>
             <button className="grid h-6 w-6 place-items-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink" onClick={() => dismiss(t.id)} aria-label="Dismiss"><Icon name="close" size={13} /></button>
           </div>
           <div className="absolute bottom-0 left-0 h-0.5 w-full origin-left bg-gradient-to-r from-[#60a5fa] to-[#2563eb]" style={{ animation: "drain 7s linear forwards" }} aria-hidden />

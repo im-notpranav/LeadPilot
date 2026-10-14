@@ -234,7 +234,7 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .field-input::placeholder { color: var(--c-ink-3); }
 .field-input:focus-visible { outline: none; }
 .auth-swap { animation: rise 520ms cubic-bezier(.2, .8, .2, 1) both; }
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .auth { height: 100%; overflow: hidden; }
   .auth-brand, .auth-form { position: absolute; top: 0; bottom: 0; left: 0; width: 50%; transition: transform 800ms cubic-bezier(.7, 0, .2, 1); }
   .auth-brand { z-index: 20; }

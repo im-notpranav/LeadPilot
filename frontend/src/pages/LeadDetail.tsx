@@ -7,7 +7,7 @@ import { useLive } from "../lib/live";
 import { ago, dateTime, human, minutes, minutesUntil, money, pct, signed, titleCase } from "../lib/format";
 import { AXIS, GRID } from "../components/charts";
 import { Icon } from "../components/icons";
-import { signalBase, to } from "../lib/links";
+import { jumpTo, signalBase, to } from "../lib/links";
 import { Button, Card, Chip, Delta, Empty, GradePill, IntentBadge, Loading, Select, StageBadge, StallFlag, Stat, StatusTag } from "../components/ui";
 
 export default function LeadDetail() {
@@ -73,13 +73,13 @@ function Header({ l }: { l: Lead }) {
         <div className="flex items-center gap-2 text-sm"><span className="text-ink-3">Owner</span>{l.owner_rep_id ? <Link to={to.queue(l.owner_rep_id)} className="drill font-medium" title={`${l.owner_name}'s queue`}>{l.owner_name}</Link> : <span className="font-medium">Unassigned</span>}</div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-4 border-t border-line pt-4 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Score" value={l.score.toFixed(1)} sub={`fit ${l.parts.fit.toFixed(0)} · eng ${l.parts.engagement.toFixed(0)} · intent ${l.parts.intent.toFixed(0)} · pen ${l.parts.penalties.toFixed(0)}`} />
+        <Stat label="Score" value={<button onClick={() => jumpTo("factors")} className="drill" title="See the factor breakdown">{l.score.toFixed(1)}</button>} sub={`fit ${l.parts.fit.toFixed(0)} · eng ${l.parts.engagement.toFixed(0)} · intent ${l.parts.intent.toFixed(0)} · pen ${l.parts.penalties.toFixed(0)}`} />
         <Stat label="Intent" value={<Link to={to.leads({ intent: l.intent_level })} title={`All ${l.intent_level}-intent leads`}><IntentBadge level={l.intent_level} /></Link>}
           sub={l.active_signals.length ? l.active_signals.map((s, i) => <span key={s}>{i > 0 && ", "}<Link to={to.leads({ signal: signalBase(s) })} className="drill">{human(s)}</Link></span>) : "no active signals"} />
-        <Stat label="Close probability" value={pct(l.close_prob, 1)} sub={`${l.days_in_stage.toFixed(1)}d in ${human(l.stage)}`} />
-        <Stat label="Predicted ACV" value={money(l.predicted_acv)} sub={`${money(l.acv_p10)} – ${money(l.acv_p90)}`} />
-        <Stat label="Expected value" value={money(l.expected_value)} sub="ACV × probability" />
-        <Stat label="Priority" value={l.priority.toFixed(0)} sub={l.priority_drivers.map((d) => d.label).join(" · ")} />
+        <Stat label="Close probability" value={<button onClick={() => jumpTo("prediction")} className="drill" title="See what drives this">{pct(l.close_prob, 1)}</button>} sub={`${l.days_in_stage.toFixed(1)}d in ${human(l.stage)}`} />
+        <Stat label="Predicted ACV" value={<button onClick={() => jumpTo("prediction")} className="drill" title="See how ACV is built">{money(l.predicted_acv)}</button>} sub={`${money(l.acv_p10)} – ${money(l.acv_p90)}`} />
+        <Stat label="Expected value" value={<button onClick={() => jumpTo("prediction")} className="drill" title="See the deal prediction">{money(l.expected_value)}</button>} sub="ACV × probability" />
+        <Stat label="Priority" value={l.owner_rep_id ? <Link to={to.queue(l.owner_rep_id)} className="drill" title={`Position in ${l.owner_name}'s queue`}>{l.priority.toFixed(0)}</Link> : l.priority.toFixed(0)} sub={l.priority_drivers.map((d) => d.label).join(" · ")} />
       </div>
     </section>
   );
@@ -162,7 +162,7 @@ function Waterfall({ factors, score }: { factors: Record<string, Factor>; score:
   }, [factors]);
   const scale = (v: number) => `${Math.max(0, Math.min(100, v))}%`;
   return (
-    <Card title="Factor breakdown" subtitle={`Fit + engagement + intent − penalties = ${score.toFixed(1)}. Bars show each factor's step on the 0–100 scale.`}>
+    <Card id="factors" title="Factor breakdown" subtitle={`Fit + engagement + intent − penalties = ${score.toFixed(1)}. Bars show each factor's step on the 0–100 scale.`}>
       <div className="space-y-1.5">
         {rows.map(({ f, start, end }) => (
           <div key={f.key} className="grid grid-cols-[minmax(0,180px)_1fr_56px] items-center gap-3 text-sm" title={f.reason}>
@@ -194,7 +194,7 @@ function Timeline({ items }: { items: any[] }) {
   const [filter, setFilter] = useState<string>("all");
   const shown = items.filter((i) => filter === "all" || i.kind === filter).slice().reverse();
   return (
-    <Card title="Unified timeline" subtitle="Events, score changes, stage moves, assignments, actions and flags in one chronological view."
+    <Card id="timeline" title="Unified timeline" subtitle="Events, score changes, stage moves, assignments, actions and flags in one chronological view."
       right={<div className="flex flex-wrap gap-1">{["all", "event", "score", "stage", "assignment", "action", "stall"].map((k) => (
         <button key={k} onClick={() => setFilter(k)} className={`rounded-md px-2 py-0.5 text-xs ${filter === k ? "bg-accent-soft text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}>{k === "all" ? "All" : KIND_LABEL[k]}</button>
       ))}</div>}>
@@ -211,13 +211,13 @@ function TimelineRow({ i }: { i: any }) {
   if (i.kind === "event") {
     const pl = i.payload ?? {};
     const detail = pl.page_category ? `${pl.page_category} page` : pl.body ? `“${pl.body}”` : pl.outcome ? pl.outcome : pl.meeting_type ? pl.meeting_type : pl.amount ? money(pl.amount) : pl.status ? `fake score ${pl.fake_score} (${pl.status})` : pl.found ? `${pl.employees} employees, ${pl.industry}` : pl.template ? `template ${pl.template}` : pl.merged_from ? `duplicate ${pl.merged_from} merged` : "";
-    body = <><span className="font-medium">{human(i.type)}</span> <span className="text-ink-3">by {i.rep_name ?? i.actor}{i.derived ? " (derived)" : ""}</span>{detail && <div className="text-xs text-ink-2">{detail}</div>}</>;
+    body = <><Link to={to.feed({ type: i.type })} className="drill font-medium" title={`All ${human(i.type)} events`}>{human(i.type)}</Link> <span className="text-ink-3">by {i.rep_id && i.rep_name ? <Link to={to.queue(i.rep_id)} className="drill">{i.rep_name}</Link> : (i.rep_name ?? i.actor)}{i.derived ? " (derived)" : ""}</span>{detail && <div className="text-xs text-ink-2">{detail}</div>}</>;
   } else if (i.kind === "score") {
     body = <><span className="font-medium">Score {i.old.toFixed(0)} → {i.new.toFixed(0)}</span> <Delta value={i.delta} /><div className="text-xs text-ink-2">{i.contributions.filter((c: any) => Math.abs(c.delta) >= 0.05).slice(0, 3).map((c: any) => c.text).join(" · ") || "Time decay only"}</div></>;
   } else if (i.kind === "stage") {
-    body = <><span className="font-medium">{human(i.from_stage)} → {human(i.to_stage)}</span> <Chip>{i.rule_id}</Chip> <span className="text-xs text-ink-3">{i.mode}</span><div className="text-xs text-ink-2">{i.reason} · evidence {i.evidence_event_ids?.join(", ")}</div></>;
+    body = <><span className="font-medium"><Link to={to.pipeline({ stage: i.from_stage })} className="drill capitalize">{human(i.from_stage)}</Link> → <Link to={to.pipeline({ stage: i.to_stage })} className="drill capitalize">{human(i.to_stage)}</Link></span> <Chip>{i.rule_id}</Chip> <span className="text-xs text-ink-3">{i.mode}</span><div className="text-xs text-ink-2">{i.reason} · evidence {i.evidence_event_ids?.join(", ")}</div></>;
   } else if (i.kind === "assignment") {
-    body = <><span className="font-medium">{i.previous_rep_name ? `${i.previous_rep_name} → ` : ""}{i.rep_name}</span> <Chip>{i.rule_id ?? i.type}</Chip><div className="text-xs text-ink-2">{i.reason}</div></>;
+    body = <><span className="font-medium">{i.previous_rep_name ? <><Link to={to.queue(i.previous_rep_id)} className="drill">{i.previous_rep_name}</Link> → </> : ""}{i.rep_id ? <Link to={to.queue(i.rep_id)} className="drill">{i.rep_name}</Link> : i.rep_name}</span> <Chip>{i.rule_id ?? i.type}</Chip><div className="text-xs text-ink-2">{i.reason}</div></>;
   } else if (i.kind === "action") {
     body = <><span className="font-medium">{i.rule_id} {i.action}</span> <span className="text-xs text-ink-3">{i.status}</span><div className="text-xs text-ink-2">{i.reason}</div></>;
   } else if (i.kind === "stall") {
@@ -240,7 +240,7 @@ function NextAction({ l }: { l: Lead }) {
   const a = l.primary_action;
   const due = minutesUntil(a?.due_at, clock.now);
   return (
-    <Card title="Next best action">
+    <Card id="action" title="Next best action">
       {!a ? <p className="text-sm text-ink-3">No action: {l.stage === "won" || l.stage === "lost" ? "deal is closed" : "nothing recommended"}.</p> : (
         <div>
           <div className="flex items-start justify-between gap-2">
@@ -266,7 +266,7 @@ function NextAction({ l }: { l: Lead }) {
 function Prediction({ l }: { l: Lead }) {
   const maxAbs = Math.max(1, ...l.close_factors.map((f) => Math.abs(f.logit ?? 0)).filter((_, i) => i > 0));
   return (
-    <Card title="Deal prediction" subtitle={`${money(l.predicted_acv)} ACV × ${pct(l.close_prob, 1)} = ${money(l.expected_value)} expected`}>
+    <Card id="prediction" title="Deal prediction" subtitle={`${money(l.predicted_acv)} ACV × ${pct(l.close_prob, 1)} = ${money(l.expected_value)} expected`}>
       <div className="space-y-1 text-sm">
         {l.acv_factors.map((f) => (
           <div key={f.key} className="flex justify-between gap-2"><span className="text-ink-2">{f.label}</span><span className="tabular">{f.kind === "multiplier" ? `×${f.value}` : money(f.value)}</span></div>

@@ -32,10 +32,10 @@ export default function LiveFeed() {
 
   return (
     <div className="mx-auto max-w-[1200px]">
-      <PageHeader title="Live feed" subtitle="Every processed event with the score change it caused and a plain-English reason. Updates live." />
+      <PageHeader eyebrow="Real time" title="Live feed" subtitle="Every processed event with the score change it caused and a plain-English reason. Updates live." />
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         {Object.keys(GROUPS).map((g) => (
-          <button key={g} onClick={() => toggle(g)} className={`rounded-full border px-3 py-1 text-xs ${active.has(g) ? "border-transparent bg-accent text-white" : "border-line bg-surface text-ink-2 hover:bg-surface-2"}`}>{g}</button>
+          <button key={g} onClick={() => toggle(g)} aria-pressed={active.has(g)} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${active.has(g) ? "border-transparent bg-accent text-white shadow-[0_6px_14px_-6px_rgb(37_99_235/.7)]" : "border-line bg-surface text-ink-2 shadow-sm hover:border-brand/40 hover:text-ink"}`}>{g}</button>
         ))}
         <label className="ml-2 inline-flex items-center gap-1.5 text-xs text-ink-2"><input type="checkbox" checked={movers} onChange={(e) => setMovers(e.target.checked)} /> Only moves ≥ 3 points</label>
       </div>
@@ -43,7 +43,7 @@ export default function LiveFeed() {
         {!items.length ? <Empty>Waiting for events… start the simulator.</Empty> : (
           <ul>
             {items.map((i) => (
-              <li key={i.event_id} className="flash grid grid-cols-[56px_150px_minmax(0,200px)_70px_1fr] items-baseline gap-3 border-b border-line px-4 py-2 text-sm last:border-0">
+              <li key={i.event_id} className="flash grid grid-cols-[56px_150px_minmax(0,200px)_70px_1fr] items-baseline gap-3 border-b border-line px-4 py-2.5 text-sm transition-colors last:border-0 hover:bg-surface-2/50">
                 <span className="text-xs tabular text-ink-3">{time(i.ts)}</span>
                 <span className="truncate text-xs font-medium text-ink-2">{human(i.type)}{i.actor === "rep" ? " · rep" : ""}</span>
                 <Link to={`/leads/${i.lead_id}`} className="truncate font-medium hover:underline">{i.name ?? i.lead_id}<span className="font-normal text-ink-3"> {i.company ? `· ${i.company}` : ""}</span></Link>

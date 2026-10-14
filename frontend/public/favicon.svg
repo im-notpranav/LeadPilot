@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .tile{fill:url(#t)} .w{fill:#fff} .f{fill:#dbeafe} .k{fill:#bfdbfe} .b{fill:#fff}
+    @media (prefers-color-scheme: dark){
+      .tile{fill:url(#n)} .w{fill:url(#bw)} .f{fill:#93c5fd} .k{fill:#2563eb} .b{fill:url(#bb)}
+    }
+  </style>
+  <defs>
+    <linearGradient id="t" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+    <linearGradient id="n" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#1e293b"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+    <linearGradient id="bw" x1="2" y1="27" x2="62" y2="4" gradientUnits="userSpaceOnUse"><stop stop-color="#2563eb"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
+    <linearGradient id="bb" x1="0" y1="60" x2="0" y2="33" gradientUnits="userSpaceOnUse"><stop stop-color="#2563eb"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
+  </defs>
+  <rect class="tile" width="64" height="64" rx="15"/>
+  <g transform="translate(10 10) scale(.69)">
+    <path class="w" d="M62 4 L2 27 L22 35 Z"/>
+    <path class="f" d="M62 4 L22 35 L27 56 Z"/>
+    <path class="k" d="M62 4 L33 41 L27 56 Z"/>
+    <rect class="b" x="36" y="49" width="6.5" height="11" rx="1.6"/>
+    <rect class="b" x="45" y="42" width="6.5" height="18" rx="1.6"/>
+    <rect class="b" x="54" y="33" width="6.5" height="27" rx="1.6"/>
+  </g>
+</svg>

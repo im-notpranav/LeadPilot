@@ -57,7 +57,8 @@ make install   # creates backend/.venv, installs Python + npm dependencies
 make dev       # starts the API (port 8000) and the dashboard (port 5173)
 ```
 
-Open **http://localhost:5173**. Interactive API docs are at **http://localhost:8000/docs**.
+Open **http://localhost:5173** and sign in with the demo account (**demo@leadpilot.io** / **pilot123**, or click
+*Use the demo account*). Interactive API docs are at **http://localhost:8000/docs**.
 
 On first start the backend generates 6 months of closed-deal history and simulates a 21-day warm-up (about 150 open
 leads). This takes 10–20 seconds. After that the simulator runs live at 60× speed (1 simulated minute per real second).
@@ -254,6 +255,9 @@ TanStack Query · Recharts.
 
 ## 🎬 Dashboard tour (5-minute demo)
 
+0. **Sign in.** The app opens with a short brand animation (click or press any key to skip), then the sign-in page.
+   After sign-in the plane "takes off" from the button and the dashboard flies in. Toggle light / dark / system from
+   the top bar or the account menu; the choice is remembered. Press **Ctrl K** (or **/**) to search leads.
 1. **My Queue.** Leads ordered by priority for the selected rep. Each row shows a grade pill with a score sparkline,
    intent chips, the stage, stall flag, SLA countdown, the next best action (**Mark done**) and the top reasons.
 2. **Simulator → Reviver → Launch**, then set speed to 600×. Priya starts cold in *nurture* (score ~30). She visits
@@ -394,9 +398,10 @@ backend/
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
-  src/pages/     Queue · LeadDetail · Pipeline · LiveFeed · Analytics · Quality · Simulator
-  src/components ui · charts
-  src/lib        api client · live WebSocket · formatting
+  src/pages/     Login · Queue · LeadDetail · Pipeline · LiveFeed · Analytics · Quality · Simulator · NotFound (404)
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts
+  src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (demo sign-in)
+  public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest
 scripts/dev.py   runs backend + frontend together
 Makefile
 ```
@@ -412,4 +417,6 @@ Makefile
 - Weights are expert-set. The logistic model and the grade-vs-conversion chart show how to calibrate them.
 - Plus-tags are stripped from all email domains, so `rahul.k+ads@acme.io` matches `rahul.k@acme.io`. Dots are
   stripped for Gmail only.
+- Sign-in is a client-side demo gate: the API has no authentication, so any email with a 6+ character password
+  works and nothing is enforced server-side. Replace `signIn` in `frontend/src/lib/auth.tsx` when the API adds auth.
 - The in-memory store is the working set and SQLite is the durable copy. The server starts from a fresh seeded world.

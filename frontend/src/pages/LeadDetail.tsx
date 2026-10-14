@@ -14,7 +14,7 @@ export default function LeadDetail() {
   const hist = useQuery({ queryKey: ["lead", id, "score"], queryFn: () => api.get<{ points: ScorePoint[] }>(`/api/leads/${id}/score-history`) });
   const tl = useQuery({ queryKey: ["lead", id, "timeline"], queryFn: () => api.get<{ items: any[] }>(`/api/leads/${id}/timeline`) });
 
-  if (lead.isLoading) return <Loading />;
+  if (lead.isLoading) return <Card><Loading rows={5} /></Card>;
   if (lead.error) return <Empty>Lead not found. <Link className="text-accent-ink underline" to="/queue">Back to queue</Link></Empty>;
   const l = lead.data!;
   if (l.status === "merged") {
@@ -45,11 +45,12 @@ export default function LeadDetail() {
 
 function Header({ l }: { l: Lead }) {
   return (
-    <section className="rounded-xl border border-line bg-surface p-4">
+    <section className="card relative isolate overflow-hidden rounded-2xl p-5">
+      <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-56 w-56 rounded-full bg-[var(--c-glow-1)] blur-3xl" aria-hidden />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight">{l.name}</h1>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight">{l.name}</h1>
             <GradePill grade={l.grade} score={l.score} />
             <StageBadge stage={l.stage} />
             {l.is_stalled && <StallFlag rules={l.stall.rules} risk={l.stall.risk} />}
@@ -100,7 +101,7 @@ function ScoreChart({ points }: { points: ScorePoint[] }) {
                     const p = payload?.[0]?.payload as (typeof data)[number] | undefined;
                     if (!active || !p) return null;
                     return (
-                      <div className="max-w-xs rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-lg">
+                      <div className="max-w-xs rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-pop">
                         <div className="font-medium text-ink">{p.score.toFixed(1)} <span className="text-ink-3">({signed(p.delta)})</span></div>
                         <div className="text-ink-3">{dateTime(p.ts)} · {human(p.event_type)}</div>
                         <div className="mt-1 text-ink-2">{p.summary}</div>
@@ -388,9 +389,9 @@ function InjectEvent({ l }: { l: Lead }) {
       <div className="space-y-2">
         <Select value={type} onChange={setType}>{EVENT_TYPES.map((t) => <option key={t} value={t}>{human(t)}</option>)}</Select>
         {type === "page_view" && <Select value={cat} onChange={setCat} label="Page">{["pricing", "demo", "product", "case_study", "roi", "competitor_compare", "docs", "blog", "careers", "enterprise_plan"].map((c) => <option key={c}>{c}</option>)}</Select>}
-        {type === "email_replied" && <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} className="w-full rounded-lg border border-line bg-surface p-2 text-sm outline-none focus:ring-2 focus:ring-accent/40" />}
+        {type === "email_replied" && <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} className="w-full rounded-xl border border-line bg-surface p-2 text-sm outline-none focus:ring-2 focus:ring-accent/40" />}
         {type === "call_logged" && <Select value={outcome} onChange={setOutcome} label="Outcome">{["connected", "voicemail", "no_answer"].map((c) => <option key={c}>{c}</option>)}</Select>}
-        {["proposal_sent", "contract_sent", "deal_won"].includes(type) && <input value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-lg border border-line bg-surface px-2 py-1.5 text-sm" />}
+        {["proposal_sent", "contract_sent", "deal_won"].includes(type) && <input value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-xl border border-line bg-surface px-2 py-1.5 text-sm" />}
         <Button variant="primary" size="sm" onClick={send}>Send event</Button>
         {res && <div className="text-xs text-ink-2">{res}</div>}
         <div className="text-[11px] text-ink-3">Last inbound {ago(l.last_inbound_at, useLive().clock.now)}</div>

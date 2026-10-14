@@ -24,8 +24,8 @@ export default function Simulator() {
 
   return (
     <div className="mx-auto max-w-[1300px] space-y-4">
-      <PageHeader title="Simulator" subtitle="A seeded, deterministic simulation: personas, sources, reps with response-delay profiles, 6 months of closed-deal history." />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <PageHeader eyebrow="System" title="Simulator" subtitle="A seeded, deterministic simulation: personas, sources, reps with response-delay profiles, 6 months of closed-deal history." />
+      <div className="stagger grid gap-4 lg:grid-cols-3">
         <Card title="Clock" subtitle={resetting ? "Resetting…" : dateTime(clock.now)}>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
@@ -38,7 +38,7 @@ export default function Simulator() {
         </Card>
         <Card title="Reset" subtitle="Regenerates history and ~150 open leads from a seed">
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm">Seed <input value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ""))} className="w-24 rounded-lg border border-line bg-surface px-2 py-1.5 tabular" /></label>
+            <label className="flex items-center gap-2 text-sm">Seed <input value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ""))} className="w-24 rounded-xl border border-line bg-surface px-2 py-1.5 tabular" /></label>
             <Button variant="danger" disabled={resetting} onClick={() => post("/api/sim/reset", { seed: Number(seed || 42) })}>Reset world</Button>
             <div className="flex flex-col gap-1.5 text-sm">
               <label className="inline-flex items-center gap-2"><input type="checkbox" checked={s?.background ?? true} onChange={(e) => post("/api/sim/background", { enabled: e.target.checked })} /> Background lead arrivals</label>
@@ -64,7 +64,7 @@ export default function Simulator() {
             {scenarios.data.items.map((sc) => {
               const info = launched[sc.name];
               return (
-                <div key={sc.name} className="flex flex-col rounded-lg border border-line p-3">
+                <div key={sc.name} className="flex flex-col rounded-xl border border-line bg-surface-2/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-card">
                   <div className="flex items-baseline justify-between"><h3 className="font-semibold">{sc.title}</h3><span className="text-xs text-ink-3">~{sc.duration_hours >= 24 ? `${sc.duration_hours / 24}d` : `${sc.duration_hours}h`} sim</span></div>
                   <p className="mt-1 text-sm text-ink-2">{sc.description}</p>
                   <ul className="mt-2 flex-1 space-y-0.5 text-xs text-ink-2">{sc.expected.map((e) => <li key={e}>✓ {e}</li>)}</ul>

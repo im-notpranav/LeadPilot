@@ -5,9 +5,9 @@ import type { FeedItem } from "./api";
 
 type Clock = { now: string | null; speed: number; paused: boolean; status: string };
 export type Toast = { id: number; kind: string; text: string; lead_id?: string };
-type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[]; dismiss: (id: number) => void; eventsPerMin: number };
+type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[]; dismiss: (id: number) => void; eventsPerMin: number; history: Toast[]; unread: number; markRead: () => void; notify: (text: string, kind?: string) => void };
 
-const LiveCtx = createContext<Live>({ clock: { now: null, speed: 60, paused: true, status: "starting" }, connected: false, feed: [], toasts: [], dismiss: () => {}, eventsPerMin: 0 });
+const LiveCtx = createContext<Live>({ clock: { now: null, speed: 60, paused: true, status: "starting" }, connected: false, feed: [], toasts: [], dismiss: () => {}, eventsPerMin: 0, history: [], unread: 0, markRead: () => {}, notify: () => {} });
 
 const DATA_KEYS = [["leads"], ["queue"], ["pipeline"], ["lead"], ["feed"], ["reps"], ["sim"]];
 const QUALITY_KEYS = [["quality"]];
@@ -19,9 +19,18 @@ export function LiveProvider({ children }: { children: ReactNode }) {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [eventsPerMin, setEpm] = useState(0);
+  const [history, setHistory] = useState<Toast[]>([]);
+  const [unread, setUnread] = useState(0);
   const dirty = useRef({ data: false, quality: false, all: false });
   const counter = useRef<number[]>([]);
   const toastId = useRef(0);
+
+  const push = (items: Toast[]) => {
+    setToasts((ts) => [...items.slice(-3), ...ts].slice(0, 4));
+    setHistory((h) => [...items.slice().reverse(), ...h].slice(0, 20));
+    setUnread((n) => n + items.length);
+    for (const t of items) window.setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== t.id)), 7000);
+  };
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -50,10 +59,7 @@ export function LiveProvider({ children }: { children: ReactNode }) {
           if (t) newToasts.push({ id: ++toastId.current, kind: m.type, ...t });
         }
         if (fresh.length) setFeed((f) => [...fresh.reverse(), ...f].slice(0, 250));
-        if (newToasts.length) {
-          setToasts((ts) => [...newToasts.slice(-3), ...ts].slice(0, 4));
-          for (const t of newToasts) window.setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== t.id)), 7000);
-        }
+        if (newToasts.length) push(newToasts);
       };
     };
     connect();
@@ -76,7 +82,9 @@ export function LiveProvider({ children }: { children: ReactNode }) {
   }, [qc]);
 
   const dismiss = (id: number) => setToasts((ts) => ts.filter((t) => t.id !== id));
-  return <LiveCtx.Provider value={{ clock, connected, feed, toasts, dismiss, eventsPerMin }}>{children}</LiveCtx.Provider>;
+  const markRead = () => setUnread(0);
+  const notify = (text: string, kind = "info") => push([{ id: ++toastId.current, kind, text }]);
+  return <LiveCtx.Provider value={{ clock, connected, feed, toasts, dismiss, eventsPerMin, history, unread, markRead, notify }}>{children}</LiveCtx.Provider>;
 }
 
 function toastFor(type: string, d: any): { text: string; lead_id?: string } | null {

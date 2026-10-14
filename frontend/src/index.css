@@ -52,7 +52,7 @@
   --c-critical: #d03b3b;
   --c-good-ink: #006300;
   --c-critical-ink: #b02a2a;
-  --c-glass: rgb(255 255 255 / 0.66);
+  --c-glass: rgb(255 255 255 / 0.72);
   --c-glass-line: rgb(255 255 255 / 0.8);
   --c-glow-1: rgb(96 165 250 / 0.35);
   --c-glow-2: rgb(147 197 253 / 0.40);
@@ -84,7 +84,7 @@
   --c-wordmark: #60a5fa;
   --c-good-ink: #4cc44c;
   --c-critical-ink: #ef8181;
-  --c-glass: rgb(17 26 46 / 0.62);
+  --c-glass: rgb(17 26 46 / 0.7);
   --c-glass-line: rgb(148 163 184 / 0.14);
   --c-glow-1: rgb(37 99 235 / 0.28);
   --c-glow-2: rgb(30 64 175 / 0.30);
@@ -99,9 +99,6 @@
 
 html, body, #root { height: 100%; }
 body { background: var(--c-page); color: var(--c-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after {
-  transition: background-color 280ms ease, border-color 280ms ease, color 200ms ease, fill 280ms ease !important;
-}
 ::selection { background: color-mix(in srgb, var(--c-brand) 28%, transparent); }
 :focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
 
@@ -113,7 +110,7 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 
 /* Airy blue backdrop behind the whole app (reference: frosted SaaS panels). */
 .app-backdrop {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; contain: strict;
   background:
     radial-gradient(60rem 40rem at 8% -10%, var(--c-glow-2), transparent 60%),
     radial-gradient(50rem 36rem at 105% 0%, var(--c-glow-1), transparent 62%),
@@ -121,17 +118,24 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
     var(--c-page);
 }
 .app-backdrop::after {
-  content: ""; position: absolute; inset: 0; opacity: .5;
+  content: ""; position: absolute; inset: 0 0 35% 0; opacity: .5;
   background-image: radial-gradient(color-mix(in srgb, var(--c-ink-3) 18%, transparent) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: linear-gradient(to bottom, black, transparent 70%);
 }
 
+/* Frosted panels. The sidebar, header and pipeline columns sit over the fixed backdrop and nothing
+   scrolls beneath them, so a tinted fill looks the same as a live blur and costs nothing to repaint.
+   Real backdrop blur is kept for overlays that float over content (.glass-blur). */
 .glass {
   background: var(--c-glass);
   border: 1px solid var(--c-glass-line);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+.glass-blur {
+  background: var(--c-glass);
+  border: 1px solid var(--c-glass-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .card { background: var(--c-surface); border: 1px solid var(--c-line); box-shadow: var(--sh-card); }
 .btn-brand {
@@ -141,80 +145,77 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 }
 .btn-brand:hover { filter: brightness(1.08); }
 
-/* ---------- motion ---------- */
+/* Long lists: cards scrolled out of view skip style, layout and paint (a theme switch only repaints what is visible). */
+.cv-auto { content-visibility: auto; contain-intrinsic-size: auto 104px; }
+
+/* ---------- motion ----------
+   Rules: transform and opacity only (they run on the compositor, so a busy main thread can't stall them),
+   150-250ms for UI feedback, nothing waits on an animation, no decorative loops in the app shell. */
+:root { --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1); }
 @keyframes flash { from { background: var(--c-accent-soft); } to { background: transparent; } }
-.flash { animation: flash 1.6s ease-out; }
-@keyframes slidein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.slidein { animation: slidein 220ms ease-out; }
-@keyframes toastin { from { opacity: 0; transform: translateX(24px) scale(.98); } to { opacity: 1; transform: none; } }
-.toastin { animation: toastin 320ms cubic-bezier(.2, .9, .3, 1.2); }
+.flash { animation: flash 900ms ease-out; }
+@keyframes slidein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.slidein { animation: slidein 160ms var(--ease-out); }
+@keyframes toastin { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+.toastin { animation: toastin 200ms var(--ease-out); }
 @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-@keyframes pop { 0% { opacity: 0; transform: scale(.96) translateY(-4px); } 100% { opacity: 1; transform: none; } }
-.pop { animation: pop 160ms ease-out; transform-origin: top; }
+@keyframes pop { 0% { opacity: 0; transform: scale(.97) translateY(-2px); } 100% { opacity: 1; transform: none; } }
+.pop { animation: pop 140ms var(--ease-out); transform-origin: top; }
 
-/* Route change: the page rises in, its direct children cascade. */
-.page-enter { animation: rise 420ms cubic-bezier(.2, .8, .2, 1) both; }
-.stagger > * { animation: rise 520ms cubic-bezier(.2, .8, .2, 1) both; }
-.stagger > *:nth-child(2) { animation-delay: 60ms; }
-.stagger > *:nth-child(3) { animation-delay: 120ms; }
-.stagger > *:nth-child(4) { animation-delay: 180ms; }
-.stagger > *:nth-child(5) { animation-delay: 240ms; }
-.stagger > *:nth-child(6) { animation-delay: 300ms; }
-.stagger > *:nth-child(n+7) { animation-delay: 340ms; }
+/* Route change: one quick fade-up for the whole page. */
+.page-enter { animation: rise 180ms var(--ease-out) both; }
 
-/* Post-login arrival: sidebar slides in, header drops, content rises. */
-@keyframes arrive-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
-@keyframes arrive-down { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+/* Post-login arrival: the takeoff color fades away while the shell settles in. No staggered delays. */
+@keyframes arrive-left { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+@keyframes arrive-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 @keyframes arrive-veil { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
-.arrive .arrive-side { animation: arrive-left 700ms cubic-bezier(.2, .8, .2, 1) 120ms both; }
-.arrive .arrive-top { animation: arrive-down 600ms cubic-bezier(.2, .8, .2, 1) 260ms both; }
-.arrive .arrive-main { animation: rise 700ms cubic-bezier(.2, .8, .2, 1) 380ms both; }
-.arrive-veil { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: linear-gradient(135deg, #1d4ed8, #3b82f6 55%, #60a5fa); animation: arrive-veil 650ms ease-out both; }
+.arrive .arrive-side { animation: arrive-left 240ms var(--ease-out) both; }
+.arrive .arrive-top { animation: arrive-down 240ms var(--ease-out) both; }
+.arrive .arrive-main { animation: rise 240ms var(--ease-out) both; }
+.arrive-veil { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: linear-gradient(135deg, #1d4ed8, #3b82f6 55%, #60a5fa); animation: arrive-veil 220ms ease-out both; }
 
-@keyframes pulse-ring { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes pulse-ring { 0% { transform: scale(1); opacity: .5; } 70%, 100% { transform: scale(2.4); opacity: 0; } }
 .live-dot { position: relative; }
-.live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; background: inherit; animation: pulse-ring 1.8s ease-out infinite; }
+.live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; background: inherit; animation: pulse-ring 2.4s ease-out infinite; }
 
-@keyframes shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(3px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
-.shake { animation: shake 480ms cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+.shake { animation: shake 300ms ease-in-out both; }
 
-@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes drift { from { transform: translateX(-10%); } to { transform: translateX(110vw); } }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes dash { to { stroke-dashoffset: 0; } }
 @keyframes grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
-/* ---------- Splash (opening animation) ---------- */
+/* ---------- Splash (opening animation, ~1.1s, first load of a tab only) ----------
+   The plane glides in on a short arc and settles, the bars pop up under it, the name fades up,
+   then the plane climbs out of frame as the splash fades. */
 .splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow: hidden; background: var(--c-page); cursor: pointer; }
-.splash::before {
-  content: ""; position: absolute; inset: -20%;
-  background: radial-gradient(closest-side, var(--c-glow-1), transparent 70%);
-  animation: fadein 900ms ease-out both, splash-breathe 2.4s ease-in-out infinite alternate;
+.splash::before { content: ""; position: absolute; inset: -20%; background: radial-gradient(closest-side, var(--c-glow-1), transparent 70%); }
+.splash.is-leaving { animation: splash-out 300ms ease-in 60ms forwards; }
+@keyframes splash-out { to { opacity: 0; visibility: hidden; } }
+.splash-plane { animation: splash-glide 560ms var(--ease-out) both; will-change: transform, opacity; }
+@keyframes splash-glide {
+  0% { opacity: 0; transform: translate(-150px, 96px) rotate(-14deg) scale(.55); }
+  25% { opacity: 1; }
+  70% { transform: translate(3px, -4px) rotate(2deg) scale(1.03); }
+  100% { opacity: 1; transform: none; }
 }
-@keyframes splash-breathe { from { transform: scale(.85); } to { transform: scale(1.05); } }
-.splash.is-leaving { animation: splash-out 520ms cubic-bezier(.7, 0, .3, 1) forwards; }
-@keyframes splash-out { to { opacity: 0; transform: scale(1.04); visibility: hidden; } }
-.splash-trail { stroke-dasharray: 520; stroke-dashoffset: 520; animation: dash 900ms cubic-bezier(.6, .1, .3, 1) 80ms forwards; }
-.splash-plane { offset-path: path("M -260 190 C -150 150, -90 40, 0 0"); offset-rotate: 0deg; offset-anchor: 0 0; animation: splash-fly 900ms cubic-bezier(.3, .1, .2, 1) 80ms both; }
-@keyframes splash-fly { from { offset-distance: 0%; opacity: 0; } 15% { opacity: 1; } to { offset-distance: 100%; opacity: 1; } }
-.splash.is-leaving .splash-plane-wrap { animation: takeoff 520ms cubic-bezier(.6, 0, .9, .4) forwards; }
-@keyframes takeoff { to { transform: translate(60vw, -60vh) scale(.6); opacity: 0; } }
-.splash-bar { transform-box: fill-box; transform-origin: bottom; animation: grow-y 420ms cubic-bezier(.3, 1.4, .5, 1) both; }
-.splash-word > span { display: inline-block; animation: rise 520ms cubic-bezier(.2, .8, .2, 1) both; }
-.splash-tag { animation: fadein 600ms ease-out 1250ms both; }
-.splash-progress { transform-origin: left; animation: splash-load 1500ms cubic-bezier(.4, 0, .2, 1) 300ms both; }
-@keyframes splash-load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.splash-trail { opacity: 0; animation: splash-trail 700ms ease-out both; }
+@keyframes splash-trail { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+.splash.is-leaving .splash-plane { animation: splash-climb 340ms cubic-bezier(.5, 0, .9, .5) forwards; }
+@keyframes splash-climb { from { transform: none; opacity: 1; } to { transform: translate(38vw, -42vh) rotate(-6deg) scale(.7); opacity: 0; } }
+.splash-bar { transform-box: fill-box; transform-origin: bottom; animation: grow-y 240ms cubic-bezier(.3, 1.5, .5, 1) both; }
+.splash-word { display: inline-block; animation: rise 300ms var(--ease-out) 220ms both; }
+.splash-tag { animation: fadein 280ms ease-out 360ms both; }
 
 /* ---------- Login ---------- */
-.login-orb { position: absolute; border-radius: 9999px; filter: blur(48px); opacity: .7; animation: float-y 7s ease-in-out infinite; }
-.login-float { animation: float-y 6s ease-in-out infinite; }
-@keyframes login-loop { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 85% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
-.takeoff-wipe { position: fixed; inset: 0; z-index: 90; pointer-events: none; background: linear-gradient(135deg, #1d4ed8, #3b82f6 55%, #60a5fa); clip-path: circle(0 at var(--x, 50%) var(--y, 50%)); animation: wipe 700ms cubic-bezier(.7, 0, .3, 1) 380ms forwards; }
-@keyframes wipe { to { clip-path: circle(150% at var(--x, 50%) var(--y, 50%)); } }
-.takeoff-plane { position: fixed; z-index: 95; pointer-events: none; left: var(--x, 50%); top: var(--y, 50%); offset-path: path("M 0 0 C 120 -40, 260 -180, 900 -700"); offset-rotate: auto 45deg; animation: login-fly 950ms cubic-bezier(.5, 0, .7, .3) forwards; }
-@keyframes login-fly { from { offset-distance: 0%; transform: scale(1); } to { offset-distance: 100%; transform: scale(1.6); } }
+/* Soft color pools drawn as gradients: same look as a blurred circle, no filter to rasterize. */
+.login-orb { position: absolute; border-radius: 9999px; pointer-events: none; opacity: .6; }
+.takeoff-wipe { position: fixed; inset: 0; z-index: 90; pointer-events: none; background: linear-gradient(135deg, #1d4ed8, #3b82f6 55%, #60a5fa); opacity: 0; animation: wipe 300ms ease-out forwards; }
+@keyframes wipe { to { opacity: 1; } }
+.takeoff-plane { position: fixed; z-index: 95; pointer-events: none; left: var(--x, 50%); top: var(--y, 50%); margin: -32px 0 0 -32px; animation: login-fly 380ms cubic-bezier(.5, 0, .8, .4) forwards; will-change: transform, opacity; }
+@keyframes login-fly { from { transform: none; opacity: 1; } to { transform: translate(60vw, -70vh) scale(1.4); opacity: .2; } }
 
 /* ---------- 404 ---------- */
 .radar-sweep { transform-origin: center; animation: spin 3.2s linear infinite; }
@@ -223,30 +224,30 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
-  .live-dot::after, .radar-sweep, .orbit, .cloud, .login-orb, .login-float { animation: none !important; }
+  .live-dot::after, .radar-sweep, .orbit, .cloud, .skeleton { animation: none !important; }
 }
 
-@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-.skeleton { background: linear-gradient(90deg, var(--c-surface-2) 25%, color-mix(in srgb, var(--c-line) 70%, var(--c-surface)) 50%, var(--c-surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+/* Loading placeholder: an opacity pulse (composited) instead of a moving gradient (repainted every frame). */
+@keyframes skeleton-pulse { from { opacity: 1; } to { opacity: .45; } }
+.skeleton { background: color-mix(in srgb, var(--c-line) 70%, var(--c-surface)); animation: skeleton-pulse 900ms ease-in-out infinite alternate; }
 
 /* ---------- Auth: brand and form slide past each other ---------- */
 .field-input { min-width: 0; flex: 1; background: transparent; font-size: .875rem; color: var(--c-ink); outline: none; }
 .field-input::placeholder { color: var(--c-ink-3); }
 .field-input:focus-visible { outline: none; }
-.auth-swap { animation: rise 520ms cubic-bezier(.2, .8, .2, 1) both; }
+.auth-swap { animation: rise 200ms var(--ease-out) both; }
 @media (min-width: 768px) {
   .auth { height: 100%; overflow: hidden; }
-  .auth-brand, .auth-form { position: absolute; top: 0; bottom: 0; left: 0; width: 50%; transition: transform 800ms cubic-bezier(.7, 0, .2, 1); }
+  .auth-brand, .auth-form { position: absolute; top: 0; bottom: 0; left: 0; width: 50%; transition: transform 380ms var(--ease-in-out); }
   .auth-brand { z-index: 20; }
   .auth-form { transform: translateX(100%); overflow-y: auto; }
   .auth[data-mode="signup"] .auth-brand { transform: translateX(100%); }
   .auth[data-mode="signup"] .auth-form { transform: translateX(0); }
-  .auth-swap { animation-delay: 280ms; }
 }
 
 /* Drill-down target: the section a link pointed at glows once. */
 @keyframes target-flash { 0%, 30% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 55%, transparent), var(--sh-card); } 100% { box-shadow: 0 0 0 0 transparent, var(--sh-card); } }
-.target-flash { animation: target-flash 1.8s ease-out; scroll-margin-top: 96px; }
+.target-flash { animation: target-flash 1.2s ease-out; scroll-margin-top: 96px; }
 [id] { scroll-margin-top: 96px; }
 /* Anything that drills down gets the same affordance. */
 .drill { cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: color .15s, text-decoration-color .15s; }

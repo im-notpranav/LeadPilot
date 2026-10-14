@@ -27,7 +27,7 @@ export default function Simulator() {
   return (
     <div className="mx-auto max-w-[1300px] space-y-4">
       <PageHeader title="Simulator" subtitle="A seeded, deterministic simulation: personas, sources, reps with response-delay profiles, 6 months of closed-deal history." />
-      <div className="stagger grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Clock" subtitle={resetting ? "Resetting…" : dateTime(clock.now)}>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">

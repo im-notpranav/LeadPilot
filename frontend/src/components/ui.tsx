@@ -193,7 +193,7 @@ export function StatTile({ label, value, icon, sub, tone = "accent", to }: { lab
       {sub && <div className="mt-0.5 truncate text-xs text-ink-3">{sub}</div>}
     </>
   );
-  const cls = "card group block rounded-2xl px-4 py-3.5 transition duration-300";
+  const cls = "card group block rounded-2xl px-4 py-3.5 transition";
   return to
     ? <Link to={to} className={`${cls} hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-pop`}>{body}</Link>
     : <div className={cls}>{body}</div>;
@@ -212,8 +212,8 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     return (
       <button onClick={toggle} aria-label={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`} title={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`}
         className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-line bg-surface text-ink-2 shadow-sm transition hover:text-ink">
-        <span className={`absolute transition duration-500 ${resolved === "dark" ? "rotate-0 opacity-100" : "-rotate-90 scale-50 opacity-0"}`}><Icon name="moon" /></span>
-        <span className={`absolute transition duration-500 ${resolved === "light" ? "rotate-0 opacity-100" : "rotate-90 scale-50 opacity-0"}`}><Icon name="sun" /></span>
+        <span className={`absolute transition duration-200 ${resolved === "dark" ? "rotate-0 opacity-100" : "-rotate-90 scale-50 opacity-0"}`}><Icon name="moon" /></span>
+        <span className={`absolute transition duration-200 ${resolved === "light" ? "rotate-0 opacity-100" : "rotate-90 scale-50 opacity-0"}`}><Icon name="sun" /></span>
       </button>
     );
   }

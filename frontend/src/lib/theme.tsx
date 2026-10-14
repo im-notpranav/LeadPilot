@@ -19,12 +19,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const apply = () => {
       const r = resolve(pref);
+      // Swap instantly: one style recalc and repaint. Animating every element's colors is what made it lag.
       const root = document.documentElement;
-      if (root.dataset.theme !== r) {
-        // Cross-fade colors for the switch only; normal interactions keep their own transitions.
-        root.classList.add("theme-switching");
-        window.setTimeout(() => root.classList.remove("theme-switching"), 320);
-      }
       root.dataset.theme = r;
       root.style.background = "";
       setResolved(r);

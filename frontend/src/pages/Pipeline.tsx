@@ -103,7 +103,7 @@ function LeadBoard({ switcher }: { switcher: JSX.Element }) {
           <Select label="Source" value={source} onChange={setSource}><option value="">All</option>{SOURCES.map((s) => <option key={s} value={s}>{human(s)}</option>)}</Select>
         </div>} />
       {q.isLoading ? <Loading /> : (
-        <div ref={board} className="stagger scroll-thin flex gap-3 overflow-x-auto pb-4">
+        <div ref={board} className="scroll-thin flex gap-3 overflow-x-auto pb-4">
           {columns.map((col) => (
             <div key={col.stage} data-stage={col.stage} className={`glass flex w-64 shrink-0 flex-col rounded-2xl shadow-card ${focus === col.stage ? "target-flash ring-2 ring-brand/50" : ""}`}>
               <div className="border-b border-line px-3 py-2.5">
@@ -129,7 +129,7 @@ function PipelineCard({ c }: { c: Card }) {
   const nav = useNavigate();
   return (
     <div className="group relative">
-      <Link to={`/leads/${c.lead_id}`} className={`block rounded-xl border bg-surface p-3 text-sm shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-card ${c.is_stalled ? "border-[var(--c-critical)]" : "border-line hover:border-brand/40"}`}>
+      <Link to={`/leads/${c.lead_id}`} className={`cv-auto block rounded-xl border bg-surface p-3 text-sm shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-card ${c.is_stalled ? "border-[var(--c-critical)]" : "border-line hover:border-brand/40"}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate font-medium">{c.name}</div>

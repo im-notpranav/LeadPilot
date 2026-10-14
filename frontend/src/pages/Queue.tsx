@@ -45,7 +45,7 @@ export default function Queue() {
         }
       />
       {me && (
-        <div className="stagger mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {([
             ["Open leads", me.open_leads, "users", "accent", `${me.assigned} assigned all-time`, to.leads({ rep_id: me.rep_id, open: true })],
             ["Load", `${me.load} / ${me.capacity}`, "gauge", me.load > me.capacity ? "critical" : "accent", me.load > me.capacity ? "Over capacity" : `${Math.max(0, me.capacity - me.load)} slots free`, to.analytics("reps")],

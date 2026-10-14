@@ -19,7 +19,7 @@ export default function Analytics() {
   return (
     <div className="mx-auto max-w-[1400px]">
       <PageHeader title="Analytics" subtitle="Conversion, speed to lead, engagement and whether the score actually predicts outcomes." />
-      <div className="stagger grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card id="funnel" title="Funnel" subtitle={funnel.data ? `${funnel.data.total} real leads (duplicates and fakes excluded) · bars = leads that ever reached the stage` : undefined}>
           {!funnel.data ? <Loading /> : <Funnel data={funnel.data} />}
         </Card>

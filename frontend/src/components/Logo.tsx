@@ -41,7 +41,7 @@ export function LogoMark({ size = 32, tone = "color", className, animateBars, st
       </g>
       {BARS.map((b, i) => (
         <rect key={b.x} x={b.x} y={b.y} width={6.5} height={b.h} rx={1.6} fill={fill("bar")}
-          className={animateBars ? "splash-bar" : undefined} style={animateBars ? { animationDelay: `${700 + i * 110}ms` } : undefined} />
+          className={animateBars ? "splash-bar" : undefined} style={animateBars ? { animationDelay: `${240 + i * 60}ms` } : undefined} />
       ))}
     </svg>
   );
@@ -51,9 +51,8 @@ export function LogoMark({ size = 32, tone = "color", className, animateBars, st
 export function Wordmark({ className = "", animate }: { className?: string; animate?: boolean }) {
   if (animate) {
     return (
-      <span className={`splash-word font-display font-extrabold tracking-tight ${className}`} aria-label="LeadPilot">
-        {"Lead".split("").map((c, i) => <span key={`l${i}`} className="text-ink" style={{ animationDelay: `${820 + i * 45}ms` }} aria-hidden>{c}</span>)}
-        {"Pilot".split("").map((c, i) => <span key={`p${i}`} style={{ color: "var(--c-wordmark)", animationDelay: `${1000 + i * 45}ms` }} aria-hidden>{c}</span>)}
+      <span className={`splash-word font-display font-extrabold tracking-tight ${className}`}>
+        <span className="text-ink">Lead</span><span style={{ color: "var(--c-wordmark)" }}>Pilot</span>
       </span>
     );
   }

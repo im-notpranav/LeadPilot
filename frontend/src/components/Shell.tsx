@@ -150,7 +150,14 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
                           <Icon name={n.icon} size={15} />
                         </span>
                         {!collapsed && <span className="flex-1 truncate">{n.label}</span>}
-                        {n.live && connected && <span className={`live-dot h-2 w-2 rounded-full bg-good ${collapsed ? "absolute right-2.5 top-2.5" : ""}`} aria-label="Live" />}
+                        {/* The live stream's health rides on its own nav item instead of a card that crowds the menu. */}
+                        {n.live && (
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium tabular ${connected ? "text-good-ink" : "text-critical-ink"} ${collapsed ? "absolute right-2.5 top-2.5" : ""}`}
+                            title={connected ? `Live: ${eventsPerMin} events per minute` : "Reconnecting to the live stream"}>
+                            <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-good" : "bg-critical"}`} aria-hidden />
+                            {!collapsed && (connected ? `${eventsPerMin}/min` : "Offline")}
+                          </span>
+                        )}
                         {!!count && n.badge && (
                           <span role="link" tabIndex={0} onClick={(e) => { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); } }}
                             className={`rounded-full bg-critical px-1.5 text-[10px] font-semibold leading-[18px] tabular text-white transition hover:scale-110 hover:brightness-110 ${collapsed ? "absolute right-1 top-1" : ""}`} title={`${count} ${n.badge.label}: open them`}>{count > 99 ? "99+" : count}</span>
@@ -164,22 +171,6 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
           </div>
         ))}
       </nav>
-
-      {!collapsed && (
-        <NavLink to={to.feed()} className="group mx-3 mb-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#60a5fa] p-4 text-white shadow-[0_12px_28px_-12px_rgb(37_99_235/.8)] transition hover:brightness-110 dark:from-[#1e3a8a] dark:via-[#1d4ed8] dark:to-[#2563eb]">
-          <div className="relative">
-            <LogoMark size={56} tone="white" className="absolute -right-3 -top-3 opacity-20" />
-            <div className="flex items-center gap-2 text-xs font-medium text-white/85">
-              <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-[#86efac]" : "bg-[#fca5a5]"}`} />{connected ? "Connected" : "Reconnecting…"}
-            </div>
-            <div className="mt-1 font-display text-2xl font-bold tabular">{eventsPerMin}<span className="ml-1 text-xs font-medium text-white/75">events / min</span></div>
-            <div className="mt-0.5 text-[11px] leading-snug text-white/80">
-              {status.data ? `${status.data.open_leads} open leads · ${status.data.events.toLocaleString()} events processed` : status.isError ? "No numbers while the API is offline" : "Loading…"}
-            </div>
-            <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/90 group-hover:text-white">Open live feed <Icon name="arrowRight" size={12} /></div>
-          </div>
-        </NavLink>
-      )}
 
       <div className={`flex items-center gap-2.5 border-t border-line px-3 py-3 ${collapsed ? "justify-center" : ""}`}>
         <Avatar initials={user?.initials ?? "LP"} />

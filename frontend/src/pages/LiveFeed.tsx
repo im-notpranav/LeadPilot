@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { api, type FeedItem } from "../lib/api";
+import { api, type FeedItem, type SimStatus } from "../lib/api";
 import { useLive } from "../lib/live";
 import { human, time } from "../lib/format";
 import { Card, Delta, Empty, GradePill, PageHeader } from "../components/ui";
@@ -19,7 +19,8 @@ const GROUPS: Record<string, string[]> = {
 };
 
 export default function LiveFeed() {
-  const { feed } = useLive();
+  const { feed, connected, eventsPerMin } = useLive();
+  const status = useQuery({ queryKey: ["sim", "status"], queryFn: () => api.get<SimStatus>("/api/sim/status"), refetchInterval: 5000 });
   const initial = useQuery({ queryKey: ["feed", "initial"], queryFn: () => api.get<{ items: FeedItem[] }>("/api/feed?limit=200"), staleTime: Infinity });
   const [active, setActive] = useState<Set<string>>(new Set());
   const [movers, setMovers] = useState(false);
@@ -37,7 +38,19 @@ export default function LiveFeed() {
 
   return (
     <div className="mx-auto max-w-[1200px]">
-      <PageHeader title="Live feed" subtitle="Every processed event with the score change it caused and a plain-English reason. Updates live." />
+      <PageHeader title="Live feed" subtitle="Every processed event with the score change it caused and a plain-English reason. Updates live."
+        right={
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={`inline-flex h-8 items-center gap-2 rounded-xl border border-line bg-surface px-3 font-medium shadow-sm ${connected ? "text-good-ink" : "text-critical-ink"}`}>
+              <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-good" : "bg-critical"}`} aria-hidden />{connected ? "Connected" : "Reconnecting…"}
+            </span>
+            <span className="inline-flex h-8 items-center gap-1 rounded-xl border border-line bg-surface px-3 text-ink-2 shadow-sm"><b className="tabular text-ink">{eventsPerMin}</b> events / min</span>
+            {status.data && <>
+              <Link to={to.leads({ open: true })} className="inline-flex h-8 items-center gap-1 rounded-xl border border-line bg-surface px-3 text-ink-2 shadow-sm transition hover:border-brand/40 hover:text-ink"><b className="tabular text-ink">{status.data.open_leads.toLocaleString()}</b> open leads</Link>
+              <span className="inline-flex h-8 items-center gap-1 rounded-xl border border-line bg-surface px-3 text-ink-2 shadow-sm"><b className="tabular text-ink">{status.data.events.toLocaleString()}</b> events processed</span>
+            </>}
+          </div>
+        } />
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         {Object.keys(GROUPS).map((g) => (
           <button key={g} onClick={() => toggle(g)} aria-pressed={active.has(g)} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${active.has(g) ? "border-transparent bg-accent text-white shadow-[0_6px_14px_-6px_rgb(37_99_235/.7)]" : "border-line bg-surface text-ink-2 shadow-sm hover:border-brand/40 hover:text-ink"}`}>{g}</button>

@@ -43,6 +43,7 @@ A built-in simulator generates leads, buyer personas and sales reps, so the syst
 - [Database (Supabase / Postgres)](#database-supabase--postgres)
 - [Sign-in, roles and API keys](#sign-in-roles-and-api-keys)
 - [Connectors: forms, CRM, email, website, CSV](#connectors-forms-crm-email-website-csv)
+- [Accounts and deals](#accounts-and-deals)
 - [Testing & performance](#testing--performance)
 - [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
 - [Project structure](#project-structure)
@@ -285,7 +286,11 @@ TanStack Query · Recharts.
    SLA.
 7. **Analytics.** Funnel and conversion, time in stage, first-response times and SLA attainment per rep, score
    distribution, grade vs. actual win rate, model calibration and a rep leaderboard.
-8. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
+8. **Pipeline → Deals.** One card per deal, however many people from the company take part. Open a deal for its
+   stage history (each move names its rule, O0–O8), the buying committee and an edit form (amount, expected close,
+   stage, won / lost with a reason). **Accounts** groups everyone at a company domain and shows who is missing from
+   the buying committee.
+9. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
 
 ---
 
@@ -314,6 +319,8 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/hooks/{id}` | Inbound webhook, form, CRM record or email (authenticated by the connector's secret) |
 | `GET` · `POST` | `/api/t.js` · `/api/track/{site key}` | Website tracker script and its page views / form captures |
 | `POST` | `/api/import/preview` · `/api/import/commit` | CSV import (manager) |
+| `GET` | `/api/accounts` · `/api/accounts/{id}` | Companies with their people, buying committee and deals |
+| `GET/POST/PATCH` | `/api/opportunities` · `/api/opportunities/{id}` | Deal board, deal detail, create a deal, edit or close one |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -466,6 +473,32 @@ twice adds nothing the second time.
 
 ---
 
+## Accounts and deals
+
+People at the same company (the same web domain) form one **account**. A **deal** (opportunity) belongs to the
+account, so several contacts can work on one deal, and one company can have several deals over time.
+
+- **How a deal opens.** On the first buying signal from any contact at the account (demo request, sales enquiry,
+  BANT qualification, meeting) when no deal is open: rule **O1**. A rep can also create one from a lead page (**O0**).
+  After a win, the next signal opens an **expansion** deal.
+- **How it moves.** Meeting held (**O4**), proposal sent (**O5**), contract sent or a positive reply after a proposal
+  (**O6**), won (**O7**) or lost (**O8**). A rep can move it by hand (**OM**). Every move stores its rule, the events
+  behind it and who made it, and the deal page lists them.
+- **Which deal an event belongs to.** An event that names a deal (`payload.opportunity_id`) goes to that deal;
+  anything else goes to the newest open deal at the account. A closed deal only changes when someone edits it.
+- **Value and chance.** The deal's amount when one is set (by a rep or a contract), otherwise the predicted ACV.
+  The chance to win uses the best contact's score and intent, the stage, the owner's record and the **buying
+  committee**: each extra role involved (decision maker, manager, user, from job seniority) raises it.
+- **Stalls.** A deal with no activity past its stage time limit is flagged (**S1**), like a lead.
+- **Replays.** Deals are rebuilt from the event log, so a replay gives identical deals and event order does not matter.
+- **Who sees what.** You see an account or deal when you can see at least one of its contacts. Contacts owned by other
+  reps show their name and role only.
+
+Rules and labels are in `opportunities` in `backend/config/pipeline.yaml`; deals are stored in the `opportunities`
+table (migration `supabase/migrations/20261014000000_opportunities.sql`).
+
+---
+
 ## Testing & performance
 
 ```bash
@@ -529,17 +562,17 @@ backend/
   data/          seed companies, reps, sources, domain lists, IP geo
   app/
     engine/      pure functions: normalize · identity · quality · enrich · profile · scoring · intent
-                 explain · metrics · pipeline · stall · prediction · assignment · nba · priority
+                 explain · metrics · pipeline · stall · prediction · assignment · nba · priority · opportunity
     simulator/   personas · generator · history · scenarios
     analytics/   funnel · response_time · source_quality · rep_performance · calibration
     connectors/  field mapping · signing · email parsing · CSV import · store · tracker.js
-    api/         leads · pipeline · reps · analytics · sim · auth · connectors · websocket routes
+    api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · websocket routes
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
-  src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline · LiveFeed · Analytics ·
-                 Quality · Simulator · Access · Connectors · Import · NotFound (404)
+  src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
+                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · NotFound
   src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)
@@ -552,7 +585,8 @@ Makefile
 
 ## Known simplifications
 
-- A lead and its opportunity are 1:1. A lead counts as a "deal" from *qualified* onward.
+- Accounts are keyed by company domain (from the email, or the website for free-mail addresses). A free-mail lead with
+  no website is its own account. Buying roles come from job-title seniority only.
 - Enrichment, MX validation and IP geolocation are mocked from seed data in `backend/data`.
 - Reply classification is keyword-based by default. An LLM classifier is a stub behind `USE_LLM`.
 - A single-process asyncio event bus. The `EventBus` interface allows Kafka or Redis Streams partitioned by `lead_id`.

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const API = "http://127.0.0.1:8010";
-const ROUTES = ["/queue", "/pipeline", "/feed", "/analytics", "/quality", "/simulator"];
+const ROUTES = ["/queue", "/leads", "/pipeline", "/pipeline?view=leads", "/accounts", "/feed", "/analytics", "/quality", "/simulator"];
 
 test.beforeAll(async ({ request }) => {
   // The demo backend generates history + a short warm-up before it serves data.
@@ -59,7 +59,7 @@ test("ingested event shows up on the lead", async ({ page, request }) => {
 
 test("mobile width has no horizontal page scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const route of ["/queue", "/pipeline", "/analytics"]) {
+  for (const route of ["/queue", "/pipeline", "/accounts", "/analytics"]) {
     await page.goto(route);
     await expect(page.locator("main h1").first()).toBeVisible();
     await expect.poll(() => fitsWidth(page), { message: `${route} overflows on mobile` }).toBe(true);

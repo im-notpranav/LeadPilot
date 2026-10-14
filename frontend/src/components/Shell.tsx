@@ -19,7 +19,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
   { section: "Main", items: [
     { to: "/queue", label: "My Queue", icon: "queue" },
     { to: "/leads", label: "Leads", icon: "list" },
-    { to: "/pipeline", label: "Pipeline", icon: "pipeline", badge: { key: "stalled", href: to.pipeline({ stalled: true }), label: "stalled deals" } },
+    { to: "/pipeline", label: "Pipeline", icon: "pipeline", badge: { key: "stalled", href: to.pipeline({ stalled: true }), label: "stalled leads" } },
+    { to: "/accounts", label: "Accounts", icon: "building" },
     { to: "/feed", label: "Live Feed", icon: "feed", live: true },
   ] },
   { section: "Insights", items: [

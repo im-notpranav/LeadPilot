@@ -5,6 +5,9 @@ import Shell, { visibleNav } from "./components/Shell";
 import NotFound from "./pages/NotFound";
 import Queue from "./pages/Queue";
 import Leads from "./pages/Leads";
+import Accounts from "./pages/Accounts";
+import Account from "./pages/Account";
+import Deal from "./pages/Deal";
 import LeadDetail from "./pages/LeadDetail";
 import Pipeline from "./pages/Pipeline";
 import LiveFeed from "./pages/LiveFeed";
@@ -31,6 +34,9 @@ export default function App() {
         <Route path="leads" element={<Leads />} />
         <Route path="leads/:id" element={<LeadDetail />} />
         <Route path="pipeline" element={<Pipeline />} />
+        <Route path="deals/:id" element={<Deal />} />
+        <Route path="accounts" element={<Accounts />} />
+        <Route path="accounts/:id" element={<Account />} />
         <Route path="feed" element={<LiveFeed />} />
         <Route path="analytics" element={guard("/analytics", <Analytics />)} />
         <Route path="quality" element={guard("/quality", <Quality />)} />

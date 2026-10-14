@@ -18,7 +18,13 @@ export const to = {
   lead: (id: string) => `/leads/${id}`,
   leads: (f: LeadFilter = {}) => `/leads${qs(f)}`,
   queue: (rep?: string | null) => `/queue${qs({ rep: rep ?? undefined })}`,
-  pipeline: (o: { rep?: string | null; source?: string; stalled?: boolean; stage?: string } = {}) => `/pipeline${qs({ rep: o.rep ?? undefined, source: o.source, stalled: o.stalled, stage: o.stage })}`,
+  // The lead board takes lead stages and sources, so any filtered link lands on it; plain /pipeline is the deal board.
+  pipeline: (o: { rep?: string | null; source?: string; stalled?: boolean; stage?: string } = {}) =>
+    `/pipeline${qs({ view: Object.keys(o).length ? "leads" : undefined, rep: o.rep ?? undefined, source: o.source, stalled: o.stalled, stage: o.stage })}`,
+  deals: (o: { owner?: string | null; stalled?: boolean; stage?: string } = {}) => `/pipeline${qs({ owner: o.owner ?? undefined, stalled: o.stalled, stage: o.stage })}`,
+  deal: (id: string) => `/deals/${id}`,
+  accounts: (o: { q?: string; sort?: string } = {}) => `/accounts${qs(o)}`,
+  account: (id: string) => `/accounts/${encodeURIComponent(id)}`,
   feed: (o: { type?: string; lead?: string } = {}) => `/feed${qs(o)}`,
   analytics: (section?: "funnel" | "response" | "scores" | "grades" | "stages" | "reps") => `/analytics${section ? `#${section}` : ""}`,
   quality: (section?: "sources" | "review" | "quarantine" | "merges") => `/quality${section ? `#${section}` : ""}`,

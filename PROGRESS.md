@@ -1,6 +1,6 @@
 # LeadPilot upgrade: progress
 
-Last updated: 14 Oct 2026
+Last updated: 15 Oct 2026
 
 The upgrade turns LeadPilot from a demo into a real product: Supabase for the database and login, Gemini for AI
 features, and ideas borrowed from Fizzy (https://github.com/KenshinCommits/Fizzy). It has 12 phases. Each phase is
@@ -15,7 +15,7 @@ on its own git branch, stacked on the previous one: `phase-0-foundations` → `p
 | 1 | Supabase Postgres database | ✅ Done | `phase-1-supabase` · aea514a |
 | 2 | Sign-in, roles (admin / manager / rep) and API keys | ✅ Done | `phase-2-auth` · 842d5c3 |
 | 3 | Connectors: forms, CRM, email, website tracker, CSV import | ✅ Done | `phase-3-connectors` · 26cc0e9 |
-| 4 | Accounts (companies) and deals (opportunities) | 🟡 Backend done, screens to build | `phase-4-accounts` |
+| 4 | Accounts (companies) and deals (opportunities) | ✅ Done | `phase-4-accounts` |
 | 5 | Settings console: edit scoring / SLA / rules with versions | ⬜ To do | |
 | 6 | What-if testing: replay history against a draft config | ⬜ To do | |
 | 7 | Notifications: in-app, email, Slack, SMS | ⬜ To do | |
@@ -25,7 +25,11 @@ on its own git branch, stacked on the previous one: `phase-0-foundations` → `p
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 220 backend tests pass (plus 5 Supabase tests, run with `make test-pg`), and 11 browser tests pass.
+**Tests right now:** 220 backend tests pass (plus 5 Supabase tests, run with `make test-pg`), and 13 browser tests pass.
+
+**Dashboard redesign:** the `claude/charming-noether-8ziqwn` branch (new brand, sign-in layout, Leads explorer,
+clickable drill-downs, self-installing `python scripts/dev.py`) is merged into `phase-4-accounts`. It keeps the real
+Supabase sign-in, roles and page guards from Phase 2; the placeholder browser-only accounts from that branch were not used.
 
 ## What is done
 
@@ -59,7 +63,7 @@ on its own git branch, stacked on the previous one: `phase-0-foundations` → `p
 - **CSV import** with column matching, preview, duplicate detection and history dates.
 - **Connectors** page (admins) and **Import** page (managers).
 
-### Phase 4: Accounts and deals (part 1: backend, done and tested)
+### Phase 4: Accounts and deals
 - **Accounts:**
   - A company, identified by its web domain, groups all its contacts.
   - It shows the **buying committee**: decision makers, managers and users.
@@ -91,21 +95,20 @@ on its own git branch, stacked on the previous one: `phase-0-foundations` → `p
   - `backend/app/api/routes_deals.py`
   - `backend/tests/test_opportunity.py`
   - changes in `processor.py` and `store.py`
-- **Frontend groundwork:** API types in `frontend/src/lib/api.ts`, and shared deal components in `frontend/src/components/deals.tsx` (not yet used by any page).
+- **Screens:**
+  - **Pipeline** opens on the **deal board** (one card per deal, won and lost columns, owner and stalled filters).
+    A **Deals | Leads** switch brings back the per-lead board.
+  - **Accounts** (`/accounts`): companies with contacts, buying roles, open deals, pipeline, won revenue; search and sort.
+  - **Account** (`/accounts/:id`): company details, deals, people with their roles, and the buying committee with who is missing.
+  - **Deal** (`/deals/:id`): stage path, stage history with rules and evidence, people, value and chance breakdown,
+    and an edit form (name, amount, expected close, stage, won / lost with a reason).
+  - **Lead page:** an "Account & deals" card with a **New deal** button.
+- **Code (frontend):** `pages/Accounts.tsx`, `pages/Account.tsx`, `pages/Deal.tsx`, `pages/Pipeline.tsx`,
+  `components/deals.tsx`, `e2e/deals.spec.ts`.
 
 ## What should be done next
 
-### Finish Phase 4 (screens)
-1. **Accounts page** (`/accounts`): a list of companies with contacts, buying committee, open deals, pipeline and won revenue, plus search and sort.
-2. **Account page** (`/accounts/:id`): company details, people and their roles, deals, and the buying committee with "who is missing".
-3. **Deal page** (`/deals/:id`): stage history, contacts, value and win-chance breakdown, and an edit form (amount, close date, stage, won/lost with reason).
-4. **Pipeline page:** add a **Deals | Leads** switch, with the deal board (from `/api/opportunities`) as the default.
-5. **Lead page:** add the "Account & deals" card (`LeadDealsCard` in `components/deals.tsx`) with a **New deal** button.
-6. **Navigation:** add an "Accounts" link and routes in `App.tsx`.
-7. **Tests:** a Playwright test for the accounts page, deal page, creating and editing a deal, and the Deals board. Then run the full suite.
-8. **Docs:** update the README (accounts and deals section, new API rows), then commit Phase 4.
-
-### Later phases
+### Next phases
 - **Phase 5: Settings console.**
   - Store scoring, SLA, pipeline and next-action rules as versioned configs in the database (the YAML files stay as defaults).
   - Editor page with history, diff and rollback.
@@ -136,6 +139,7 @@ A chat panel where a rep asks "what should I do next with this lead, and why?":
 - [ ] In Supabase: Authentication → URL Configuration → set **Site URL** to `http://localhost:5173`.
 - [ ] Add `GEMINI_API_KEY` to `backend/.env` before Phase 8.
 - [ ] Review the phase branches and merge them into `main` when you're happy (in order: 0, then 1, 2, 3, 4).
+      `phase-4-accounts` already contains the dashboard redesign branch.
 
 ## How to run and test
 ```bash

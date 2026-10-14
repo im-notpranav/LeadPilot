@@ -8,6 +8,7 @@ import { can, useAuth } from "../lib/auth";
 import { ago, dateTime, human, minutes, minutesUntil, money, pct, signed, titleCase } from "../lib/format";
 import { AXIS, GRID } from "../components/charts";
 import { Icon } from "../components/icons";
+import { LeadDealsCard } from "../components/deals";
 import { jumpTo, signalBase, to } from "../lib/links";
 import { Button, Card, Chip, Delta, Empty, GradePill, IntentBadge, Loading, Select, StageBadge, StallFlag, Stat, StatusTag } from "../components/ui";
 
@@ -40,6 +41,7 @@ export default function LeadDetail() {
         </div>
         <div className="space-y-4">
           <NextAction l={l} />
+          <LeadDealsCard l={l} />
           <Prediction l={l} />
           <StallPanel l={l} />
           <QualityPanel l={l} />

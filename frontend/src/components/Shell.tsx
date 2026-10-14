@@ -29,6 +29,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
   ] },
   { section: "System", items: [
     { to: "/simulator", label: "Simulator", icon: "simulator", show: (me, live) => can.manage(me) && !live },
+    { to: "/settings", label: "Settings", icon: "sliders", show: can.manage },
     { to: "/import", label: "Import", icon: "upload", show: can.manage },
     { to: "/connectors", label: "Connectors", icon: "plug", show: can.admin },
     { to: "/access", label: "Access", icon: "key", show: can.admin },

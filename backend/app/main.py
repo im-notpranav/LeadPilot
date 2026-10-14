@@ -9,14 +9,14 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import (routes_analytics, routes_auth, routes_connectors, routes_deals, routes_leads, routes_pipeline,
-                  routes_reps, routes_sim, ws)
+from .api import (routes_analytics, routes_auth, routes_config, routes_connectors, routes_deals, routes_leads,
+                  routes_pipeline, routes_reps, routes_sim, ws)
 from .api.security import manager, user
 from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
 from .api.deps import state
 from .bus import AsyncQueueBus
-from .config import load_config
+from .config_versions import ConfigStore
 from .connectors.store import ConnectorStore
 from .persistence import NullPersistence, Persistence
 from .runtime import Runtime
@@ -94,8 +94,11 @@ async def sim_loop() -> None:
 async def lifespan(app: FastAPI):
     settings = get_settings()
     overrides = {"simulator": {"warmup_days": settings.warmup_days}} if settings.warmup_days is not None else {}
-    cfg = load_config(overrides=overrides)
     db = Persistence(settings.db_url, schema=settings.db_schema) if settings.persist else NullPersistence()
+    # The rules in force: the YAML files plus the active settings version (version 1 = the files as they are).
+    state.config = ConfigStore(db, base_overrides=overrides)
+    active = state.config.ensure_initial()
+    cfg = state.config.build(active["overrides"])
     state.settings = settings
     state.accounts = AccountStore(db, settings.admin_emails)
     state.connectors = ConnectorStore(db)
@@ -105,6 +108,7 @@ async def lifespan(app: FastAPI):
     elif not settings.admin_emails:
         log.warning("auth is on but LEADPILOT_ADMIN_EMAILS is empty: new sign-ups stay pending until an admin exists")
     state.runtime = Runtime(cfg, db, live=settings.live)
+    state.runtime.apply_config(cfg, active["id"], replay=False)
     state.runtime.ensure_mode(settings.allow_mode_switch)
     state.lock = asyncio.Lock()
     state.ws = ws.ConnectionManager()
@@ -131,3 +135,4 @@ for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, r
 for r in (routes_leads.router, routes_pipeline.router, routes_deals.router, routes_reps.router, routes_sim.router):
     app.include_router(r, dependencies=[Depends(user)])
 app.include_router(routes_analytics.router, dependencies=[Depends(manager)])
+app.include_router(routes_config.router)         # managers read; admins change (checked per route)

@@ -133,6 +133,32 @@ class Runtime:
         self.status = "ready"
         return {**self.stats(), **result}
 
+    def apply_config(self, cfg, version: int | None = None, replay: bool = True) -> dict:
+        """Switch every part of the engine to `cfg` (a settings version) and, by default, rebuild every
+        projection from the raw event log under it. Blocking: run it in a thread, under the API lock."""
+        from .engine import intent
+        from .engine.enrich import MockEnrichmentProvider
+        self.cfg = cfg
+        self.store.cfg = cfg
+        self.sim.cfg = cfg
+        self.processor.cfg = cfg
+        self.processor.config_version = version
+        if isinstance(self.processor.provider, MockEnrichmentProvider):
+            self.processor.provider = MockEnrichmentProvider(cfg)
+        intent._CLASS_CACHE.clear()            # keyed by object id, which a new config may reuse
+        if not replay:
+            return {}
+        self.status = "resetting"
+        try:
+            result = self.processor.replay(write=True)
+            self.scheduler_drop_kind("sla_check")
+            for lead in self.store.leads.values():  # replay runs with hooks off: re-arm pending first-touch SLAs
+                if lead.first_touch_deadline is not None and lead.status == "active":
+                    self._on_hook("sla_deadline", lead_id=lead.lead_id, deadline=lead.first_touch_deadline)
+        finally:
+            self.status = "ready"
+        return result
+
     def scheduler_drop_kind(self, kind: str) -> None:
         import heapq
         self.scheduler._heap = [i for i in self.scheduler._heap if i.kind != kind]
@@ -212,4 +238,5 @@ class Runtime:
             "scheduled": len(self.scheduler), "latency": st.latency_stats(),
             "background": self.sim.background, "rep_actions": self.sim.rep_actions,
             "historical_deals": len(st.historical), "sim_counts": dict(self.sim.counts.most_common(12)),
+            "config_version": self.processor.config_version,
         }

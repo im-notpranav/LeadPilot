@@ -1,6 +1,7 @@
 """Config loader: every weight, threshold, half-life and SLA lives in backend/config/*.yaml."""
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from functools import lru_cache
@@ -12,6 +13,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 CONFIG_DIR = BACKEND_DIR / "config"
 DATA_DIR = BACKEND_DIR / "data"
 CONFIG_FILES = ("scoring", "pipeline", "assignment", "quality", "nba", "simulator")
+# What the settings console may change. The simulator only drives demo mode, so it stays file-only.
+EDITABLE_SECTIONS = ("scoring", "pipeline", "assignment", "quality", "nba")
 
 
 class Cfg(dict):
@@ -38,10 +41,22 @@ def _read_lines(path: Path) -> list[str]:
     return [ln.strip().lower() for ln in path.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
 
 
+def read_sections(config_dir: Path = CONFIG_DIR) -> dict:
+    """The YAML files as plain dicts (fresh copies: callers may change them)."""
+    return {name: yaml.safe_load((config_dir / f"{name}.yaml").read_text()) or {} for name in CONFIG_FILES}
+
+
+def merge_overrides(*layers: dict | None) -> dict:
+    """Combine override layers (later wins), e.g. environment overrides then a settings version."""
+    out: dict = {}
+    for layer in layers:
+        for section, values in (layer or {}).items():
+            _deep_update(out.setdefault(section, {}), copy.deepcopy(values))
+    return out
+
+
 def load_config(config_dir: Path = CONFIG_DIR, data_dir: Path = DATA_DIR, overrides: dict | None = None) -> Cfg:
-    raw: dict = {}
-    for name in CONFIG_FILES:
-        raw[name] = yaml.safe_load((config_dir / f"{name}.yaml").read_text()) or {}
+    raw: dict = read_sections(config_dir)
     companies = json.loads((data_dir / "companies.json").read_text())
     raw["data"] = {
         "companies": {c["domain"]: c for c in companies},
@@ -52,7 +67,7 @@ def load_config(config_dir: Path = CONFIG_DIR, data_dir: Path = DATA_DIR, overri
         "ip_geo": json.loads((data_dir / "ip_geo.json").read_text()),
     }
     for section, values in (overrides or {}).items():
-        _deep_update(raw.setdefault(section, {}), values)
+        _deep_update(raw.setdefault(section, {}), copy.deepcopy(values))
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True, default=_jsonable).encode()).hexdigest()[:16]
     cfg = Cfg.wrap(raw)
     cfg["fingerprint"] = fingerprint          # identifies the rules + reference data that produce projections

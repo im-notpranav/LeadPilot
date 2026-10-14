@@ -47,6 +47,7 @@ events = Table(
     Column("ts", DateTime(timezone=True), index=True), Column("actor", String), Column("rep_id", String),
     Column("source", String), Column("payload", JSON), Column("lead_ref", JSON), Column("derived", Boolean),
     Column("ingested_at", DateTime(timezone=True)),
+    Column("config_version", Integer),        # the settings version that processed this event
 )
 
 score_changes = Table(
@@ -55,6 +56,7 @@ score_changes = Table(
     Column("lead_id", String, index=True), Column("event_id", String), Column("event_type", String),
     Column("ts", DateTime(timezone=True)), Column("old_score", Float), Column("new_score", Float),
     Column("delta", Float), Column("contributions", JSON), Column("summary", Text),
+    Column("config_version", Integer),        # the settings version that produced this score
 )
 
 factor_snapshots = Table(
@@ -227,4 +229,19 @@ tracker_visitors = Table(
     Column("connector_id", String, index=True), Column("email", String),
     Column("first_seen", DateTime(timezone=True)), Column("last_seen", DateTime(timezone=True)),
     Column("page_views", Integer), Column("pending", JSON),
+)
+
+
+# ---- Settings: versioned rule changes on top of backend/config/*.yaml. Like accounts, they survive resets and replays.
+
+config_versions = Table(
+    "config_versions", metadata,
+    # Each version stores only what differs from the YAML defaults (`overrides`), so a code update that adds a new
+    # default still reaches every version. status: draft (saved, never used) | active (exactly one) | retired.
+    Column("id", Integer, primary_key=True, autoincrement=False),
+    Column("note", Text), Column("overrides", JSON, nullable=False), Column("fingerprint", String),
+    Column("status", String, nullable=False, index=True), Column("restored_from", Integer),
+    Column("created_by", String), Column("created_at", DateTime(timezone=True)),
+    Column("activated_by", String), Column("activated_at", DateTime(timezone=True)),
+    Column("retired_at", DateTime(timezone=True)),
 )

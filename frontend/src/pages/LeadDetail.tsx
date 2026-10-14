@@ -136,7 +136,7 @@ function ScoreChart({ points }: { points: ScorePoint[] }) {
             <div className="mt-3 rounded-lg bg-surface-2 p-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div className="text-sm font-medium">{chosen.summary}</div>
-                <div className="text-xs text-ink-3">{dateTime(chosen.ts)} · {human(chosen.event_type)} · {chosen.event_id}</div>
+                <div className="text-xs text-ink-3">{dateTime(chosen.ts)} · {human(chosen.event_type)} · {chosen.event_id}{chosen.config_version != null && <> · scored under rules v{chosen.config_version}</>}</div>
               </div>
               <ul className="mt-2 space-y-1">
                 {shown.length === 0 && <li className="text-xs text-ink-3">No factor changed.</li>}

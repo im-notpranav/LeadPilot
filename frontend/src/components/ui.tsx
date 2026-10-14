@@ -107,7 +107,7 @@ export function Segmented<T extends string | number>({ value, options, onChange,
     <div role="group" aria-label={label} className="inline-flex rounded-xl border border-line bg-surface-2 p-0.5">
       {options.map((o) => (
         <button key={String(o.value)} onClick={() => onChange(o.value)} aria-pressed={o.value === value}
-          className={`rounded-[10px] px-2.5 py-1 text-xs font-medium transition ${o.value === value ? "bg-surface text-ink shadow-sm ring-1 ring-line" : "text-ink-2 hover:text-ink"}`}>
+          className={`whitespace-nowrap rounded-[10px] px-2.5 py-1 text-xs font-medium transition ${o.value === value ? "bg-surface text-ink shadow-sm ring-1 ring-line" : "text-ink-2 hover:text-ink"}`}>
           {o.label}
         </button>
       ))}

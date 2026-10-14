@@ -61,6 +61,7 @@ class Processor:
         self._replaying = False
         self._importing = False
         self._dirty_accounts: set[str] = set()
+        self.config_version: int | None = None   # the settings version in force: stamped on events and scores
 
     # ================================================================ public
     def handle(self, raw: dict | Event) -> dict:
@@ -197,7 +198,8 @@ class Processor:
         self.db.upsert("events", {"event_id": e.event_id, "seq": e.seq, "lead_id": e.lead_id, "type": e.type,
                                   "ts": e.ts, "actor": e.actor, "rep_id": e.rep_id, "source": e.source,
                                   "payload": e.payload, "lead_ref": e.lead_ref, "derived": e.derived,
-                                  "ingested_at": self.store.ingested_at.get(e.event_id)})
+                                  "ingested_at": self.store.ingested_at.get(e.event_id),
+                                  "config_version": self.config_version})
 
     def _resolve(self, e: Event) -> LeadRecord | None:
         ref = e.lead_ref or {}
@@ -363,7 +365,7 @@ class Processor:
                    "event_id": trigger.event_id if trigger else None, "event_type": trigger.type if trigger else None,
                    "ts": now, "old_score": old, "new_score": new, "delta": new - old, "contributions": contribs,
                    "summary": text, "grade": ev.score.grade, "intent_level": ev.score.intent_level,
-                   "parts": ev.score.parts()}
+                   "parts": ev.score.parts(), "config_version": self.config_version}
             lead.score_history.append(row)
             self.db.add("score_changes", row)
             self.db.add("factor_snapshots", {"id": row["id"], "lead_id": lead.lead_id, "event_id": row["event_id"],

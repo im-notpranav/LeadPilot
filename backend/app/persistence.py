@@ -25,8 +25,8 @@ log = logging.getLogger("leadpilot.persistence")
 
 SEED_TABLES = {"historical_deals", "reps", "sources", "meta"}
 LOG_TABLES = {"raw_events", "events"}
-ACCOUNT_TABLES = {"profiles", "api_keys",         # people, keys and connectors: survive demo resets and replays
-                  "connectors", "connector_deliveries", "tracker_visitors"}
+ACCOUNT_TABLES = {"profiles", "api_keys",         # people, keys, connectors and settings: survive demo resets
+                  "connectors", "connector_deliveries", "tracker_visitors", "config_versions"}
 
 
 def jsonable(obj):
@@ -134,6 +134,7 @@ class Persistence:
                 cur.execute("PRAGMA synchronous=NORMAL")
                 cur.close()
             T.metadata.create_all(self.engine)
+            self._add_missing_columns()
         else:
             schema_name = self.schema
 
@@ -154,6 +155,17 @@ class Persistence:
         if self.async_writes:
             self._writer = threading.Thread(target=self._writer_loop, name="leadpilot-db-writer", daemon=True)
             self._writer.start()
+
+    def _add_missing_columns(self) -> None:
+        """SQLite only (Postgres uses migrations): create_all skips existing tables, so add columns a newer
+        version of tables.py introduced to a database file made by an older one."""
+        with self.engine.begin() as conn:
+            for t in T.metadata.sorted_tables:
+                have = {r[1] for r in conn.execute(text(f'PRAGMA table_info("{t.name}")'))}
+                for c in t.columns:
+                    if c.name not in have:
+                        conn.execute(text(f'ALTER TABLE "{t.name}" ADD COLUMN "{c.name}" '
+                                          f'{c.type.compile(dialect=self.engine.dialect)}'))
 
     # ------------------------------------------------------------------ queueing (called under the runtime lock)
     def add(self, table: str, row: dict) -> None:

@@ -15,6 +15,7 @@ import Simulator from "./pages/Simulator";
 import Access from "./pages/Access";
 import Connectors from "./pages/Connectors";
 import Import from "./pages/Import";
+import Settings from "./pages/Settings";
 import { Loading } from "./components/ui";
 
 // The chart library is only used on these pages. Splitting them out keeps the first load (and the splash) fast;
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="analytics" element={guard("/analytics", <Deferred><Analytics /></Deferred>)} />
         <Route path="quality" element={guard("/quality", <Deferred><Quality /></Deferred>)} />
         <Route path="simulator" element={guard("/simulator", <Simulator />)} />
+        <Route path="settings" element={guard("/settings", <Settings />)} />
         <Route path="import" element={guard("/import", <Import />)} />
         <Route path="connectors" element={guard("/connectors", <Connectors />)} />
         <Route path="access" element={guard("/access", <Access />)} />

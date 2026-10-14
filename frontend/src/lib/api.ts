@@ -65,7 +65,7 @@ export type AccountRow = {
 };
 export type AccountPerson = Partial<LeadView> & { lead_id: string; name: string | null; title: string | null; role: string; visible: boolean; stage: string; owner_name: string | null };
 export type AccountDetail = AccountRow & { revenue_band: string | null; funding_stage: string | null; tech_stack: string[]; people: AccountPerson[]; opportunities: Opportunity[] };
-export type ScorePoint = { id: number; ts: string; score: number; old: number; delta: number; event_id: string; event_type: string; summary: string; grade: string; intent_level: string; parts: LeadView["parts"]; contributions: Contribution[] };
+export type ScorePoint = { id: number; ts: string; score: number; old: number; delta: number; event_id: string; event_type: string; summary: string; grade: string; intent_level: string; parts: LeadView["parts"]; contributions: Contribution[]; config_version: number | null };
 export type FeedItem = { ts: string; event_id: string; type: string; lead_id: string; name: string | null; company: string | null; actor: string; rep_id: string | null; source: string | null; delta: number; score: number | null; grade: string | null; stage: string | null; summary: string };
 export type Rep = { rep_id: string; name: string; profile: string; territories: string[]; industries: string[]; segments: string[]; tags: string[]; open_leads: number; load: number; capacity: number; pipeline_ev: number; stalled: number; won_live: number; lost_live: number; wins_total: number; closed_total: number; win_rate: number | null; revenue: number; median_first_response_min: number | null; sla_attainment: number | null; neglect_count: number; reassigned_away: number; assigned: number };
 export type SimStatus = { status: string; seed: number; clock: { now: string; speed: number; paused: boolean }; events: number; raw_events: number; leads: number; open_leads: number; stalled: number; quarantined: number; merged: number; won: number; lost: number; scheduled: number; latency: { count: number; p50_ms?: number; p95_ms?: number; max_ms?: number }; background: boolean; rep_actions: boolean; historical_deals: number; sim_counts: Record<string, number> };
@@ -132,3 +132,16 @@ export type ImportResult = { batch_id: string; counts: ImportPreview["counts"]; 
 export const STAGES = ["new", "contacted", "engaged", "qualified", "meeting", "proposal", "negotiation", "won", "lost", "nurture", "disqualified"];
 export const EVENT_TYPES = ["page_view", "content_download", "webinar_registered", "webinar_attended", "demo_request", "contact_sales", "trial_signup", "proposal_viewed", "email_sent", "email_opened", "email_clicked", "email_replied", "email_bounced", "unsubscribed", "call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show", "proposal_sent", "contract_sent", "deal_won", "deal_lost", "task_created", "task_completed", "bant_qualified"];
 export const REP_EVENTS = new Set(["email_sent", "call_logged", "meeting_scheduled", "meeting_held", "meeting_no_show", "proposal_sent", "contract_sent", "deal_won", "deal_lost", "task_created", "task_completed", "bant_qualified"]);
+
+export type ConfigVersion = {
+  id: number; note: string | null; status: "draft" | "active" | "retired"; restored_from: number | null;
+  created_by: string | null; created_at: string | null; activated_by: string | null; activated_at: string | null;
+  retired_at: string | null; fingerprint: string | null; sections_changed: string[];
+  changes_from_defaults: number; changes_from_previous: number | null;
+};
+export type ConfigChange = { path: string; before: unknown; after: unknown };
+export type ConfigSection = { name: string; label: string; yaml: string; changed: boolean; file: string };
+export type ConfigCurrent = { active: ConfigVersion; sections: ConfigSection[]; can_edit: boolean; engine_version: number | null; versions: number };
+export type ConfigVersionDetail = ConfigVersion & { sections: ConfigSection[]; changes: ConfigChange[]; changes_vs_active: ConfigChange[]; previous_id: number | null };
+export type ConfigCheck = { ok: boolean; events_checked: number; changes: ConfigChange[] };
+export type ConfigActivated = { version: ConfigVersion; replayed_events: number; seconds: number };

@@ -141,7 +141,8 @@ async def score_history(lead_id: str, p: Principal = Depends(user)):
             {"id": r["id"], "ts": iso(r["ts"]), "score": round(r["new_score"], 2), "old": round(r["old_score"], 2),
              "delta": round(r["delta"], 2), "event_id": r["event_id"], "event_type": r["event_type"],
              "summary": r["summary"], "grade": r.get("grade"), "intent_level": r.get("intent_level"),
-             "parts": r.get("parts"), "contributions": _contribs(r["contributions"])} for r in lead.score_history]}
+             "parts": r.get("parts"), "contributions": _contribs(r["contributions"]),
+             "config_version": r.get("config_version")} for r in lead.score_history]}
 
 
 async def _manual(p: Principal, lead_id: str, type_: str, payload: dict, actor: str = "rep",

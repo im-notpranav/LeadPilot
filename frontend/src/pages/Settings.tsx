@@ -53,7 +53,7 @@ function InForce({ v }: { v: ConfigVersion }) {
       <p className="mt-1 text-sm text-ink-2">{v.note ?? "No note"}</p>
       <p className="mt-0.5 text-xs text-ink-3">
         Activated {dateTime(v.activated_at)}{v.activated_by ? ` by ${v.activated_by}` : ""} ·{" "}
-        {v.changes_from_defaults ? `${v.changes_from_defaults} setting${v.changes_from_defaults === 1 ? "" : "s"} differ from the YAML files` : "same as the YAML files"}
+        {v.changes_from_defaults ? `${v.changes_from_defaults} ${v.changes_from_defaults === 1 ? "setting differs" : "settings differ"} from the YAML files` : "same as the YAML files"}
         {v.sections_changed.length ? ` (${v.sections_changed.join(", ")})` : ""}
       </p>
     </section>

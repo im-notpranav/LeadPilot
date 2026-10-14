@@ -44,6 +44,7 @@ A built-in simulator generates leads, buyer personas and sales reps, so the syst
 - [Sign-in, roles and API keys](#sign-in-roles-and-api-keys)
 - [Connectors: forms, CRM, email, website, CSV](#connectors-forms-crm-email-website-csv)
 - [Accounts and deals](#accounts-and-deals)
+- [Settings console](#settings-console)
 - [Testing & performance](#testing--performance)
 - [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
 - [Project structure](#project-structure)
@@ -290,7 +291,10 @@ TanStack Query · Recharts.
    stage history (each move names its rule, O0–O8), the buying committee and an edit form (amount, expected close,
    stage, won / lost with a reason). **Accounts** groups everyone at a company domain and shows who is missing from
    the buying committee.
-9. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
+9. **Settings** (admins). Lower grade A from 80 to 70 in *Scoring*, **Check changes** to see the change pass on real
+   events, then **Save and activate**: every event is re-run and more leads are now grade A. **Roll back to this** on
+   version 1 brings the YAML rules back as a new version.
+10. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
 
 ---
 
@@ -321,6 +325,9 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/import/preview` · `/api/import/commit` | CSV import (manager) |
 | `GET` | `/api/accounts` · `/api/accounts/{id}` | Companies with their people, buying committee and deals |
 | `GET/POST/PATCH` | `/api/opportunities` · `/api/opportunities/{id}` | Deal board, deal detail, create a deal, edit or close one |
+| `GET` | `/api/config` · `/api/config/versions` · `/api/config/versions/{id}` | Rules in force, version history, one version with its changes (manager) |
+| `POST` | `/api/config/check` | Validate edited rules and dry-run them on real events; returns problems or the list of changes (admin) |
+| `POST` | `/api/config/versions` · `/{id}/activate` · `/{id}/restore` | Save a version (optionally activate it), activate a draft, roll back (admin) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -348,6 +355,9 @@ X-API-Key: lp_…            (or a signed-in admin / manager session)
 | `quality.yaml` | Duplicate matching thresholds, fake-lead signals |
 | `nba.yaml` | Next-best-action rules N1–N15 and priority weights |
 | `simulator.yaml` | Lead volume, sources, personas, rep profiles, warm-up length, seed |
+
+The first five files are the defaults. Admins change them from the dashboard without a restart: see
+[Settings console](#settings-console). `simulator.yaml` is only editable on disk.
 
 Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-ignored). Real environment variables win.
 
@@ -499,10 +509,37 @@ table (migration `supabase/migrations/20261014000000_opportunities.sql`).
 
 ---
 
+## Settings console
+
+**System → Settings** (`/settings`) shows the rules behind every score, stage, assignment and next action, and lets
+admins change them. Managers can look but not change anything.
+
+- **Versions.** The YAML files in `backend/config` stay the defaults. A **settings version** stores only the settings
+  that differ from them, so new defaults added in code reach every version. Version 1 ("Starting rules from the YAML
+  files") is created on first start. Exactly one version is **active**; the others are **drafts** (saved, never used)
+  or **retired** (used before).
+- **Editing.** Each section (Scoring, Pipeline and deals, Assignment, Quality and duplicates, Next best actions) is
+  edited as YAML. **Show the documented defaults** shows the YAML file with its comments.
+- **Check changes.** Validates the edit (valid YAML, same shape as the defaults, numbers stay numbers, the config
+  loads) and **dry-runs** it on a built-in sample journey plus the first 400 real events in a scratch engine. It shows
+  either a list of plain-English problems or a before / after table of every setting that would change.
+- **Save as draft** or **Save and activate.** Activating swaps the rules everywhere and **re-runs the whole event
+  log** under them, so every score, stage, assignment and deal reflects the new rules. Requests wait while it runs.
+  If the replay fails, the previous version is put back.
+- **Roll back.** **Roll back to this** on an older version saves its rules as a **new** version and activates it, so
+  the history is never rewritten.
+- **Traceability.** Every processed event and every score change records the version that produced it
+  (`config_version`). Selecting a point on a lead's score chart shows "scored under rules vN".
+
+Versions are stored in the `config_versions` table, which survives demo resets (migration
+`supabase/migrations/20261015000000_config_versions.sql`).
+
+---
+
 ## Testing & performance
 
 ```bash
-make test   # 214 tests (5 Postgres tests skip unless enabled)
+make test   # 230 tests (5 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -566,13 +603,15 @@ backend/
     simulator/   personas · generator · history · scenarios
     analytics/   funnel · response_time · source_quality · rep_performance · calibration
     connectors/  field mapping · signing · email parsing · CSV import · store · tracker.js
-    api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · websocket routes
+    api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · config · websocket routes
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
+    config_versions.py  settings versions: validation, diff, dry run
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
   src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
-                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · NotFound
+                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings ·
+                 NotFound
   src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)

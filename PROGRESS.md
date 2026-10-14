@@ -18,7 +18,7 @@ Start new work from `main`.
 | 2 | Sign-in, roles (admin / manager / rep) and API keys | ✅ Done | 842d5c3 |
 | 3 | Connectors: forms, CRM, email, website tracker, CSV import | ✅ Done | 26cc0e9 |
 | 4 | Accounts (companies) and deals (opportunities) | ✅ Done | 2bfe39a, 019a6a6 |
-| 5 | Settings console: versioned rules with diff and rollback | 🟡 Built and backend-tested; finishing steps below | 9cdc32a |
+| 5 | Settings console: versioned rules with diff and rollback | ✅ Done | 9cdc32a, PHASE5_FINISH |
 | 6 | What-if testing: replay history against a draft config | ⬜ To do | |
 | 7 | Notifications: in-app, email, Slack, SMS | ⬜ To do | |
 | 8 | Call intelligence with Gemini (summaries, outcomes) | ⬜ To do | |
@@ -27,9 +27,9 @@ Start new work from `main`.
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 230 backend tests pass (`make test`, includes 10 new settings tests). 13 browser tests passed
-before Phase 5 (`make e2e`); they have not been re-run since Phase 5 and the last redesign merge. The 5 Supabase
-tests (`make test-pg`) last passed at Phase 4 and have not been run against the Phase 5 migration yet.
+**Tests right now:** 230 backend tests pass (`make test`). 14 browser tests pass (`make e2e`, including the new
+`settings.spec.ts`). The 5 Postgres tests (`make test-pg`) pass with the Phase 5 migration (run against a local
+Postgres 16; worth one run against Supabase too).
 
 **Dashboard redesign:** the `claude/charming-noether-8ziqwn` branch (brand, sign-in layout, Leads explorer,
 drill-down links, self-installing `python scripts/dev.py`, faster motion, lazy-loaded chart pages, live status on the
@@ -111,7 +111,7 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
 - **Code (frontend):** `pages/Accounts.tsx`, `pages/Account.tsx`, `pages/Deal.tsx`, `pages/Pipeline.tsx`,
   `components/deals.tsx`, `e2e/deals.spec.ts`.
 
-### Phase 5: Settings console (built; see "Finish Phase 5" below)
+### Phase 5: Settings console
 - **How it works:**
   - The rules in `backend/config/scoring.yaml`, `pipeline.yaml`, `assignment.yaml`, `quality.yaml` and `nba.yaml`
     stay the defaults. `simulator.yaml` is not editable (demo only).
@@ -143,19 +143,12 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
 - **Code:** `backend/app/config_versions.py` (versions, validation, diff, dry run), `backend/app/api/routes_config.py`,
   `Runtime.apply_config` in `backend/app/runtime.py`, `backend/tests/test_config_versions.py`,
   `frontend/src/pages/Settings.tsx`.
-- **Checked in the browser:** the page loads, editing and **Check changes** work (grade A 80 → 70 passed on 408
-  events and showed the one change). **Save and activate** was started but its result was not watched to the end.
+- **Checked in the browser** (`frontend/e2e/settings.spec.ts`): grade A 80 → 70, **Check changes** shows the one
+  change, **Save and activate** makes version 2 active and more leads become grade A; **Roll back to this** on
+  version 1 makes version 3 active with the YAML rules and exactly the original grade-A count. `/settings` is in the
+  smoke test's page list. The README has a "Settings console" section and the `/api/config` rows.
 
 ## What should be done next
-
-### Finish Phase 5
-1. In the browser: Save and activate a change, confirm "Version 2 is in force" and that grades changed; then
-   **Roll back to this** on version 1 and confirm version 3 is active with no differences from the YAML files.
-2. Add a Playwright test for that flow (`frontend/e2e/settings.spec.ts`) and add `/settings` to the page list in
-   `frontend/e2e/smoke.spec.ts`. Then run the whole browser suite (`make e2e`).
-3. Run `make test-pg` so the new migration is checked on Postgres (the test compares every table's columns with
-   `backend/app/models/tables.py`).
-4. README: add a "Settings console" section and the `/api/config` rows to the API table.
 
 ### Next phases
 - **Phase 6: What-if testing.** Replay history with a draft config in a scratch engine (the Phase 5 dry run is the

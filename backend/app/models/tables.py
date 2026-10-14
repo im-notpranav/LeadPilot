@@ -184,6 +184,21 @@ api_keys = Table(
 
 # ---- Connectors: how outside systems send events in. Like accounts, they survive demo resets and replays.
 
+opportunities = Table(
+    "opportunities", metadata,
+    # Deals: a projection like leads (rebuilt from raw_events). One account can have several, each with several
+    # contacts. status: open | won | lost | void (no longer produced by the event log, e.g. after a merge).
+    Column("opp_id", String, primary_key=True),
+    Column("account_id", String, index=True), Column("account_key", String, index=True), Column("name", String),
+    Column("kind", String), Column("status", String, index=True), Column("stage", String, index=True),
+    Column("stage_entered_at", DateTime(timezone=True)), Column("opened_at", DateTime(timezone=True)),
+    Column("closed_at", DateTime(timezone=True)), Column("open_rule", String), Column("primary_lead_id", String),
+    Column("contact_ids", JSON), Column("owner_rep_id", String, index=True), Column("amount", Float),
+    Column("predicted_acv", Float), Column("close_prob", Float), Column("expected_value", Float),
+    Column("is_stalled", Boolean), Column("close_date", String), Column("lost_reason", Text),
+    Column("committee", JSON), Column("transitions", JSON), Column("last_activity_at", DateTime(timezone=True)),
+)
+
 connectors = Table(
     "connectors", metadata,
     # kind: webhook (LeadPilot events, HMAC) | form | crm | email | tracker (website snippet, public site key).

@@ -9,8 +9,8 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import (routes_analytics, routes_auth, routes_connectors, routes_leads, routes_pipeline, routes_reps,
-                  routes_sim, ws)
+from .api import (routes_analytics, routes_auth, routes_connectors, routes_deals, routes_leads, routes_pipeline,
+                  routes_reps, routes_sim, ws)
 from .api.security import manager, user
 from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
@@ -128,6 +128,6 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router,
           routes_connectors.public, routes_connectors.admin_router, routes_connectors.import_router):
     app.include_router(r)
-for r in (routes_leads.router, routes_pipeline.router, routes_reps.router, routes_sim.router):
+for r in (routes_leads.router, routes_pipeline.router, routes_deals.router, routes_reps.router, routes_sim.router):
     app.include_router(r, dependencies=[Depends(user)])
 app.include_router(routes_analytics.router, dependencies=[Depends(manager)])

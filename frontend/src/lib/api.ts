@@ -33,8 +33,38 @@ export type LeadDetail = LeadView & {
   funding_stage: string | null; account_id: string | null; disqualifier: string | null; budget: number | null; seats: number | null;
   fake_signals: { key: string; weight: number; detail: string }[];
   transitions: Transition[]; assignments: any[]; actions: Action[]; stall_flags: any[]; merges: any[];
+  opportunities: Opportunity[];
   redirect?: string;
 };
+
+export type DealStage = "qualified" | "meeting" | "proposal" | "negotiation" | "won" | "lost";
+export type Opportunity = {
+  opp_id: string; name: string; kind: "new_business" | "expansion" | "renewal"; status: "open" | "won" | "lost";
+  stage: DealStage; account_id: string | null; company: string | null; primary_lead_id: string; contacts: number;
+  owner_rep_id: string | null; owner_name: string | null; opened_at: string; closed_at: string | null;
+  stage_entered_at: string | null; days_in_stage: number; amount: number | null; acv: number | null;
+  close_prob: number | null; expected_value: number; is_stalled: boolean; stall: Stall | null;
+  close_date: string | null; lost_reason: string | null; last_activity_at: string | null; committee_covered: string[];
+};
+export type DealContact = { lead_id: string; name: string | null; title: string | null; seniority: string; email: string | null; score: number; grade: string; stage: string; owner_rep_id: string | null; primary: boolean };
+export type OpportunityDetail = Opportunity & {
+  contacts_detail: DealContact[];
+  committee: { roles: Record<string, string[]>; covered: string[]; missing: string[]; size: number } | null;
+  acv_factors: { key: string; label: string; value: number; kind: string }[];
+  close_factors: { key: string; label: string; logit: number | null }[];
+  transitions: { ts: string; from: string | null; to: string; rule_id: string; evidence: string[]; reason: string; mode: string }[];
+  open_rule: string; opened_event_id: string; events: number; created_by: string | null;
+};
+export type DealColumn = { stage: DealStage; count: number; acv_total: number; ev_total: number; stalled: number; cards: Opportunity[] };
+export type DealBoard = { columns: DealColumn[]; open_deals: number; pipeline_ev: number; pipeline_acv: number };
+export type AccountRow = {
+  account_id: string; name: string | null; domain: string | null; industry: string | null; employees: number | null;
+  segment: string | null; country: string | null; contacts: number; open_deals: number; deals: number;
+  pipeline_ev: number; pipeline_acv: number; won_revenue: number; best_score: number; owner_rep_ids: string[];
+  owner_names: (string | null)[]; committee_covered: string[]; last_inbound_at: string | null;
+};
+export type AccountPerson = Partial<LeadView> & { lead_id: string; name: string | null; title: string | null; role: string; visible: boolean; stage: string; owner_name: string | null };
+export type AccountDetail = AccountRow & { revenue_band: string | null; funding_stage: string | null; tech_stack: string[]; people: AccountPerson[]; opportunities: Opportunity[] };
 export type ScorePoint = { id: number; ts: string; score: number; old: number; delta: number; event_id: string; event_type: string; summary: string; grade: string; intent_level: string; parts: LeadView["parts"]; contributions: Contribution[] };
 export type FeedItem = { ts: string; event_id: string; type: string; lead_id: string; name: string | null; company: string | null; actor: string; rep_id: string | null; source: string | null; delta: number; score: number | null; grade: string | null; stage: string | null; summary: string };
 export type Rep = { rep_id: string; name: string; profile: string; territories: string[]; industries: string[]; segments: string[]; tags: string[]; open_leads: number; load: number; capacity: number; pipeline_ev: number; stalled: number; won_live: number; lost_live: number; wins_total: number; closed_total: number; win_rate: number | null; revenue: number; median_first_response_min: number | null; sla_attainment: number | null; neglect_count: number; reassigned_away: number; assigned: number };

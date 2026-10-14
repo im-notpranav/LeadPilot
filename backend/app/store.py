@@ -93,6 +93,10 @@ class Store:
         self.last_tick_at: datetime | None = None
         self.last_snapshot_day: str | None = None
         self.unresolved: list[str] = []
+        self.opps: dict[str, object] = {}                      # opp_id -> engine.opportunity.Opportunity
+        self.opp_evals: dict[str, dict] = {}                   # opp_id -> evaluation at the last refresh
+        self.account_opps: dict[str, list] = defaultdict(list)  # account key -> opp ids, in opening order
+        self.lead_account: dict[str, str] = {}                 # lead_id -> account key used at the last refresh
         self.load_history(self.historical)
 
     # ---------------------------------------------------------------- ids / history
@@ -218,6 +222,60 @@ class Store:
                 "seniority": p.seniority, "revenue_band": p.revenue_band, "tech_stack": p.tech_stack,
                 "funding_stage": p.funding_stage, "account_id": p.account_id, "disqualifier": p.disqualifier,
                 "budget": p.budget, "seats": p.seats, "fake_signals": p.fake_signals,
+                "opportunities": [self.opp_view(o) for o in self.opps_for_lead(lead.lead_id)],
+            })
+        return view
+
+    # ---------------------------------------------------------------- accounts and deals
+    @staticmethod
+    def account_key(lead: LeadRecord) -> str:
+        """A company is keyed by its web domain; a lead without one (free mail) is an account of its own."""
+        p = lead.profile
+        return p.account_id if p is not None and p.account_id else f"lead:{lead.lead_id}"
+
+    def account_contacts(self, key: str) -> list[LeadRecord]:
+        ids = self.account_index.get(key, ()) if not key.startswith("lead:") else (key[5:],)
+        out = [self.leads[i] for i in sorted(ids) if i in self.leads]
+        return [l for l in out if l.status != "merged" and l.fold is not None]
+
+    def opps_for_lead(self, lead_id: str) -> list:
+        key = self.lead_account.get(lead_id)
+        return [o for oid in self.account_opps.get(key, ()) if (o := self.opps.get(oid)) and lead_id in o.contact_ids]
+
+    def opp_view(self, o, detail: bool = False) -> dict:
+        ev = self.opp_evals.get(o.opp_id) or {}
+        primary = self.leads.get(o.primary_lead_id)
+        owner = primary.owner if primary else None
+        p = primary.profile if primary else None
+        view = {
+            "opp_id": o.opp_id, "name": o.name, "kind": o.kind, "status": o.status, "stage": o.stage,
+            "account_id": None if o.account_key.startswith("lead:") else o.account_key,
+            "company": p.company if p else None, "primary_lead_id": o.primary_lead_id,
+            "contacts": len(o.contact_ids), "owner_rep_id": owner, "owner_name": self.rep_name(owner),
+            "opened_at": iso(o.opened_at), "closed_at": iso(o.closed_at), "stage_entered_at": iso(o.stage_entered_at),
+            "days_in_stage": round(ev.get("days_in_stage", 0.0), 1), "amount": o.amount,
+            "acv": ev["acv"]["acv"] if ev else None, "close_prob": round(ev["close"]["p"], 4) if ev else None,
+            "expected_value": round(ev.get("expected_value", 0.0), 2),
+            "is_stalled": bool(ev and ev["stall"]["is_stalled"]), "stall": ev.get("stall"),
+            "close_date": o.close_date, "lost_reason": o.lost_reason, "last_activity_at": iso(o.last_activity_at),
+            "committee_covered": ev["committee"]["covered"] if ev else [],
+        }
+        if detail:
+            people = []
+            for lid in o.contact_ids:
+                lead = self.leads.get(lid)
+                if lead is None or lead.ev is None:
+                    continue
+                lp = lead.profile
+                people.append({"lead_id": lid, "name": lp.name, "title": lp.title, "seniority": lp.seniority,
+                               "email": lp.email, "score": round(lead.ev.score.score, 1), "grade": lead.ev.score.grade,
+                               "stage": lead.ev.stage, "owner_rep_id": lead.owner, "primary": lid == o.primary_lead_id})
+            view.update({
+                "contacts_detail": people, "committee": ev.get("committee"),
+                "acv_factors": ev["acv"]["factors"] if ev else [], "close_factors": ev["close"]["factors"] if ev else [],
+                "transitions": [{**t, "ts": iso(t["ts"])} for t in o.transitions],
+                "open_rule": o.open_rule, "opened_event_id": o.opened_event_id, "events": len(o.event_ids),
+                "created_by": o.created_by,
             })
         return view
 

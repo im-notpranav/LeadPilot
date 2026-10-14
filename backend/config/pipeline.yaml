@@ -76,3 +76,26 @@ close_probability:
     days_over_sla: -0.05
     source_quality: 0.5    # x (source_quality_index - 0.5)
   use_model: false         # when true and a trained model exists, use it instead of the rule formula
+
+# Deals (opportunities): one company (account) can have several contacts and, over time, several deals.
+opportunities:
+  stages: [qualified, meeting, proposal, negotiation, won, lost]
+  open_stages: [qualified, meeting, proposal, negotiation]
+  # The first of these from a contact opens a deal when the account has none open (O1).
+  open_on: [demo_request, contact_sales, bant_qualified, meeting_scheduled, meeting_held, proposal_sent, contract_sent,
+            deal_won]
+  # Buying committee: which seniority counts as which role.
+  committee_roles:
+    decision_maker: [c_level, vp]
+    manager: [director, manager]
+    practitioner: [ic, unknown]
+  committee_coef: 0.3      # close-probability logit per committee role engaged beyond the first
+  rule_labels:
+    O0: Deal created by a rep
+    O1: Opened on a buying signal
+    O4: Meeting held
+    O5: Proposal sent
+    O6: Negotiation started
+    O7: Deal won
+    O8: Deal lost
+    OM: Moved by hand

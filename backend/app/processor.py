@@ -19,6 +19,7 @@ from .engine.evaluate import evaluate
 from .engine.explain import diff, merge_contribution, summary
 from .engine.identity import blocking_keys, identity_of, resolve
 from .engine.normalize import normalize_capture
+from .engine.opportunity import evaluate_opportunity, fold_opportunities
 from .engine.pipeline import FoldState, fold_step, run_fold
 from .engine.prediction import close_probability
 from .engine.priority import compute_priority
@@ -35,6 +36,7 @@ EVENT_TYPES = {
     "stage_override", "lead_disqualified", "bant_qualified", "time_tick",
     # manual / system extensions
     "manual_assign", "quality_cleared", "merge_approved", "review_rejected", "sla_check", "lead_refresh",
+    "opportunity_created", "opportunity_updated",
     # derived (written by the processor)
     "quality_assessed", "lead_enriched", "lead_merged",
 }
@@ -58,6 +60,7 @@ class Processor:
         self._api_seq = 0
         self._replaying = False
         self._importing = False
+        self._dirty_accounts: set[str] = set()
 
     # ================================================================ public
     def handle(self, raw: dict | Event) -> dict:
@@ -142,14 +145,20 @@ class Processor:
         hooks, bc, af = self.hooks_enabled, self.broadcast, self.autoflush
         self.hooks_enabled, self.broadcast, self.autoflush = False, False, False
         self._replaying = True
+        self._dirty_accounts = set()
         try:
             for i, r in enumerate(raw):
                 self.handle(r)
                 if i % 500 == 0:
                     self.db.flush()
+            self._replaying = False
+            end = self.clock.now() if self.clock else max((e.ts for e in self.store.log), default=None)
+            for key in sorted(self._dirty_accounts):
+                self._rebuild_account(key, end)
             self.db.flush()
         finally:
             self._replaying = False
+            self._dirty_accounts = set()
             self.hooks_enabled, self.broadcast, self.autoflush = hooks, bc, af
             self.db = db
         if write:
@@ -442,6 +451,7 @@ class Processor:
             self._actions(lead, now, e)
             self._priority(lead, now)
             self._persist_lead(lead)
+            self._refresh_deals(lead, now)
         ev = lead.ev
         p = lead.profile
         rows = [r for r in lead.score_history[-4:] if r["event_id"] and r["event_id"].startswith(e.event_id)]
@@ -619,6 +629,77 @@ class Processor:
             "created_at": p.created_at, "last_inbound_at": m["last_inbound_at"],
             "last_outbound_at": m["last_outbound_at"], "first_response_at": m["first_response_at"]})
 
+    # ================================================================ accounts and deals
+    def _refresh_deals(self, lead: LeadRecord, now: datetime) -> None:
+        if lead.fold is None:
+            return
+        key = self.store.account_key(lead)
+        old = self.store.lead_account.get(lead.lead_id)
+        if old and old != key:
+            self._refresh_account(old, now)
+        self._refresh_account(key, now)
+
+    def _refresh_account(self, key: str, now: datetime) -> None:
+        if self._replaying:                       # a replay rebuilds every touched account once, at the end
+            self._dirty_accounts.add(key)
+            return
+        self._rebuild_account(key, now)
+
+    def _rebuild_account(self, key: str, now: datetime) -> None:
+        """Rebuild one account's deals from its contacts' events (a pure fold), then re-evaluate them."""
+        store = self.store
+        contacts = store.account_contacts(key)
+        events = sorted((x for lead in contacts for x in lead.events), key=lambda x: x.sort_key)
+        eligible = {l.lead_id for l in contacts if l.status != "quarantined" and l.profile.fake_status != "fake"}
+        company = next((l.profile.company for l in contacts if l.profile.company), None)
+        opps = fold_opportunities(key, events, eligible, company, self.cfg)
+        ids = [o.opp_id for o in opps]
+        for oid in store.account_opps.get(key, []):
+            if oid not in ids and oid in store.opps:            # no longer produced by the log (e.g. a merge)
+                gone = store.opps.pop(oid)
+                ev = store.opp_evals.pop(oid, None) or {}
+                row = dict(ev.get("row") or {"opp_id": oid, "account_key": key, "name": gone.name})
+                self.db.upsert("opportunities", {**row, "status": "void"})
+                self._emit("opportunity.removed", {"opp_id": oid})
+        store.account_opps[key] = ids
+        for lead in contacts:
+            store.lead_account[lead.lead_id] = key
+        for o in opps:
+            prev = store.opps.get(o.opp_id)
+            store.opps[o.opp_id] = o
+            self._evaluate_deal(o, now, prev.stage if prev else None)
+
+    def _evaluate_deal(self, o, now: datetime, prev_stage: str | None) -> None:
+        store = self.store
+        members = [store.leads[i] for i in o.contact_ids if i in store.leads and store.leads[i].ev is not None]
+        primary = store.leads.get(o.primary_lead_id)
+        if primary is None or primary.ev is None or not members:
+            return
+        best = max((l.ev.score for l in members), key=lambda s: s.score)
+        people = [{"lead_id": l.lead_id, "name": l.profile.name, "title": l.profile.title,
+                   "seniority": l.profile.seniority} for l in members]
+        events = [store.events[i] for i in o.event_ids if i in store.events]
+        ev = evaluate_opportunity(o, primary.profile, events, best, people, now, self._context(primary), self.cfg)
+        row = {"opp_id": o.opp_id, "account_id": None if o.account_key.startswith("lead:") else o.account_key,
+               "account_key": o.account_key, "name": o.name, "kind": o.kind, "status": o.status, "stage": o.stage,
+               "stage_entered_at": o.stage_entered_at, "opened_at": o.opened_at, "closed_at": o.closed_at,
+               "open_rule": o.open_rule, "primary_lead_id": o.primary_lead_id, "contact_ids": list(o.contact_ids),
+               "owner_rep_id": primary.owner, "amount": o.amount, "predicted_acv": ev["acv"]["acv"],
+               "close_prob": round(ev["close"]["p"], 4), "expected_value": round(ev["expected_value"], 2),
+               "is_stalled": ev["stall"]["is_stalled"], "close_date": o.close_date, "lost_reason": o.lost_reason,
+               "committee": ev["committee"], "transitions": [{**t, "ts": iso(t["ts"])} for t in o.transitions],
+               "last_activity_at": o.last_activity_at}
+        old = (store.opp_evals.get(o.opp_id) or {}).get("row")
+        ev["row"] = row
+        store.opp_evals[o.opp_id] = ev
+        if row != old:
+            self.db.upsert("opportunities", row)
+            if old is None or old["stage"] != o.stage or abs(old["expected_value"] - row["expected_value"]) >= 1:
+                self._emit("opportunity.changed", {"opp_id": o.opp_id, "lead_id": o.primary_lead_id, "name": o.name,
+                                                   "stage": o.stage, "from": prev_stage, "status": o.status,
+                                                   "expected_value": row["expected_value"],
+                                                   "account_id": row["account_id"], "owner_rep_id": primary.owner})
+
     # ================================================================ system events
     def _tick(self, e: Event, now: datetime) -> dict:
         store = self.store
@@ -644,6 +725,9 @@ class Processor:
         for lead in open_leads:
             self._priority(lead, now)
             self._persist_lead(lead)
+        if not self._replaying:
+            for o in [o for o in store.opps.values() if o.status == "open"]:
+                self._evaluate_deal(o, now, o.stage)      # value, close probability and stall move with time
         self._source_quality(now)
         store.last_tick_at = now
         return {"rescored": rescored, "open_leads": len(open_leads)}
@@ -727,6 +811,9 @@ class Processor:
         self.db.add("merges", merge)
         self._resolve_review(pl.get("review_id"), "merged", now)
         self.db.upsert("leads", {"lead_id": merged.lead_id, "status": "merged", "merged_into": survivor.lead_id})
+        old_key = store.lead_account.pop(merged.lead_id, None)
+        if old_key:
+            self._refresh_account(old_key, now)          # the merged lead's deals move to the survivor's account
         self._emit("lead.merged", {"survivor_id": survivor.lead_id, "merged_id": merged.lead_id, "confidence": conf,
                                    "mode": "review"})
         self._finish(survivor, me, now)

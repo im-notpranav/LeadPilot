@@ -235,3 +235,52 @@ def test_save_activate_and_roll_back(client):
     assert client.post("/api/config/versions/2/activate", headers=h("boss")).status_code == 409
     assert client.post("/api/config/versions/3/activate", headers=h("boss")).status_code == 409
     assert client.get("/api/config/versions/99", headers=h("boss")).status_code == 404
+
+
+# ================================================================================================ what-if
+def wait_for(c, rid: int) -> dict:
+    for _ in range(400):
+        run = c.get(f"/api/config/whatif/{rid}", headers=h("max")).json()
+        if run["status"] != "running":
+            return run
+        time.sleep(0.05)
+    raise AssertionError("what-if run did not finish")
+
+
+def test_what_if_compares_draft_rules_with_the_rules_in_force(client):
+    active = client.get("/api/config", headers=h("boss")).json()["active"]["id"]
+    body = {"sections": sections(client, lambda s: s["scoring"]["grades"].update(A=50, B=35))}
+    assert client.post("/api/config/whatif", headers=h("max"), json=body).status_code == 403
+    assert client.get("/api/config/whatif", headers=h("rita")).status_code == 403
+    same = client.post("/api/config/whatif", headers=h("boss"), json={"sections": sections(client, lambda s: None)})
+    assert same.status_code == 422 and "nothing changed" in same.json()["detail"]
+    bad = client.post("/api/config/whatif", headers=h("boss"), json={"sections": {"scoring": "grades: [\n"}})
+    assert bad.status_code == 422 and "not valid YAML" in bad.json()["detail"]
+
+    started = client.post("/api/config/whatif", headers=h("boss"), json=body)
+    assert started.status_code == 202
+    run = started.json()
+    assert run["label"] == "Unsaved edits" and run["against"]["id"] == active and run["events"] > 0
+    assert run["settings_changes"] == [{"path": "scoring.grades.A", "before": 80, "after": 50},
+                                       {"path": "scoring.grades.B", "before": 60, "after": 35}]
+    done = wait_for(client, run["id"])                              # managers can read the result
+    assert done["status"] == "done" and done["progress"] == 1.0 and not done["stale"]
+    r = done["result"]
+    assert r["counts"]["grade"] == r["counts"]["grade_up"] > 0 and r["counts"]["grade_down"] == 0
+    assert r["grades"]["after"]["A"] > r["grades"]["before"].get("A", 0)
+    assert client.get("/api/config", headers=h("boss")).json()["active"]["id"] == active   # nothing switched
+    assert [x["id"] for x in client.get("/api/config/whatif", headers=h("max")).json()["items"]][0] == run["id"]
+    assert client.get("/api/config/whatif/999", headers=h("max")).status_code == 404
+
+
+def test_what_if_runs_on_a_saved_version(client):
+    active = client.get("/api/config", headers=h("boss")).json()["active"]["id"]
+    body = {"sections": sections(client, lambda s: s["scoring"]["grades"].update(A=95)), "note": "Strict A"}
+    draft = client.post("/api/config/versions", headers=h("boss"), json=body).json()["version"]
+    run = client.post("/api/config/whatif", headers=h("boss"), json={"version_id": draft["id"]}).json()
+    assert run["label"] == f"Version {draft['id']}"
+    r = wait_for(client, run["id"])["result"]
+    assert r["counts"]["grade_up"] == 0 and r["counts"]["grade_down"] == r["counts"]["grade"]
+    in_force = client.post("/api/config/whatif", headers=h("boss"), json={"version_id": active})
+    assert in_force.status_code == 409 and "already in force" in in_force.json()["detail"]
+    assert client.post("/api/config/whatif", headers=h("boss"), json={"version_id": 999}).status_code == 404

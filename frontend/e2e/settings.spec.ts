@@ -64,3 +64,24 @@ test("an admin activates a rule change, sees grades move, then rolls back to the
   await expect(history.getByText(`copy of v${start}`)).toBeVisible();
   expect(await gradeA(request)).toBe(hotBefore);                                   // the replay is exact
 });
+
+test("what if shows what a rule change would do without switching anything", async ({ page, request }) => {
+  const start = await activeId(request);
+  await page.goto("/settings");
+  const editor = page.getByLabel("Scoring settings");
+  const yaml = await editor.inputValue();
+  await editor.fill(yaml.replace("grades: {A: 80,", "grades: {A: 60,"));
+  await page.getByRole("button", { name: "What if?" }).first().click();
+
+  const panel = page.locator("section#whatif");
+  await expect(panel.getByRole("heading", { name: "What if" })).toBeVisible();
+  await expect(panel.getByText(`Unsaved edits compared with version ${start} (in force)`)).toBeVisible();
+  await expect(panel.getByText(/If these rules were in force, [\d,]+ leads? would change grade/)).toBeVisible({ timeout: REPLAY });
+  await expect(panel.getByRole("button", { name: /^Grades \(\d+\)$/ })).toHaveAttribute("aria-pressed", "true");
+  const lead = panel.locator("table a[href^='/leads/']").first();
+  await expect(lead).toBeVisible();
+  await expect(panel.getByText(/▲ \d+ up · ▼ 0 down/)).toBeVisible();
+  expect(await activeId(request)).toBe(start);                                     // nothing was switched
+  await lead.click();
+  await expect(page).toHaveURL(/\/leads\/L-\d+/);
+});

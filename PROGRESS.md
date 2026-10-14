@@ -1,11 +1,12 @@
 # LeadPilot upgrade: progress
 
-Last updated: 15 Oct 2026
+Last updated: 14 Oct 2026
 
 The upgrade turns LeadPilot from a demo into a real product: Supabase for the database and login, Gemini for AI
 features, and ideas borrowed from Fizzy (https://github.com/KenshinCommits/Fizzy). It has 12 phases.
 
-**Where the code is:** `main` contains everything below (Phases 0–5 and the dashboard redesign). The phase branches
+**Where the code is:** `main` contains Phases 0–5 (first part) and the dashboard redesign. The finishing steps
+of Phase 5 and all of Phase 6 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
 (`phase-0-foundations` … `phase-5-config`) are kept on GitHub for reference; `phase-5-config` is the same as `main`.
 Start new work from `main`.
 
@@ -18,8 +19,8 @@ Start new work from `main`.
 | 2 | Sign-in, roles (admin / manager / rep) and API keys | ✅ Done | 842d5c3 |
 | 3 | Connectors: forms, CRM, email, website tracker, CSV import | ✅ Done | 26cc0e9 |
 | 4 | Accounts (companies) and deals (opportunities) | ✅ Done | 2bfe39a, 019a6a6 |
-| 5 | Settings console: versioned rules with diff and rollback | ✅ Done | 9cdc32a, PHASE5_FINISH |
-| 6 | What-if testing: replay history against a draft config | ⬜ To do | |
+| 5 | Settings console: versioned rules with diff and rollback | ✅ Done | 9cdc32a, 0efdfa6 |
+| 6 | What-if testing: replay history against a draft config | ✅ Done | see branch `claude/epic-bell-nq6hx0` |
 | 7 | Notifications: in-app, email, Slack, SMS | ⬜ To do | |
 | 8 | Call intelligence with Gemini (summaries, outcomes) | ⬜ To do | |
 | 9 | Quotes | ⬜ To do | |
@@ -27,7 +28,7 @@ Start new work from `main`.
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 230 backend tests pass (`make test`). 14 browser tests pass (`make e2e`, including the new
+**Tests right now:** 236 backend tests pass (`make test`). 15 browser tests pass (`make e2e`, including
 `settings.spec.ts`). The 5 Postgres tests (`make test-pg`) pass with the Phase 5 migration (run against a local
 Postgres 16; worth one run against Supabase too).
 
@@ -148,12 +149,35 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
   version 1 makes version 3 active with the YAML rules and exactly the original grade-A count. `/settings` is in the
   smoke test's page list. The README has a "Settings console" section and the `/api/config` rows.
 
+### Phase 6: What-if testing
+- **What it does:** shows exactly what a rule change would do before it is switched on. The whole event log is
+  re-run **twice** in scratch engines, as of the same moment: under the rules in force and under the draft. The two
+  outcomes are compared lead by lead and deal by deal. Nothing is saved, switched or written.
+- **Why two runs:** the live engine re-evaluates a deal's value only when something happens to it, so live deal
+  values are slightly older than a fresh replay. Re-running the active rules too makes the comparison exact: the
+  same rules give zero differences (tested), and the draft side equals what **Save and activate** would produce
+  (tested: what-if result == state after activation).
+- **What it compares:** per lead: grade (up / down), score, stage, owner, next action (open leads), quality status
+  (quarantined, merged); per deal: opened, gone, stage. Plus the grade mix, stage mix, owner mix, and deal totals
+  (open, won, lost, stalled, expected pipeline) before and after. Lists are capped at 200 per kind; counts are complete.
+- **How it runs:** in a background thread on a snapshot taken under the API lock, so the dashboard keeps working.
+  One run at a time; the latest 10 are kept in memory (not in the database). In memory a replay is fast: about
+  3.4 s for 4,000 demo events (the 2–3 minutes for 10,000 events noted under Phase 12 is with database writes).
+- **Limitation (same as activation):** SLA checks are events created by the live scheduler, so a draft that changes
+  first-touch SLA times is replayed against the SLA checks that were actually scheduled under the old times.
+- **API:** `POST /api/config/whatif` `{sections}` or `{version_id}` (admin) returns `202` with the run;
+  `GET /api/config/whatif` (list), `GET /api/config/whatif/{id}` (status, progress, result, `stale` when the
+  rules in force changed since).
+- **Screen:** Settings → **What if?** next to *Check changes* (for unsaved edits) and on every draft or older
+  version in the history. The panel shows a progress bar, then a summary sentence, six counts, grade / stage /
+  deal tables (in force, what if, change) and the changed leads and deals with links.
+- **Code:** `backend/app/whatif.py`, routes in `backend/app/api/routes_config.py`, `backend/tests/test_whatif.py`,
+  API tests in `backend/tests/test_config_versions.py`, `frontend/src/components/whatif.tsx`,
+  `frontend/src/pages/Settings.tsx`, `frontend/e2e/settings.spec.ts`.
+
 ## What should be done next
 
 ### Next phases
-- **Phase 6: What-if testing.** Replay history with a draft config in a scratch engine (the Phase 5 dry run is the
-  starting point: `dry_run` in `config_versions.py`) and compare grades, stages, assignments and deals against the
-  active version before switching. Show it on the Settings page next to "Check changes".
 - **Phase 7: Notifications.**
   - In-app, then email (Resend), Slack and SMS (Twilio).
   - Each channel does nothing until its key is set.
@@ -190,6 +214,8 @@ A chat panel where a rep asks "what should I do next with this lead, and why?":
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind v4 + TanStack Query (`frontend/src`). Routes in `App.tsx`,
   menu and role rules in `components/Shell.tsx` (`visibleNav`), shared UI in `components/ui.tsx`, drill-down URLs
   in `lib/links.ts`, API types in `lib/api.ts`, sign-in in `lib/auth.tsx` + `pages/Login.tsx`.
+- **Browser tests in a cloud container:** if `npx playwright test` asks to download a browser, point it at the
+  pre-installed Chromium with a local config that sets `use.launchOptions.executablePath` (do not commit it).
 - **Tests:** backend tests in `backend/tests` (`make test`); API tests run the real app with sign-in on, using
   test-only signed tokens (see `test_opportunity.py` / `test_config_versions.py`). Browser tests in `frontend/e2e`
   start their own throwaway backends on ports 8010 (sign-in off) and 8011 (sign-in on); see `playwright.config.ts`.

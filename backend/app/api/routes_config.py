@@ -1,7 +1,9 @@
-"""Settings console: view the rules in force, save edited rules as a new version, activate it, roll back.
+"""Settings console: view the rules in force, save edited rules as a new version, activate it, roll back,
+and test a change first (what-if: the whole event log re-run under draft rules, compared with what is in force).
 
-Managers can look; only admins change anything. Activating a version replays the whole event log under it,
-so the API is busy (requests wait) for as long as a replay takes.
+Managers can look; only admins change anything or start a what-if run. Activating a version replays the whole
+event log under it, so the API is busy (requests wait) for as long as a replay takes. A what-if run works on a
+snapshot in a background thread, so the API keeps serving while it runs.
 """
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ from ..auth import Principal
 from ..config import EDITABLE_SECTIONS
 from ..config_versions import SECTION_LABELS, ConfigError, diff, dry_run, to_yaml
 from ..engine.types import iso
+from ..whatif import view as run_view
 from .deps import state
 from .security import admin, manager
 
@@ -167,3 +170,65 @@ async def restore(vid: int, body: dict = Body(default={}), p: Principal = Depend
     if body.get("activate", True):
         return await _activate(row, p)
     return {"version": _view(row)}
+
+
+# ================================================================================================ what-if
+@router.post("/whatif", status_code=202, dependencies=[Depends(admin)])
+async def whatif_start(body: dict = Body(...), p: Principal = Depends(admin)):
+    """Start a what-if run for edited sections ({sections}) or a saved version ({version_id}). Poll its id."""
+    cs, rt = state.config, state.runtime
+    if body.get("version_id") is not None:
+        try:
+            row = _row_or_404(int(body["version_id"]))
+        except (TypeError, ValueError):
+            raise HTTPException(422, "version_id must be a number") from None
+        if row["status"] == "active":
+            raise HTTPException(409, f"version {row['id']} is already in force, so there is nothing to compare")
+        overrides, cfg, label = row["overrides"], cs.build(row["overrides"]), f"Version {row['id']}"
+    else:
+        texts = body.get("sections")
+        if not isinstance(texts, dict) or not texts:
+            raise HTTPException(422, "send the edited sections as {\"sections\": {\"scoring\": \"<yaml>\", ...}} "
+                                     "or a saved version as {\"version_id\": 2}")
+        try:
+            overrides, cfg = cs.validate({str(k): str(v) for k, v in texts.items()})
+        except ConfigError as e:
+            raise _bad(e) from None
+        label = "Unsaved edits"
+    active = cs.active()
+    changes = diff(cs.effective(active["overrides"]), cs.effective(overrides))
+    if not changes:
+        raise HTTPException(422, "nothing changed compared with the active version")
+    if state.whatif.running():
+        raise HTTPException(409, "a what-if run is already in progress; wait for it to finish")
+    async with state.lock:                        # a consistent snapshot; both replays run outside the lock
+        if rt.status != "ready":
+            raise HTTPException(409, "the engine is rebuilding; try again in a moment")
+        raw, hist, now, active_cfg = list(rt.store.raw_log), list(rt.store.historical), rt.clock.now(), rt.cfg
+    try:
+        run = state.whatif.start(cfg=cfg, active_cfg=active_cfg, overrides=overrides, raw=raw, historical=hist, now=now,
+                                 against={"id": active["id"], "note": active["note"]}, label=label, by=_who(p),
+                                 changes=changes)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e)) from None
+    log.info("what-if run %s started by %s (%s events)", run["id"], _who(p), len(raw))
+    return _run(run, detail=False)
+
+
+@router.get("/whatif")
+async def whatif_list():
+    return {"items": [_run(r, detail=False) for r in sorted(state.whatif.runs.values(), key=lambda r: -r["id"])]}
+
+
+@router.get("/whatif/{rid}")
+async def whatif_get(rid: int):
+    run = state.whatif.runs.get(rid)
+    if run is None:
+        raise HTTPException(404, f"what-if run {rid} not found (only the latest few are kept)")
+    return _run(run)
+
+
+def _run(run: dict, detail: bool = True) -> dict:
+    out = run_view(run, detail)
+    out["stale"] = run["against"]["id"] != state.config.active()["id"]   # the rules in force changed since
+    return out

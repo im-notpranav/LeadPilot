@@ -292,7 +292,8 @@ TanStack Query · Recharts.
    stage, won / lost with a reason). **Accounts** groups everyone at a company domain and shows who is missing from
    the buying committee.
 9. **Settings** (admins). Lower grade A from 80 to 70 in *Scoring*, **Check changes** to see the change pass on real
-   events, then **Save and activate**: every event is re-run and more leads are now grade A. **Roll back to this** on
+   events, **What if?** to see which leads would move up, then **Save and activate**: every event is re-run and more
+   leads are now grade A. **Roll back to this** on
    version 1 brings the YAML rules back as a new version.
 10. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
 
@@ -328,6 +329,7 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `GET` | `/api/config` · `/api/config/versions` · `/api/config/versions/{id}` | Rules in force, version history, one version with its changes (manager) |
 | `POST` | `/api/config/check` | Validate edited rules and dry-run them on real events; returns problems or the list of changes (admin) |
 | `POST` | `/api/config/versions` · `/{id}/activate` · `/{id}/restore` | Save a version (optionally activate it), activate a draft, roll back (admin) |
+| `POST` · `GET` | `/api/config/whatif` · `/api/config/whatif/{id}` | Start a what-if run for edited rules or a saved version (admin); list runs and poll one for its result (manager) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -523,6 +525,12 @@ admins change them. Managers can look but not change anything.
 - **Check changes.** Validates the edit (valid YAML, same shape as the defaults, numbers stay numbers, the config
   loads) and **dry-runs** it on a built-in sample journey plus the first 400 real events in a scratch engine. It shows
   either a list of plain-English problems or a before / after table of every setting that would change.
+- **What if?** Re-runs the **whole event log** twice in scratch engines, under the rules in force and under the
+  edited rules (or any saved draft or older version, from the version history), as of the same moment, and shows
+  exactly what would differ: how many leads change grade (up / down), stage, owner, next action or quality status,
+  which deals would open, disappear or sit in another stage, the grade and stage mix and the pipeline before and
+  after, and the leads and deals involved (with links). It runs in the background, so the dashboard keeps working;
+  nothing is saved or switched. The result is exactly what **Save and activate** would produce.
 - **Save as draft** or **Save and activate.** Activating swaps the rules everywhere and **re-runs the whole event
   log** under them, so every score, stage, assignment and deal reflects the new rules. Requests wait while it runs.
   If the replay fails, the previous version is put back.
@@ -539,7 +547,7 @@ Versions are stored in the `config_versions` table, which survives demo resets (
 ## Testing & performance
 
 ```bash
-make test   # 230 tests (5 Postgres tests skip unless enabled)
+make test   # 236 tests (5 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -606,13 +614,14 @@ backend/
     api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · config · websocket routes
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
     config_versions.py  settings versions: validation, diff, dry run
+    whatif.py    what-if runs: scratch replays under two rule sets, compared
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
   src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
                  Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings ·
                  NotFound
-  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest

@@ -145,3 +145,19 @@ export type ConfigCurrent = { active: ConfigVersion; sections: ConfigSection[]; 
 export type ConfigVersionDetail = ConfigVersion & { sections: ConfigSection[]; changes: ConfigChange[]; changes_vs_active: ConfigChange[]; previous_id: number | null };
 export type ConfigCheck = { ok: boolean; events_checked: number; changes: ConfigChange[] };
 export type ConfigActivated = { version: ConfigVersion; replayed_events: number; seconds: number };
+export type WhatIfLead = { lead_id: string; name: string | null; company: string | null; before: string | null; after: string | null; score_before?: number; score_after?: number };
+export type WhatIfDeal = { opp_id: string; name: string; before?: string; after?: string; stage?: string; value?: number; value_before?: number; value_after?: number; exists?: string };
+type BeforeAfter<T> = { before: T; after: T };
+export type WhatIfResult = {
+  counts: Record<"grade" | "stage" | "owner" | "action" | "quality" | "deals_opened" | "deals_closed" | "deals_stage" | "grade_up" | "grade_down", number>;
+  unchanged: boolean;
+  grades: BeforeAfter<Record<string, number>>; stages: BeforeAfter<Record<string, number>>; owners: BeforeAfter<Record<string, number>>;
+  leads: BeforeAfter<{ leads: number; quarantined: number; merged: number; stalled: number }>;
+  deals: BeforeAfter<{ deals: number; open: number; won: number; lost: number; stalled: number; pipeline: number }>;
+  changes: Record<"grade" | "stage" | "owner" | "action" | "quality", WhatIfLead[]> & Record<"deals_opened" | "deals_closed" | "deals_stage", WhatIfDeal[]>;
+};
+export type WhatIfRun = {
+  id: number; status: "running" | "done" | "failed"; label: string; created_by: string | null; started_at: string; as_of: string;
+  events: number; progress: number; seconds: number | null; error: string | null; stale: boolean;
+  against: { id: number; note: string | null }; settings_changes: ConfigChange[]; result?: WhatIfResult | null;
+};

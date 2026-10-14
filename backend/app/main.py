@@ -20,6 +20,7 @@ from .config_versions import ConfigStore
 from .connectors.store import ConnectorStore
 from .persistence import NullPersistence, Persistence
 from .runtime import Runtime
+from .whatif import WhatIfRuns
 from .settings import get_settings
 
 log = logging.getLogger("leadpilot")
@@ -98,6 +99,7 @@ async def lifespan(app: FastAPI):
     # The rules in force: the YAML files plus the active settings version (version 1 = the files as they are).
     state.config = ConfigStore(db, base_overrides=overrides)
     active = state.config.ensure_initial()
+    state.whatif = WhatIfRuns()
     cfg = state.config.build(active["overrides"])
     state.settings = settings
     state.accounts = AccountStore(db, settings.admin_emails)

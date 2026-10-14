@@ -19,13 +19,13 @@ export default function Quality() {
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
-      <PageHeader title="Lead quality" subtitle="Fake and duplicate detection, the review queue, and which sources are worth paying for." />
+      <PageHeader eyebrow="Insights" title="Lead quality" subtitle="Fake and duplicate detection, the review queue, and which sources are worth paying for." />
       <Card title="Source quality" subtitle="Quality index = 0.30 SQL rate + 0.25 win rate + 0.20 (1 − fake) + 0.15 (1 − dup) + 0.10 avg score" pad={false}
         right={<Segmented value={win} onChange={setWin} options={[{ value: 7, label: "7 days" }, { value: 30, label: "30 days" }]} />}>
         {!sq.data ? <Loading /> : (
           <div className="scroll-thin overflow-x-auto">
             <table className="w-full min-w-[1100px] text-sm">
-              <thead><tr className="border-b border-line text-left text-xs text-ink-3">
+              <thead><tr className="border-b border-line bg-surface-2/60 text-left text-[11px] uppercase tracking-[0.06em] text-ink-3">
                 {["Source", "Volume", "Dup", "Fake", "Contacted", "SQL", "Win", "Median 1st resp.", "Avg score", "Revenue", "Cost / SQL", "Quality index", "Flags"].map((h) => <th key={h} className="px-3 py-2 font-medium">{h}</th>)}
               </tr></thead>
               <tbody>{sq.data.sources.map((s: any) => (
@@ -57,7 +57,7 @@ export default function Quality() {
           {!review.data ? <Loading /> : !review.data.items.length ? <Empty>Nothing to review.</Empty> : (
             <ul className="scroll-thin max-h-[520px] space-y-3 overflow-y-auto">
               {review.data.items.map((r) => (
-                <li key={r.id} className="rounded-lg border border-line p-3">
+                <li key={r.id} className="rounded-xl border border-line bg-surface-2/40 p-3 transition hover:border-brand/40">
                   <div className="flex items-center justify-between text-xs text-ink-3"><span>{r.kind === "duplicate" ? `Possible duplicate · ${pct(r.confidence)} · ${(r.match_keys ?? []).join(", ")}` : `Suspicious · fake score ${r.lead?.fake_score}`}</span><span>{dateTime(r.ts)}</span></div>
                   <div className={`mt-2 grid gap-2 ${r.candidate ? "grid-cols-2" : "grid-cols-1"}`}>
                     <Brief b={r.lead} />{r.candidate && <Brief b={r.candidate} />}
@@ -90,7 +90,7 @@ export default function Quality() {
       <Card title="Merge history" pad={false}>
         {!merges.data ? <Loading /> : !merges.data.items.length ? <Empty>No merges yet.</Empty> : (
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-line text-left text-xs text-ink-3">{["When", "Survivor", "Merged", "Confidence", "Matched on", "Source", "Mode"].map((h) => <th key={h} className="px-4 py-2 font-medium">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-line bg-surface-2/60 text-left text-[11px] uppercase tracking-[0.06em] text-ink-3">{["When", "Survivor", "Merged", "Confidence", "Matched on", "Source", "Mode"].map((h) => <th key={h} className="px-4 py-2 font-medium">{h}</th>)}</tr></thead>
             <tbody>{merges.data.items.slice(0, 50).map((m) => (
               <tr key={m.id} className="border-b border-line last:border-0">
                 <td className="px-4 py-2 text-xs tabular text-ink-3">{dateTime(m.ts)}</td>

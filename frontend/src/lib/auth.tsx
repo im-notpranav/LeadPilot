@@ -124,3 +124,17 @@ function friendly(message: string): string {
   if (/rate limit/i.test(message)) return "Too many attempts. Wait a minute and try again.";
   return message;
 }
+
+/** Display name and initials for the signed-in person (falls back to the email's local part). */
+export function profile(me: Me | null): { name: string; email: string; initials: string } {
+  const email = me?.email ?? "";
+  const raw = me?.name?.trim() || email.split("@")[0].replace(/[._-]+/g, " ").trim() || "Pilot";
+  const name = raw.replace(/\b\w/g, (c) => c.toUpperCase());
+  const initials = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  return { name, email, initials };
+}
+
+// Set by the login screen on a successful sign-in so the app shell plays its entrance once.
+let arriving = false;
+export const markArrival = () => { arriving = true; };
+export const takeArrival = () => { const a = arriving; arriving = false; return a; };

@@ -5,7 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { LiveProvider } from "./lib/live";
 import { AuthProvider } from "./lib/auth";
+import { ThemeProvider } from "./lib/theme";
 import { AuthGate } from "./pages/Login";
+import Splash from "./components/Splash";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -15,15 +17,18 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AuthGate>
-            <LiveProvider>
-              <App />
-            </LiveProvider>
-          </AuthGate>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Splash />
+          <AuthProvider>
+            <AuthGate>
+              <LiveProvider>
+                <App />
+              </LiveProvider>
+            </AuthGate>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

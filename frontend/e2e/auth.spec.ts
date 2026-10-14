@@ -66,7 +66,7 @@ test("a pending account waits for approval", async ({ page }) => {
 test("a rep sees only their own work and no manager pages", async ({ page }) => {
   await signInAs(page, "rep");
   await page.goto("/queue");
-  await expect(page.locator("main h1")).toHaveText("My Queue");
+  await expect(page.locator("main h1")).toHaveText("Ananya's queue");
   await expect(page.getByText("Ananya Rao").first()).toBeVisible();          // header chip shows their rep
   const nav = page.locator("aside nav");
   for (const hidden of ["Analytics", "Quality", "Simulator", "Access"]) await expect(nav.getByText(hidden)).toHaveCount(0);

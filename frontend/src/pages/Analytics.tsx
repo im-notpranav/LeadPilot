@@ -13,8 +13,8 @@ export default function Analytics() {
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      <PageHeader title="Analytics" subtitle="Conversion, speed to lead, engagement and whether the score actually predicts outcomes." />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <PageHeader eyebrow="Insights" title="Analytics" subtitle="Conversion, speed to lead, engagement and whether the score actually predicts outcomes." />
+      <div className="stagger grid gap-4 lg:grid-cols-2">
         <Card title="Funnel" subtitle={funnel.data ? `${funnel.data.total} real leads (duplicates and fakes excluded) · bars = leads that ever reached the stage` : undefined}>
           {!funnel.data ? <Loading /> : <Funnel data={funnel.data} />}
         </Card>
@@ -90,7 +90,7 @@ export default function Analytics() {
           {!reps.data || !rt.data ? <Loading /> : (
             <div className="scroll-thin overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
-                <thead><tr className="border-b border-line text-left text-xs text-ink-3">
+                <thead><tr className="border-b border-line bg-surface-2/60 text-left text-[11px] uppercase tracking-[0.06em] text-ink-3">
                   {["Rep", "Profile", "Open", "Load", "Pipeline EV", "Won / closed", "Win rate", "Median 1st resp.", "SLA met", "Neglected"].map((h) => <th key={h} className="px-3 py-2 font-medium">{h}</th>)}
                 </tr></thead>
                 <tbody>{reps.data.items.map((r) => (

@@ -16,12 +16,15 @@ router = APIRouter()
 
 GLOBAL_PREFIXES = ("sim.", "scenario.")          # clock and simulator status: everyone
 MANAGER_ONLY = {"source.flagged"}
+NOTICE = "notification.created"
 
 
 def visible(p: Principal, msg: dict) -> bool:
+    kind, data = msg.get("type", ""), msg.get("data") or {}
+    if kind == NOTICE:                            # only to the people it is addressed to, admins included
+        return state.notifications.addressed_to(p, data)
     if p.sees_all:
         return True
-    kind, data = msg.get("type", ""), msg.get("data") or {}
     if kind.startswith(GLOBAL_PREFIXES):
         return True
     if kind in MANAGER_ONLY:
@@ -54,8 +57,9 @@ class ConnectionManager:
             return
         shared = None
         dead = []
+        personal = any(m.get("type") == NOTICE for m in messages)
         for ws, p in list(self.clients.items()):
-            if p.sees_all:
+            if p.sees_all and not personal:
                 shared = shared or self._envelope(messages)
                 payload = shared
             else:

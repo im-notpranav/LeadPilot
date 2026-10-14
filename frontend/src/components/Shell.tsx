@@ -4,7 +4,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLive, type Toast } from "../lib/live";
 import { can, profile, takeArrival, useAuth } from "../lib/auth";
-import { api, type LeadView, type Me, type SimStatus } from "../lib/api";
+import { api, type LeadView, type Me, type Notice, type NoticeList, type SimStatus } from "../lib/api";
+import { NoticeRow, useMarkRead } from "./notices";
 import { dateTime, human } from "../lib/format";
 import { GradePill, Segmented, ThemeToggle } from "./ui";
 import { Icon, type IconName } from "./icons";
@@ -348,35 +349,40 @@ function SearchBox() {
   );
 }
 
-/** Where a notification leads: its lead if it has one, otherwise the page about it. */
-const toastHref = (t: Toast) => (t.lead_id ? to.lead(t.lead_id) : t.kind === "source.flagged" ? to.quality("sources") : t.kind === "lead.merged" ? to.quality("merges") : null);
+/** Where a toast leads: its own link, its lead if it has one, otherwise the page about it. */
+const toastHref = (t: Toast) => (t.href ? t.href : t.lead_id ? to.lead(t.lead_id) : t.kind === "source.flagged" ? to.quality("sources") : t.kind === "lead.merged" ? to.quality("merges") : null);
 
 const KIND_ICON: Record<string, IconName> = { "lead.reassigned": "users", "stall.detected": "alert", "lead.merged": "merge", "source.flagged": "quality", "scenario.launched": "zap", welcome: "check" };
 
 function Notifications() {
-  const { history, unread, markRead } = useLive();
+  const { clock } = useLive();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(open, () => setOpen(false));
+  const q = useQuery({ queryKey: ["notifications", "bell"], queryFn: () => api.get<NoticeList>("/api/notifications?limit=8"), refetchInterval: 30_000 });
+  const read = useMarkRead();
+  const unread = q.data?.unread ?? 0;
+  const items = q.data?.items ?? [];
+  const openOne = (n: Notice) => { if (!n.read) read.mutate({ ids: [n.id] }); if (n.link) nav(n.link); setOpen(false); };
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => { setOpen((o) => !o); markRead(); }} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} aria-expanded={open}
+      <button onClick={() => setOpen((o) => !o)} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} aria-expanded={open}
         className="relative grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-ink-2 shadow-sm transition hover:text-ink">
         <Icon name="bell" />
-        {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-[9px] font-bold text-white ring-2 ring-surface" style={{ animation: "pop 200ms" }}>{unread > 9 ? "9+" : unread}</span>}
+        {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-[9px] font-bold text-white ring-2 ring-surface" style={{ animation: "pop 200ms" }}>{unread > 99 ? "99+" : unread}</span>}
       </button>
       {open && (
-        <div className="pop card absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl shadow-pop">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="font-display text-sm font-bold">Notifications</span><span className="text-[11px] text-ink-3">Last {history.length}</span></div>
-          <div className="scroll-thin max-h-80 overflow-y-auto p-1.5">
-            {!history.length ? <div className="px-3 py-6 text-center text-sm text-ink-3">No notifications yet. Reassignments, stalls and merges appear here.</div>
-              : history.map((t) => (
-                <button key={t.id} onClick={() => { const h = toastHref(t); if (h) nav(h); setOpen(false); }} className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition hover:bg-surface-2">
-                  <ToastIcon t={t} />
-                  <span className="min-w-0 flex-1 text-ink-2">{t.text}</span>
-                </button>
-              ))}
+        <div role="dialog" aria-label="Notifications" className="pop card fixed inset-x-4 top-16 z-50 overflow-hidden rounded-2xl shadow-pop sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[22rem]">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <span className="font-display text-sm font-bold">Notifications{unread > 0 && <span className="ml-1.5 text-xs font-medium text-ink-3">{unread} unread</span>}</span>
+            {unread > 0 && <button type="button" onClick={() => read.mutate({ all: true })} className="text-xs font-medium text-accent-ink hover:underline">Mark all read</button>}
           </div>
+          <div className="scroll-thin max-h-96 overflow-y-auto p-1.5">
+            {q.isLoading ? <div className="px-3 py-6 text-center text-sm text-ink-3">Loading…</div>
+              : !items.length ? <div className="px-3 py-6 text-center text-sm text-ink-3">Nothing yet. New leads, replies, reassignments and won deals appear here.</div>
+              : items.map((n) => <NoticeRow key={n.id} n={n} now={clock.now} compact onOpen={() => openOne(n)} />)}
+          </div>
+          <button type="button" onClick={() => { nav("/notifications"); setOpen(false); }} className="block w-full border-t border-line px-4 py-2.5 text-center text-xs font-medium text-accent-ink transition hover:bg-surface-2">All notifications and settings</button>
         </div>
       )}
     </div>
@@ -406,6 +412,7 @@ function UserMenu() {
           </div>
           <div className="my-1 h-px bg-[var(--c-line)]" />
           <div className="flex items-center justify-between px-2.5 py-2 text-sm text-ink-2">Theme <ThemeToggle /></div>
+          <MenuItem icon="bell" onClick={() => { nav("/notifications"); setOpen(false); }}>Notification settings</MenuItem>
           {can.manage(me) && !clock.live && <MenuItem icon="simulator" onClick={() => { nav("/simulator"); setOpen(false); }}>Simulator settings</MenuItem>}
           {status === "signed-in" && <MenuItem icon="logout" danger onClick={() => { setOpen(false); void signOut(); }}>Sign out</MenuItem>}
         </div>

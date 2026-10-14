@@ -193,6 +193,22 @@ class AccountStore:
         self._save("profiles", snapshot)
         return snapshot
 
+    def get_profile(self, user_id: str | None) -> dict | None:
+        with self._lock:
+            prof = self.profiles.get(user_id or "")
+            return dict(prof) if prof else None
+
+    def update_notify(self, user_id: str, phone: str | None, notify: dict) -> dict:
+        """A person's own notification settings: SMS number and which channels they want."""
+        with self._lock:
+            prof = self.profiles.get(user_id)
+            if prof is None:
+                raise KeyError(user_id)
+            prof.update(phone=phone, notify=notify, updated_at=_now())
+            snapshot = dict(prof)
+        self._save("profiles", snapshot)
+        return snapshot
+
     def list_profiles(self) -> list[dict]:
         with self._lock:
             return sorted((dict(p) for p in self.profiles.values()), key=lambda p: (p.get("email") or ""))

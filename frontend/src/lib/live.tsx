@@ -1,13 +1,14 @@
 // WebSocket live layer: keeps the sim clock, a rolling feed, toasts, and invalidates queries (throttled).
+// Notifications live on the server (the bell reads them); a new one refreshes the bell, and urgent ones also toast.
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { currentToken, type FeedItem } from "./api";
 
 type Clock = { now: string | null; speed: number; paused: boolean; status: string; live?: boolean };
-export type Toast = { id: number; kind: string; text: string; lead_id?: string };
-type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[]; dismiss: (id: number) => void; eventsPerMin: number; history: Toast[]; unread: number; markRead: () => void; notify: (text: string, kind?: string) => void };
+export type Toast = { id: number; kind: string; text: string; lead_id?: string; href?: string };
+type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[]; dismiss: (id: number) => void; eventsPerMin: number; notify: (text: string, kind?: string) => void };
 
-const LiveCtx = createContext<Live>({ clock: { now: null, speed: 60, paused: true, status: "starting" }, connected: false, feed: [], toasts: [], dismiss: () => {}, eventsPerMin: 0, history: [], unread: 0, markRead: () => {}, notify: () => {} });
+const LiveCtx = createContext<Live>({ clock: { now: null, speed: 60, paused: true, status: "starting" }, connected: false, feed: [], toasts: [], dismiss: () => {}, eventsPerMin: 0, notify: () => {} });
 
 const DATA_KEYS = [["leads"], ["queue"], ["pipeline"], ["lead"], ["feed"], ["reps"], ["sim"]];
 const QUALITY_KEYS = [["quality"]];
@@ -19,16 +20,12 @@ export function LiveProvider({ children }: { children: ReactNode }) {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [eventsPerMin, setEpm] = useState(0);
-  const [history, setHistory] = useState<Toast[]>([]);
-  const [unread, setUnread] = useState(0);
-  const dirty = useRef({ data: false, quality: false, all: false });
+  const dirty = useRef({ data: false, quality: false, all: false, notices: false });
   const counter = useRef<number[]>([]);
   const toastId = useRef(0);
 
   const push = (items: Toast[]) => {
     setToasts((ts) => [...items.slice(-3), ...ts].slice(0, 4));
-    setHistory((h) => [...items.slice().reverse(), ...h].slice(0, 20));
-    setUnread((n) => n + items.length);
     for (const t of items) window.setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== t.id)), 7000);
   };
 
@@ -54,6 +51,7 @@ export function LiveProvider({ children }: { children: ReactNode }) {
             case "sim.reset": dirty.current.all = true; if (d.status === "resetting") setFeed([]); setClock((c) => ({ ...c, status: d.status ?? c.status })); break;
             case "event.processed": fresh.push(d); dirty.current.data = true; counter.current.push(Date.now()); break;
             case "lead.flagged": case "lead.merged": case "source.flagged": dirty.current.quality = true; dirty.current.data = true; break;
+            case "notification.created": dirty.current.notices = true; break;
             default: dirty.current.data = true;
           }
           const t = toastFor(m.type, d);
@@ -70,10 +68,11 @@ export function LiveProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const iv = window.setInterval(() => {
       const d = dirty.current;
-      if (d.all) { qc.invalidateQueries(); dirty.current = { data: false, quality: false, all: false }; return; }
+      if (d.all) { qc.invalidateQueries(); dirty.current = { data: false, quality: false, all: false, notices: false }; return; }
       if (d.data) DATA_KEYS.forEach((k) => qc.invalidateQueries({ queryKey: k }));
       if (d.quality) QUALITY_KEYS.forEach((k) => qc.invalidateQueries({ queryKey: k }));
-      dirty.current = { data: false, quality: false, all: false };
+      if (d.notices) qc.invalidateQueries({ queryKey: ["notifications"] });
+      dirty.current = { data: false, quality: false, all: false, notices: false };
       const cutoff = Date.now() - 60000;
       counter.current = counter.current.filter((t) => t > cutoff);
       setEpm(counter.current.length);
@@ -83,13 +82,13 @@ export function LiveProvider({ children }: { children: ReactNode }) {
   }, [qc]);
 
   const dismiss = (id: number) => setToasts((ts) => ts.filter((t) => t.id !== id));
-  const markRead = () => setUnread(0);
   const notify = (text: string, kind = "info") => push([{ id: ++toastId.current, kind, text }]);
-  return <LiveCtx.Provider value={{ clock, connected, feed, toasts, dismiss, eventsPerMin, history, unread, markRead, notify }}>{children}</LiveCtx.Provider>;
+  return <LiveCtx.Provider value={{ clock, connected, feed, toasts, dismiss, eventsPerMin, notify }}>{children}</LiveCtx.Provider>;
 }
 
-function toastFor(type: string, d: any): { text: string; lead_id?: string } | null {
+function toastFor(type: string, d: any): { text: string; lead_id?: string; href?: string } | null {
   switch (type) {
+    case "notification.created": return d.severity === "urgent" ? { text: d.title, lead_id: d.lead_id ?? undefined, href: d.link ?? undefined } : null;
     case "lead.reassigned": return d.rule_id ? { text: `${d.lead_id} reassigned to ${d.rep_name} (${d.rule_id})`, lead_id: d.lead_id } : null;
     case "stall.detected": return d.risk >= 50 ? { text: `${d.lead_id} stalled: ${d.details?.[0] ?? d.rules.join(", ")}`, lead_id: d.lead_id } : null;
     case "lead.merged": return { text: `Merged ${d.merged_id} into ${d.survivor_id} (${Math.round(d.confidence * 100)}%)`, lead_id: d.survivor_id };

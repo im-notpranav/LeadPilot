@@ -1,0 +1,78 @@
+# Notifications: who hears about what, and on which channels.
+#
+# Notifications are side effects of live processing. Replays, restarts, settings activations and the demo warm-up
+# never create them (they process events with broadcasting off), so nobody is told twice about the same thing.
+# This file does not change any score, stage or assignment, so editing it needs no replay (restart to apply).
+#
+# to:        owner          the rep who owns the lead (or deal) now
+#            previous_owner the rep the lead was taken from (reassignments)
+#            managers       managers whose team includes the owner, and admins
+# channels:  in_app         the bell and the Notifications page (always available)
+#            email          Resend: RESEND_API_KEY + LEADPILOT_EMAIL_FROM, to each recipient's sign-in email
+#            slack          one Slack incoming webhook for the team: SLACK_WEBHOOK_URL
+#            sms            Twilio: TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM_NUMBER, to recipients who turned
+#                           SMS on and saved a phone number
+# A channel without its keys does nothing. People switch email and SMS off for themselves on the Notifications page.
+# severity:  info | important | urgent (urgent ones also pop up as a toast)
+
+rules:
+  hot_lead:            # a lead of one of these grades is assigned (or reassigned) to a rep
+    enabled: true
+    grades: [A]
+    to: [owner]
+    channels: [in_app, email, sms, slack]
+    severity: urgent
+  lead_assigned:       # any other new owner
+    enabled: true
+    to: [owner]
+    channels: [in_app]
+    severity: info
+  reply_received:      # the prospect replied to an email
+    enabled: true
+    to: [owner]
+    channels: [in_app, email]
+    severity: important
+  meeting_booked:      # the prospect booked a meeting or asked for a demo / sales contact
+    enabled: true
+    events: [meeting_scheduled, demo_request, contact_sales]
+    to: [owner]
+    channels: [in_app, email]
+    severity: important
+  lead_reassigned:     # a first-touch or follow-up deadline was missed, so the lead moved to another rep
+    enabled: true
+    to: [previous_owner, managers]
+    channels: [in_app, slack]
+    severity: important
+  escalated:           # too many automatic reassignments: the lead went to the manager queue
+    enabled: true
+    to: [managers]
+    channels: [in_app, email, slack]
+    severity: urgent
+  stalled:             # a lead stalled with at least this risk
+    enabled: true
+    min_risk: 50
+    to: [owner]
+    channels: [in_app]
+    severity: important
+  deal_won:
+    enabled: true
+    to: [owner, managers]
+    channels: [in_app, slack]
+    severity: important
+  deal_lost:
+    enabled: true
+    to: [owner, managers]
+    channels: [in_app]
+    severity: info
+  review_needed:       # a suspicious lead waits for a quality review
+    enabled: true
+    to: [managers]
+    channels: [in_app]
+    severity: info
+  source_flagged:      # a lead source looks like it is sending junk
+    enabled: true
+    to: [managers]
+    channels: [in_app, slack]
+    severity: important
+
+keep_in_memory: 2000   # newest notifications served by the API (older ones stay in the database)

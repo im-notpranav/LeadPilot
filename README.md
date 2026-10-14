@@ -45,6 +45,7 @@ A built-in simulator generates leads, buyer personas and sales reps, so the syst
 - [Connectors: forms, CRM, email, website, CSV](#connectors-forms-crm-email-website-csv)
 - [Accounts and deals](#accounts-and-deals)
 - [Settings console](#settings-console)
+- [Notifications](#notifications)
 - [Testing & performance](#testing--performance)
 - [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
 - [Project structure](#project-structure)
@@ -295,7 +296,9 @@ TanStack Query · Recharts.
    events, **What if?** to see which leads would move up, then **Save and activate**: every event is re-run and more
    leads are now grade A. **Roll back to this** on
    version 1 brings the YAML rules back as a new version.
-10. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
+10. **Notifications.** The bell shows new leads, replies, reassignments and won deals as the simulator runs;
+    **All notifications and settings** shows your reps' notifications too, the channels and the rules.
+11. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
 
 ---
 
@@ -330,6 +333,10 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/config/check` | Validate edited rules and dry-run them on real events; returns problems or the list of changes (admin) |
 | `POST` | `/api/config/versions` · `/{id}/activate` · `/{id}/restore` | Save a version (optionally activate it), activate a draft, roll back (admin) |
 | `POST` · `GET` | `/api/config/whatif` · `/api/config/whatif/{id}` | Start a what-if run for edited rules or a saved version (admin); list runs and poll one for its result (manager) |
+| `GET` | `/api/notifications` | Your notifications, newest first (`mine`, `unread`, `rule`, `before`, `limit`), with the unread count |
+| `POST` | `/api/notifications/read` | Mark `{ids}` or `{all: true}` read |
+| `GET/PUT` | `/api/notifications/settings` | Channel status, the rules (managers), and your own email / SMS settings and phone |
+| `POST` | `/api/notifications/test` | Send a test on one channel to yourself, or to the Slack channel (admin) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -377,6 +384,11 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 | `LEADPILOT_PERSIST` | `1` | Set to `0` to run fully in memory |
 | `LEADPILOT_WARMUP_DAYS` | `21` | Length of the simulated warm-up |
 | `USE_LLM` | `false` | Optional LLM reply-classifier hook (core logic never depends on it) |
+| `RESEND_API_KEY` · `LEADPILOT_EMAIL_FROM` | — | Email notifications through Resend (sender on a verified domain) |
+| `SLACK_WEBHOOK_URL` | — | Slack notifications (one incoming webhook for the team channel) |
+| `TWILIO_ACCOUNT_SID` · `TWILIO_AUTH_TOKEN` · `TWILIO_FROM_NUMBER` | — | SMS notifications through Twilio |
+| `LEADPILOT_PUBLIC_URL` | — | Dashboard address, so emails, Slack posts and texts link to the lead or deal |
+| `LEADPILOT_NOTIFY_IN_DEMO` | `0` | Deliver email / Slack / SMS in demo mode too (off: simulated leads only notify in the app) |
 
 ---
 
@@ -511,6 +523,43 @@ table (migration `supabase/migrations/20261014000000_opportunities.sql`).
 
 ---
 
+## Notifications
+
+The **bell** in the top bar and the **Notifications** page (`/notifications`, also in the account menu) show what
+needs attention, as it happens. The rules are in `backend/config/notifications.yaml`:
+
+| Rule | When | Who | Channels (default) |
+|---|---|---|---|
+| Hot lead | a grade-A lead is assigned or reassigned to a rep | the new owner | in app, email, SMS, Slack · urgent |
+| New lead | any other new owner | the new owner | in app |
+| Reply | the prospect replied | the owner | in app, email |
+| Meeting or demo | the prospect booked a meeting, asked for a demo or for sales | the owner | in app, email |
+| Reassigned | a first-touch or follow-up deadline was missed (R1, R2) | the old owner and managers | in app, Slack |
+| Escalated | too many reassignments: the lead went to the manager queue (R3) | managers | in app, email, Slack · urgent |
+| Stalled | a lead stalled with risk ≥ 50 | the owner | in app |
+| Deal won / lost | a deal closed | the owner and managers | in app (+ Slack when won) |
+| Review needed | a suspicious lead waits for a quality review | managers | in app |
+| Source flagged | a lead source looks like it sends junk | managers | in app, Slack |
+
+- **Who sees what.** Reps see their own. "Managers" means managers whose team includes the lead's owner, plus admins.
+  Managers and admins can also switch to **My reps' too** to see what their reps were sent. Read / unread is per
+  person. Urgent ones also pop up as a toast.
+- **Channels.** In-app always works. Email (Resend), Slack (incoming webhook) and SMS (Twilio) each do nothing until
+  their keys are in `backend/.env` (see [Configuration](#configuration)). Admins see each channel's state on the
+  Notifications page and can **Send test** to themselves. Each person chooses email and SMS for themselves under
+  **Your settings** (SMS needs a mobile number). Every delivery is recorded as sent, failed (with the reason) or
+  skipped, and admins see that on each notification.
+- **Never twice.** Notifications come only from live processing. Replays, restarts, settings activations and the demo
+  warm-up process events with broadcasting off, so they never notify anyone again, and the notification tables are
+  kept through replays. A demo reset clears them.
+- **Demo mode** notifies in the app only, so simulated leads never email or text real people
+  (`LEADPILOT_NOTIFY_IN_DEMO=1` overrides that).
+
+Stored in `notifications`, `notification_deliveries` and `notification_reads`, with `phone` and `notify` on
+`profiles` (migration `supabase/migrations/20261016000000_notifications.sql`).
+
+---
+
 ## Settings console
 
 **System → Settings** (`/settings`) shows the rules behind every score, stage, assignment and next action, and lets
@@ -547,7 +596,7 @@ Versions are stored in the `config_versions` table, which survives demo resets (
 ## Testing & performance
 
 ```bash
-make test   # 236 tests (5 Postgres tests skip unless enabled)
+make test   # 245 tests (5 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -603,7 +652,7 @@ To run on real data in production, you would also need to:
 
 ```
 backend/
-  config/        scoring · pipeline · assignment · quality · nba · simulator (YAML)
+  config/        scoring · pipeline · assignment · quality · nba · simulator · notifications (YAML)
   data/          seed companies, reps, sources, domain lists, IP geo
   app/
     engine/      pure functions: normalize · identity · quality · enrich · profile · scoring · intent
@@ -615,13 +664,14 @@ backend/
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
     config_versions.py  settings versions: validation, diff, dry run
     whatif.py    what-if runs: scratch replays under two rule sets, compared
+    notifications.py  notification rules, inbox, read state, email / Slack / SMS delivery
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
   src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
-                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings ·
+                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings · Notifications ·
                  NotFound
-  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif · notices
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest

@@ -27,6 +27,7 @@ SEED_TABLES = {"historical_deals", "reps", "sources", "meta"}
 LOG_TABLES = {"raw_events", "events"}
 ACCOUNT_TABLES = {"profiles", "api_keys",         # people, keys, connectors and settings: survive demo resets
                   "connectors", "connector_deliveries", "tracker_visitors", "config_versions"}
+NOTICE_TABLES = {"notifications", "notification_deliveries", "notification_reads"}   # survive replays, not resets
 
 
 def jsonable(obj):
@@ -297,7 +298,7 @@ class Persistence:
 
     def clear_projections(self) -> None:
         """Everything except the event logs and seed tables (used by /replay)."""
-        keep = LOG_TABLES | SEED_TABLES | ACCOUNT_TABLES
+        keep = LOG_TABLES | SEED_TABLES | ACCOUNT_TABLES | NOTICE_TABLES
         self._clear([t for t in reversed(T.metadata.sorted_tables) if t.name not in keep])
 
     def clear_events(self) -> None:

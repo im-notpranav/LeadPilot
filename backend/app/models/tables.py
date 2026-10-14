@@ -171,6 +171,8 @@ profiles = Table(
     Column("team_rep_ids", JSON),             # managers: the reps they oversee; null = every rep
     Column("created_at", DateTime(timezone=True)), Column("updated_at", DateTime(timezone=True)),
     Column("last_seen_at", DateTime(timezone=True)),
+    Column("phone", String),                  # for SMS notifications (E.164), set by the person themselves
+    Column("notify", JSON),                   # notification preferences: {"email": bool, "sms": bool}
 )
 
 api_keys = Table(
@@ -244,4 +246,30 @@ config_versions = Table(
     Column("created_by", String), Column("created_at", DateTime(timezone=True)),
     Column("activated_by", String), Column("activated_at", DateTime(timezone=True)),
     Column("retired_at", DateTime(timezone=True)),
+)
+
+notifications = Table(
+    "notifications", metadata,
+    # Side effects of live processing (never of replays), so they survive replays; a demo reset clears them.
+    # audience: rep (one rep, rep_id) | managers (managers whose team includes scope_rep_id, and admins).
+    Column("id", Integer, primary_key=True, autoincrement=False),
+    Column("ts", DateTime(timezone=True), index=True), Column("rule", String, index=True), Column("severity", String),
+    Column("audience", String), Column("rep_id", String, index=True), Column("scope_rep_id", String),
+    Column("lead_id", String, index=True), Column("opp_id", String), Column("title", Text), Column("body", Text),
+    Column("link", String), Column("channels", JSON),
+)
+
+notification_deliveries = Table(
+    "notification_deliveries", metadata,
+    # One row per channel and recipient: sent | failed | skipped, with the reason.
+    Column("id", String, primary_key=True),           # <notification id>:<n>
+    Column("notification_id", Integer, index=True), Column("ts", DateTime(timezone=True)),
+    Column("channel", String), Column("target", String), Column("status", String), Column("detail", Text),
+)
+
+notification_reads = Table(
+    "notification_reads", metadata,
+    # What each person has read: everything up to last_read_id, plus read_ids above it.
+    Column("user_key", String, primary_key=True),
+    Column("last_read_id", Integer), Column("read_ids", JSON),
 )

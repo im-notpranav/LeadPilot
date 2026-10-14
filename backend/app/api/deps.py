@@ -14,6 +14,7 @@ class AppState:
     connectors: object = None        # connectors.store.ConnectorStore
     config: object = None            # config_versions.ConfigStore
     whatif: object = None            # whatif.WhatIfRuns
+    notifications: object = None     # notifications.NotificationCenter
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     bus: object = None
     ws: object = None

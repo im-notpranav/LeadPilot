@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import (routes_analytics, routes_auth, routes_config, routes_connectors, routes_deals, routes_leads,
-                  routes_pipeline, routes_reps, routes_sim, ws)
+                  routes_notifications, routes_pipeline, routes_reps, routes_sim, ws)
 from .api.security import manager, user
 from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
@@ -20,6 +20,7 @@ from .config_versions import ConfigStore
 from .connectors.store import ConnectorStore
 from .persistence import NullPersistence, Persistence
 from .runtime import Runtime
+from .notifications import NotificationCenter
 from .whatif import WhatIfRuns
 from .settings import get_settings
 
@@ -35,6 +36,7 @@ async def run_reset(seed: int | None = None, warmup: bool = True) -> None:
         t0 = time.perf_counter()
         await asyncio.to_thread(rt.reset, seed, warmup)
         rt.processor.drain_outbox()
+        state.notifications.reset()                 # the reset wiped their tables with the demo data
         log.info("reset done in %.1fs: %s events", time.perf_counter() - t0, len(rt.store.log))
     rt.clock.paused = not rt.cfg.simulator.autostart
     await state.ws.broadcast([{"type": "sim.reset", "data": {"status": "ready"}},
@@ -85,6 +87,8 @@ async def sim_loop() -> None:
                     msgs = rt.processor.drain_outbox()
             except Exception:  # keep the loop alive; surface in logs
                 log.exception("simulation step failed")
+        else:
+            msgs = rt.processor.drain_outbox()          # API events and actions while paused: push them now
         if now_m - last_clock_push > 0.5 or msgs:
             msgs.append({"type": "sim.clock", "data": {**rt.clock.state(), "status": rt.status}})
             last_clock_push = now_m
@@ -112,6 +116,8 @@ async def lifespan(app: FastAPI):
     state.runtime = Runtime(cfg, db, live=settings.live)
     state.runtime.apply_config(cfg, active["id"], replay=False)
     state.runtime.ensure_mode(settings.allow_mode_switch)
+    state.notifications = NotificationCenter(db, state.accounts, live=settings.live)
+    state.notifications.attach(state.runtime)
     state.lock = asyncio.Lock()
     state.ws = ws.ConnectionManager()
     state.bus = AsyncQueueBus(state.runtime.emit, state.lock)
@@ -119,9 +125,11 @@ async def lifespan(app: FastAPI):
     state.reset_task = asyncio.create_task(run_rebuild() if settings.live else run_reset())
     state.loop_task = asyncio.create_task(sim_loop())
     flush_task = asyncio.create_task(connector_flush_loop())
+    notify_task = asyncio.create_task(state.notifications.run())
     yield
     state.loop_task.cancel()
     flush_task.cancel()
+    notify_task.cancel()
     await asyncio.to_thread(state.connectors.flush)
     await state.bus.stop()
     await asyncio.to_thread(db.close)          # commit everything still queued before exit
@@ -134,7 +142,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router,
           routes_connectors.public, routes_connectors.admin_router, routes_connectors.import_router):
     app.include_router(r)
-for r in (routes_leads.router, routes_pipeline.router, routes_deals.router, routes_reps.router, routes_sim.router):
+for r in (routes_leads.router, routes_pipeline.router, routes_deals.router, routes_reps.router, routes_sim.router,
+          routes_notifications.router):
     app.include_router(r, dependencies=[Depends(user)])
 app.include_router(routes_analytics.router, dependencies=[Depends(manager)])
 app.include_router(routes_config.router)         # managers read; admins change (checked per route)

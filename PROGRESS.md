@@ -6,7 +6,7 @@ The upgrade turns LeadPilot from a demo into a real product: Supabase for the da
 features, and ideas borrowed from Fizzy (https://github.com/KenshinCommits/Fizzy). It has 12 phases.
 
 **Where the code is:** `main` contains Phases 0–5 (first part) and the dashboard redesign. The finishing steps
-of Phase 5 and all of Phase 6 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
+of Phase 5 and Phases 6 and 7 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
 (`phase-0-foundations` … `phase-5-config`) are kept on GitHub for reference; `phase-5-config` is the same as `main`.
 Start new work from `main`.
 
@@ -20,17 +20,17 @@ Start new work from `main`.
 | 3 | Connectors: forms, CRM, email, website tracker, CSV import | ✅ Done | 26cc0e9 |
 | 4 | Accounts (companies) and deals (opportunities) | ✅ Done | 2bfe39a, 019a6a6 |
 | 5 | Settings console: versioned rules with diff and rollback | ✅ Done | 9cdc32a, 0efdfa6 |
-| 6 | What-if testing: replay history against a draft config | ✅ Done | see branch `claude/epic-bell-nq6hx0` |
-| 7 | Notifications: in-app, email, Slack, SMS | ⬜ To do | |
+| 6 | What-if testing: replay history against a draft config | ✅ Done | 5e948b6 |
+| 7 | Notifications: in-app, email, Slack, SMS | ✅ Done | see branch `claude/epic-bell-nq6hx0` |
 | 8 | Call intelligence with Gemini (summaries, outcomes) | ⬜ To do | |
 | 9 | Quotes | ⬜ To do | |
 | 10 | Playbooks and recovery sequences | ⬜ To do | |
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 236 backend tests pass (`make test`). 15 browser tests pass (`make e2e`, including
-`settings.spec.ts`). The 5 Postgres tests (`make test-pg`) pass with the Phase 5 migration (run against a local
-Postgres 16; worth one run against Supabase too).
+**Tests right now:** 245 backend tests pass (`make test`). 16 browser tests pass (`make e2e`). The 5 Postgres
+tests (`make test-pg`) pass with the Phase 7 migration. They were run against a local Postgres 16; worth
+one run against Supabase too.
 
 **Dashboard redesign:** the `claude/charming-noether-8ziqwn` branch (brand, sign-in layout, Leads explorer,
 drill-down links, self-installing `python scripts/dev.py`, faster motion, lazy-loaded chart pages, live status on the
@@ -175,12 +175,41 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
   API tests in `backend/tests/test_config_versions.py`, `frontend/src/components/whatif.tsx`,
   `frontend/src/pages/Settings.tsx`, `frontend/e2e/settings.spec.ts`.
 
+### Phase 7: Notifications
+- **What it does:** tells the right people when something needs them: a hot (grade A) lead assigned to them, any
+  new lead, a reply, a meeting or demo request, a missed deadline that moved a lead, an escalation to the manager
+  queue, a stall, a won or lost deal, a suspicious lead to review, a junk source. Rules (who, which channels,
+  severity, on/off) are in `backend/config/notifications.yaml`; they do not affect the config fingerprint.
+- **How it hooks in:** the processor now calls `listeners` from `_emit`, i.e. only while it broadcasts. Replays,
+  restarts, settings activations, what-if runs and the demo warm-up never broadcast, so they never notify (tested).
+  The notification tables are kept by `clear_projections` (replays) and cleared by a demo reset.
+- **Who sees what:** rep notifications go to that rep; manager ones to managers whose team includes the lead's owner,
+  plus admins. Managers and admins can also view what their reps were sent ("My reps' too"). Read state is per person.
+  Over the WebSocket a `notification.created` message only goes to the people it is addressed to.
+- **Channels:** in-app; email (Resend), Slack (incoming webhook), SMS (Twilio), each off until its keys are set
+  (`.env.example` lists them). Deliveries run in a background loop, never under the processing lock, and each one is
+  recorded as sent / failed (with the reason) / skipped. People turn email and SMS on or off for themselves and save
+  a mobile number (validated, stored as E.164). Admins can send a test on each channel. In demo mode only in-app
+  notifications are made unless `LEADPILOT_NOTIFY_IN_DEMO=1`.
+- **API:** `GET /api/notifications`, `POST /api/notifications/read`, `GET/PUT /api/notifications/settings`,
+  `POST /api/notifications/test` (admin).
+- **Screens:** the bell (unread count, latest 8, mark all read, links to the lead or deal) and **Notifications**
+  (`/notifications`): inbox with All / Unread, "Sent to me" / "My reps' too", kind filter and paging; Your settings;
+  Channels (admins); Rules (managers). Urgent notifications also pop up as a toast.
+- **Data:** tables `notifications`, `notification_deliveries`, `notification_reads`; `phone` and `notify` columns on
+  `profiles`. Migration `supabase/migrations/20261016000000_notifications.sql`.
+- **Code:** `backend/app/notifications.py`, `backend/app/api/routes_notifications.py`, `backend/config/notifications.yaml`,
+  `backend/tests/test_notifications.py`, `frontend/src/components/notices.tsx`, `frontend/src/pages/Notifications.tsx`,
+  the bell in `frontend/src/components/Shell.tsx`, `frontend/e2e/notifications.spec.ts`.
+- **Small fixes made on the way:** reassignment reasons read "…. Reassigned to X" instead of "…. ReAssigned to X";
+  while the demo clock is paused, messages from API events are now pushed to the dashboard straight away instead of
+  waiting for the clock to run.
+- **Not done (ideas for later):** editing notification rules from the Settings console; per-person choice per rule;
+  a daily digest email; retrying failed deliveries.
+
 ## What should be done next
 
 ### Next phases
-- **Phase 7: Notifications.**
-  - In-app, then email (Resend), Slack and SMS (Twilio).
-  - Each channel does nothing until its key is set.
 - **Phase 8: Call intelligence.**
   - A call-provider webhook (Retell adapter).
   - Gemini writes call summaries and outcomes, saved as events so replays stay repeatable.
@@ -226,6 +255,8 @@ A chat panel where a rep asks "what should I do next with this lead, and why?":
 - [ ] Add `SUPABASE_ANON_KEY` and `LEADPILOT_ADMIN_EMAILS` (your email) to `backend/.env`. Real sign-in needs both.
 - [ ] In Supabase: Authentication → URL Configuration → set **Site URL** to `http://localhost:5173`.
 - [ ] Add `GEMINI_API_KEY` to `backend/.env` before Phase 8.
+- [ ] To get notifications outside the app, add the channel keys listed in `backend/.env.example` (Resend, Slack,
+      Twilio) and `LEADPILOT_PUBLIC_URL`, restart, then use **Send test** on the Notifications page.
 
 ## How to run and test
 ```bash

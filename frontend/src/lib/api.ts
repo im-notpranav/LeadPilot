@@ -105,6 +105,7 @@ export const api = {
   get: <T,>(path: string) => request<T>("GET", path),
   post: <T,>(path: string, body?: unknown) => request<T>("POST", path, body),
   patch: <T,>(path: string, body?: unknown) => request<T>("PATCH", path, body),
+  put: <T,>(path: string, body?: unknown) => request<T>("PUT", path, body),
   del: <T,>(path: string) => request<T>("DELETE", path),
 };
 
@@ -145,6 +146,16 @@ export type ConfigCurrent = { active: ConfigVersion; sections: ConfigSection[]; 
 export type ConfigVersionDetail = ConfigVersion & { sections: ConfigSection[]; changes: ConfigChange[]; changes_vs_active: ConfigChange[]; previous_id: number | null };
 export type ConfigCheck = { ok: boolean; events_checked: number; changes: ConfigChange[] };
 export type ConfigActivated = { version: ConfigVersion; replayed_events: number; seconds: number };
+export type NoticeDelivery = { channel: string; target: string | null; status: "sent" | "failed" | "skipped"; detail: string | null; ts: string | null };
+export type Notice = {
+  id: number; ts: string; rule: string; severity: "info" | "important" | "urgent"; audience: "rep" | "managers"; rep_id: string | null;
+  rep_name?: string | null; lead_id: string | null; opp_id: string | null; title: string; body: string; link: string | null;
+  channels: string[]; read?: boolean; deliveries?: NoticeDelivery[];
+};
+export type NoticeList = { items: Notice[]; unread: number };
+export type NoticeChannel = { channel: string; label: string; configured: boolean; needs: string[] };
+export type NoticeMe = { email_address: string | null; phone: string | null; email: boolean; sms: boolean };
+export type NoticeSettings = { channels: NoticeChannel[]; delivers: boolean; me: NoticeMe | null; rules: { name: string; enabled: boolean; to: string[]; channels: string[]; severity: string }[] };
 export type WhatIfLead = { lead_id: string; name: string | null; company: string | null; before: string | null; after: string | null; score_before?: number; score_after?: number };
 export type WhatIfDeal = { opp_id: string; name: string; before?: string; after?: string; stage?: string; value?: number; value_before?: number; value_after?: number; exists?: string };
 type BeforeAfter<T> = { before: T; after: T };

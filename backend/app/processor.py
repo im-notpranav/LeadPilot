@@ -53,6 +53,8 @@ class Processor:
         self.db = persistence or NullPersistence()
         self.provider = provider or MockEnrichmentProvider(cfg)
         self.hooks: list = []            # callables(kind, **data): simulator + scheduler integration
+        self.listeners: list = []        # callables(kind, data) on every live message (notifications); like the
+                                         # outbox they are silent while broadcasting is off (replays, warm-up)
         self.outbox: list[dict] = []     # websocket messages
         self.broadcast = True
         self.hooks_enabled = True
@@ -492,7 +494,10 @@ class Processor:
         reps = [r for r in store.reps.values() if r.get("active", True)]
         res = choose_rep(facts, reps, stats, store.team_win_rate, self.cfg, exclude=exclude)
         if res["rep_id"]:
-            self._set_owner(lead, res["rep_id"], now, kind, prefix + res["reason"], res["candidates"], rule=rule)
+            reason = res["reason"]
+            if prefix.endswith("Re"):                   # "…. Re" + "Assigned to X" reads "…. Reassigned to X"
+                reason = reason[:1].lower() + reason[1:]
+            self._set_owner(lead, res["rep_id"], now, kind, prefix + reason, res["candidates"], rule=rule)
 
     def _set_owner(self, lead: LeadRecord, rep_id: str, now: datetime, kind: str, reason: str, candidates: list,
                    rule: str | None) -> None:
@@ -835,6 +840,8 @@ class Processor:
     def _emit(self, kind: str, data: dict) -> None:
         if self.broadcast:
             self.outbox.append({"type": kind, "data": data})
+            for fn in self.listeners:
+                fn(kind, data)
 
     def _hook(self, kind: str, **data) -> None:
         if self.hooks_enabled:

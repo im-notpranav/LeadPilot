@@ -135,7 +135,7 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
 
   return (
     <aside className={`relative m-3 mr-0 flex h-[calc(100%-1.5rem)] flex-col rounded-3xl shadow-card transition-[width] duration-200 ease-out ${drawer ? "card" : "glass"} ${collapsed ? "w-[76px]" : "w-64"}`}>
-      <div className={`flex items-center pt-5 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}>
+      <div className={`flex items-center pt-5 short:pt-3.5 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}>
         <NavLink to="/queue" aria-label="LeadPilot home" className="rounded-lg">
           {collapsed ? <LogoMark size={34} /> : <Logo size={34} tagline={!drawer} />}
         </NavLink>
@@ -147,26 +147,33 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
           <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={13} />
         </button>
       )}
-      <div className={`mx-4 mt-5 h-px bg-gradient-to-r from-transparent via-[var(--c-line)] to-transparent`} />
+      <div className={`mx-4 mt-5 short:mt-3 h-px bg-gradient-to-r from-transparent via-[var(--c-line)] to-transparent`} />
 
       <nav className="scroll-thin mt-3 flex-1 overflow-y-auto px-3" aria-label="Primary">
         {groups.map((g) => (
           <div key={g.section} className="mb-3">
-            {collapsed ? <div className="mx-auto my-2 h-px w-6 bg-[var(--c-line)]" /> : <div className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{g.section}</div>}
-            <div className="flex flex-col gap-1">
+            {collapsed ? <div className="mx-auto my-2 h-px w-6 bg-[var(--c-line)]" /> : <div className="px-3 pb-1.5 pt-2 short:pb-0.5 short:pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-3">{g.section}</div>}
+            <div className="flex flex-col gap-1 short:gap-0.5">
               {g.items.map((n) => {
                 const count = badge(n.badge);
                 return (
                   <NavLink key={n.to} to={n.to} title={collapsed ? n.label : undefined}
-                    className={({ isActive }) => `group relative flex items-center gap-3 rounded-xl text-sm transition duration-200 ${collapsed ? "h-11 justify-center" : "px-3 py-2.5"} ${isActive ? "bg-surface font-semibold text-ink shadow-card ring-1 ring-line" : "text-ink-2 hover:bg-surface/60 hover:text-ink"}`}>
+                    className={({ isActive }) => `group relative flex items-center gap-3 rounded-xl text-sm transition duration-200 ${collapsed ? "h-11 short:h-9 justify-center" : "px-3 py-2.5 short:py-1.5"} ${isActive ? "bg-surface font-semibold text-ink shadow-card ring-1 ring-line" : "text-ink-2 hover:bg-surface/60 hover:text-ink"}`}>
                     {({ isActive }) => (
                       <>
                         {isActive && <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand" style={{ animation: "fadein 300ms" }} aria-hidden />}
-                        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg transition ${isActive ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_4px_12px_-4px_rgb(37_99_235/.8)]" : "text-ink-3 group-hover:text-accent-ink"}`}>
+                        <span className={`grid h-7 w-7 short:h-6 short:w-6 shrink-0 place-items-center rounded-lg transition ${isActive ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_4px_12px_-4px_rgb(37_99_235/.8)]" : "text-ink-3 group-hover:text-accent-ink"}`}>
                           <Icon name={n.icon} size={15} />
                         </span>
                         {!collapsed && <span className="flex-1 truncate">{n.label}</span>}
-                        {n.live && connected && <span className={`live-dot h-2 w-2 rounded-full bg-good ${collapsed ? "absolute right-2.5 top-2.5" : ""}`} aria-label="Live" />}
+                        {/* The live stream's health rides on its own nav item instead of a card that crowds the menu. */}
+                        {n.live && (
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium tabular ${connected ? "text-good-ink" : "text-critical-ink"} ${collapsed ? "absolute right-2.5 top-2.5" : ""}`}
+                            title={connected ? `Live: ${eventsPerMin} events per minute` : "Reconnecting to the live stream"}>
+                            <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-good" : "bg-critical"}`} aria-hidden />
+                            {!collapsed && (connected ? `${eventsPerMin}/min` : "Offline")}
+                          </span>
+                        )}
                         {!!count && n.badge && (
                           <span role="link" tabIndex={0} onClick={(e) => { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); } }}
                             className={`rounded-full bg-critical px-1.5 text-[10px] font-semibold leading-[18px] tabular text-white transition hover:scale-110 hover:brightness-110 ${collapsed ? "absolute right-1 top-1" : ""}`} title={`${count} ${n.badge.label}: open them`}>{count > 99 ? "99+" : count}</span>
@@ -180,22 +187,6 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
           </div>
         ))}
       </nav>
-
-      {!collapsed && (
-        <NavLink to={to.feed()} className="group mx-3 mb-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#60a5fa] p-4 text-white shadow-[0_12px_28px_-12px_rgb(37_99_235/.8)] transition hover:brightness-110 dark:from-[#1e3a8a] dark:via-[#1d4ed8] dark:to-[#2563eb]">
-          <div className="relative">
-            <LogoMark size={56} tone="white" className="absolute -right-3 -top-3 opacity-20" />
-            <div className="flex items-center gap-2 text-xs font-medium text-white/85">
-              <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-[#86efac]" : "bg-[#fca5a5]"}`} />{connected ? "Connected" : "Reconnecting…"}
-            </div>
-            <div className="mt-1 font-display text-2xl font-bold tabular">{eventsPerMin}<span className="ml-1 text-xs font-medium text-white/75">events / min</span></div>
-            <div className="mt-0.5 text-[11px] leading-snug text-white/80">
-              {status.data ? `${status.data.open_leads} open leads · ${status.data.events.toLocaleString()} events processed` : status.isError ? "No numbers while the API is offline" : "Loading…"}
-            </div>
-            <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/90 group-hover:text-white">Open live feed <Icon name="arrowRight" size={12} /></div>
-          </div>
-        </NavLink>
-      )}
 
       <div className={`flex items-center gap-2.5 border-t border-line px-3 py-3 ${collapsed ? "justify-center" : ""}`}>
         <Avatar initials={user.initials} />

@@ -6,6 +6,8 @@ import { api, EVENT_TYPES, REP_EVENTS, STAGES, type Factor, type LeadDetail as L
 import { useLive } from "../lib/live";
 import { ago, dateTime, human, minutes, minutesUntil, money, pct, signed, titleCase } from "../lib/format";
 import { AXIS, GRID } from "../components/charts";
+import { Icon } from "../components/icons";
+import { signalBase, to } from "../lib/links";
 import { Button, Card, Chip, Delta, Empty, GradePill, IntentBadge, Loading, Select, StageBadge, StallFlag, Stat, StatusTag } from "../components/ui";
 
 export default function LeadDetail() {
@@ -22,6 +24,11 @@ export default function LeadDetail() {
   }
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-ink-3">
+        <Link to={to.leads()} className="drill">Leads</Link><Icon name="chevronRight" size={13} />
+        <Link to={to.leads({ stage: l.stage })} className="drill capitalize">{human(l.stage)}</Link><Icon name="chevronRight" size={13} />
+        <span className="font-medium text-ink">{l.name}</span>
+      </nav>
       <Header l={l} />
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">
@@ -51,21 +58,24 @@ function Header({ l }: { l: Lead }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold tracking-tight">{l.name}</h1>
-            <GradePill grade={l.grade} score={l.score} />
-            <StageBadge stage={l.stage} />
-            {l.is_stalled && <StallFlag rules={l.stall.rules} risk={l.stall.risk} />}
+            <Link to={to.leads({ grade: l.grade })} title={`All grade ${l.grade} leads`}><GradePill grade={l.grade} score={l.score} /></Link>
+            <Link to={to.pipeline({ stage: l.stage })} title="Show in pipeline"><StageBadge stage={l.stage} /></Link>
+            {l.is_stalled && <Link to={to.pipeline({ stalled: true })} title="All stalled deals"><StallFlag rules={l.stall.rules} risk={l.stall.risk} /></Link>}
             {l.fake_status !== "clean" && <StatusTag status={l.fake_status === "fake" ? "critical" : "serious"}>{l.fake_status === "fake" ? "Quarantined" : "Suspicious"} · fake {l.fake_score}</StatusTag>}
           </div>
           <p className="mt-1 text-sm text-ink-2">
-            {l.title ?? "No title"} · {l.company ?? "Unknown company"}{l.employees ? ` (${l.employees.toLocaleString()} employees, ${human(l.industry)})` : ""} · {l.country ?? "-"} / {l.region ?? "-"}
+            {l.title ?? "No title"} · {l.company ? <Link to={to.leads({ q: l.company })} className="drill" title={`Leads at ${l.company}`}>{l.company}</Link> : "Unknown company"}{l.employees ? ` (${l.employees.toLocaleString()} employees, ${human(l.industry)})` : ""} · {l.country ?? "-"} / {l.region ?? "-"}
           </p>
-          <p className="mt-0.5 text-xs text-ink-3">{l.lead_id} · {l.email} {l.phone ? `· ${l.phone}` : ""} · sources {l.sources.map(human).join(", ")}</p>
+          <p className="mt-0.5 text-xs text-ink-3">
+            {l.lead_id} · {l.email ? <a href={`mailto:${l.email}`} className="drill">{l.email}</a> : "no email"} {l.phone ? <>· <a href={`tel:${l.phone}`} className="drill">{l.phone}</a></> : ""} · sources {l.sources.map((s, i) => <span key={s}>{i > 0 && ", "}<Link to={to.leads({ source: s })} className="drill">{human(s)}</Link></span>)}
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-sm"><span className="text-ink-3">Owner</span><span className="font-medium">{l.owner_name ?? "Unassigned"}</span></div>
+        <div className="flex items-center gap-2 text-sm"><span className="text-ink-3">Owner</span>{l.owner_rep_id ? <Link to={to.queue(l.owner_rep_id)} className="drill font-medium" title={`${l.owner_name}'s queue`}>{l.owner_name}</Link> : <span className="font-medium">Unassigned</span>}</div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-4 border-t border-line pt-4 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Score" value={l.score.toFixed(1)} sub={`fit ${l.parts.fit.toFixed(0)} · eng ${l.parts.engagement.toFixed(0)} · intent ${l.parts.intent.toFixed(0)} · pen ${l.parts.penalties.toFixed(0)}`} />
-        <Stat label="Intent" value={<IntentBadge level={l.intent_level} />} sub={l.active_signals.map(human).join(", ") || "no active signals"} />
+        <Stat label="Intent" value={<Link to={to.leads({ intent: l.intent_level })} title={`All ${l.intent_level}-intent leads`}><IntentBadge level={l.intent_level} /></Link>}
+          sub={l.active_signals.length ? l.active_signals.map((s, i) => <span key={s}>{i > 0 && ", "}<Link to={to.leads({ signal: signalBase(s) })} className="drill">{human(s)}</Link></span>) : "no active signals"} />
         <Stat label="Close probability" value={pct(l.close_prob, 1)} sub={`${l.days_in_stage.toFixed(1)}d in ${human(l.stage)}`} />
         <Stat label="Predicted ACV" value={money(l.predicted_acv)} sub={`${money(l.acv_p10)} – ${money(l.acv_p90)}`} />
         <Stat label="Expected value" value={money(l.expected_value)} sub="ACV × probability" />
@@ -305,7 +315,7 @@ function QualityPanel({ l }: { l: Lead }) {
         {l.fake_signals.map((s) => <div key={s.key} className="flex justify-between text-xs"><span className="text-ink-2">{human(s.key)} · {s.detail}</span><span className="tabular">+{s.weight}</span></div>)}
         {l.fake_status !== "clean" && <Button size="sm" onClick={async () => { await api.post(`/api/quality/clear/${l.lead_id}`, { reviewer: "you" }); qc.invalidateQueries(); }}>Mark false positive</Button>}
         {l.disqualifier && <div className="text-xs text-critical-ink">Disqualifier: {human(l.disqualifier)}</div>}
-        {l.merged_ids.length > 0 && <div className="text-xs text-ink-2">Merged duplicates: {l.merged_ids.join(", ")}</div>}
+        {l.merged_ids.length > 0 && <div className="text-xs text-ink-2">Merged duplicates: {l.merged_ids.map((id, i) => <span key={id}>{i > 0 && ", "}<Link to={to.lead(id)} className="drill">{id}</Link></span>)} · <Link to={to.quality("merges")} className="drill">merge history</Link></div>}
         {l.emails.length > 1 && <div className="text-xs text-ink-2">Emails seen: {l.emails.join(", ")}</div>}
         <div className="text-xs text-ink-3">Seniority {human(l.seniority)} · {l.revenue_band ?? "revenue n/a"} · {l.funding_stage ?? "funding n/a"}{l.tech_stack.length ? ` · ${l.tech_stack.join(", ")}` : ""}</div>
       </div>
@@ -324,7 +334,7 @@ function Assignments({ l }: { l: Lead }) {
           <thead><tr className="text-left text-ink-3"><th className="py-1 font-medium">Candidate</th><th className="font-medium">Skill</th><th className="font-medium">Win</th><th className="font-medium">Free</th><th className="text-right font-medium">Total</th></tr></thead>
           <tbody>{cands.map((c: any) => (
             <tr key={c.rep_id} className={c.chosen ? "font-semibold" : c.eligible ? "" : "text-ink-3"}>
-              <td className="py-0.5">{c.name}{!c.eligible && " (filtered)"}</td><td className="tabular">{c.skill}</td><td className="tabular">{pct(c.win_rate)}</td><td className="tabular">{pct(c.headroom)}</td><td className="text-right tabular">{c.total.toFixed(3)}</td>
+              <td className="py-0.5"><Link to={to.queue(c.rep_id)} className="drill">{c.name}</Link>{!c.eligible && " (filtered)"}</td><td className="tabular">{c.skill}</td><td className="tabular">{pct(c.win_rate)}</td><td className="tabular">{pct(c.headroom)}</td><td className="text-right tabular">{c.total.toFixed(3)}</td>
             </tr>))}</tbody>
         </table>
       )}

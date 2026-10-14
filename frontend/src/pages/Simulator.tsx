@@ -5,6 +5,8 @@ import { api, type SimStatus } from "../lib/api";
 import { useLive } from "../lib/live";
 import { dateTime, human, num } from "../lib/format";
 import { Button, Card, Loading, PageHeader, Segmented } from "../components/ui";
+import { Icon } from "../components/icons";
+import { to } from "../lib/links";
 
 type Scenario = { name: string; title: string; description: string; expected: string[]; duration_hours: number; runs: number };
 
@@ -24,12 +26,12 @@ export default function Simulator() {
 
   return (
     <div className="mx-auto max-w-[1300px] space-y-4">
-      <PageHeader eyebrow="System" title="Simulator" subtitle="A seeded, deterministic simulation: personas, sources, reps with response-delay profiles, 6 months of closed-deal history." />
+      <PageHeader title="Simulator" subtitle="A seeded, deterministic simulation: personas, sources, reps with response-delay profiles, 6 months of closed-deal history." />
       <div className="stagger grid gap-4 lg:grid-cols-3">
         <Card title="Clock" subtitle={resetting ? "Resetting…" : dateTime(clock.now)}>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Button variant="primary" disabled={resetting} onClick={() => post(clock.paused ? "/api/sim/start" : "/api/sim/pause")}>{clock.paused ? "▶ Start" : "❚❚ Pause"}</Button>
+              <Button variant="primary" disabled={resetting} onClick={() => post(clock.paused ? "/api/sim/start" : "/api/sim/pause")}><Icon name={clock.paused ? "play" : "pause"} size={14} />{clock.paused ? "Start" : "Pause"}</Button>
               {[15, 60, 360, 1440].map((m) => <Button key={m} disabled={resetting} onClick={() => post("/api/sim/step", { minutes: m })}>+{m < 60 ? `${m}m` : m < 1440 ? `${m / 60}h` : "1d"}</Button>)}
             </div>
             <div className="flex items-center gap-2 text-xs text-ink-2">Speed <Segmented value={clock.speed} onChange={(v) => post("/api/sim/speed", { speed: v })} options={[1, 10, 60, 600].map((x) => ({ value: x, label: `${x}×` }))} /></div>
@@ -51,8 +53,10 @@ export default function Simulator() {
         <Card title="Live counters">
           {!s ? <Loading /> : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              {[["Events processed", num(s.events)], ["Leads", num(s.leads)], ["Open leads", num(s.open_leads)], ["Stalled", num(s.stalled)], ["Quarantined", num(s.quarantined)], ["Merged duplicates", num(s.merged)], ["Won / lost", `${s.won} / ${s.lost}`], ["Historical deals", num(s.historical_deals)], ["p50 latency", s.latency.p50_ms != null ? `${s.latency.p50_ms} ms` : "-"], ["p95 latency", s.latency.p95_ms != null ? `${s.latency.p95_ms} ms` : "-"]].map(([l, v]) => (
-                <div key={l} className="flex justify-between gap-2 border-b border-line pb-1"><span className="text-ink-2">{l}</span><span className="font-medium tabular">{v}</span></div>
+              {([["Events processed", num(s.events), to.feed()], ["Leads", num(s.leads), to.leads()], ["Open leads", num(s.open_leads), to.leads({ open: true })], ["Stalled", num(s.stalled), to.pipeline({ stalled: true })], ["Quarantined", num(s.quarantined), to.quality("quarantine")], ["Merged duplicates", num(s.merged), to.quality("merges")], ["Won", num(s.won), to.leads({ stage: "won" })], ["Lost", num(s.lost), to.leads({ stage: "lost" })], ["Historical deals", num(s.historical_deals), to.analytics("grades")], ["p50 / p95 latency", s.latency.p50_ms != null ? `${s.latency.p50_ms} / ${s.latency.p95_ms} ms` : "-", null]] as [string, string, string | null][]).map(([l, v, href]) => (
+                href
+                  ? <Link key={l} to={href} className="group flex justify-between gap-2 border-b border-line pb-1"><span className="text-ink-2 group-hover:text-accent-ink">{l}</span><span className="font-medium tabular group-hover:text-accent-ink">{v}</span></Link>
+                  : <div key={l} className="flex justify-between gap-2 border-b border-line pb-1"><span className="text-ink-2">{l}</span><span className="font-medium tabular">{v}</span></div>
               ))}
             </div>
           )}
@@ -67,7 +71,7 @@ export default function Simulator() {
                 <div key={sc.name} className="flex flex-col rounded-xl border border-line bg-surface-2/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-card">
                   <div className="flex items-baseline justify-between"><h3 className="font-semibold">{sc.title}</h3><span className="text-xs text-ink-3">~{sc.duration_hours >= 24 ? `${sc.duration_hours / 24}d` : `${sc.duration_hours}h`} sim</span></div>
                   <p className="mt-1 text-sm text-ink-2">{sc.description}</p>
-                  <ul className="mt-2 flex-1 space-y-0.5 text-xs text-ink-2">{sc.expected.map((e) => <li key={e}>✓ {e}</li>)}</ul>
+                  <ul className="mt-2 flex-1 space-y-1 text-xs text-ink-2">{sc.expected.map((e) => <li key={e} className="flex gap-1.5"><Icon name="check" size={13} className="mt-px shrink-0 text-good-ink" />{e}</li>)}</ul>
                   <div className="mt-3 flex items-center gap-2">
                     <Button size="sm" variant="primary" disabled={resetting} onClick={async () => { const r = await post(`/api/sim/scenario/${sc.name}`); if (r) setLaunched((x) => ({ ...x, [sc.name]: r })); }}>Launch</Button>
                     {info?.lead_id && <Link className="text-sm font-medium text-accent-ink hover:underline" to={`/leads/${info.lead_id}`}>Open {info.lead_id} →</Link>}
@@ -81,8 +85,8 @@ export default function Simulator() {
         )}
       </Card>
       {s && (
-        <Card title="Simulated activity" subtitle="Event counts generated by personas and reps since reset">
-          <div className="flex flex-wrap gap-2 text-xs">{Object.entries(s.sim_counts).map(([k, v]) => <span key={k} className="rounded-md bg-surface-2 px-2 py-1 text-ink-2">{human(k)} <span className="font-medium tabular text-ink">{num(v)}</span></span>)}</div>
+        <Card title="Simulated activity" subtitle="Event counts generated by personas and reps since reset · click a type to see those events">
+          <div className="flex flex-wrap gap-2 text-xs">{Object.entries(s.sim_counts).map(([k, v]) => <Link key={k} to={to.feed({ type: k })} title={`Show ${human(k)} events in the live feed`} className="rounded-md bg-surface-2 px-2 py-1 text-ink-2 transition hover:bg-accent-soft hover:text-accent-ink">{human(k)} <span className="font-medium tabular text-ink">{num(v)}</span></Link>)}</div>
         </Card>
       )}
     </div>

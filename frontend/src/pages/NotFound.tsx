@@ -6,6 +6,7 @@ import { ThemeToggle } from "../components/ui";
 
 const QUICK: { to: string; label: string; icon: IconName; hint: string }[] = [
   { to: "/queue", label: "My Queue", icon: "queue", hint: "Leads by priority" },
+  { to: "/leads", label: "Leads", icon: "list", hint: "Search every lead" },
   { to: "/pipeline", label: "Pipeline", icon: "pipeline", hint: "Deals by stage" },
   { to: "/analytics", label: "Analytics", icon: "analytics", hint: "Funnel & reps" },
 ];
@@ -34,13 +35,13 @@ export default function NotFound() {
         </div>
 
         <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-2 shadow-sm" style={{ animation: "rise 600ms 120ms both" }}>
-          <span className="h-1.5 w-1.5 rounded-full bg-critical" /> Signal lost · Error 404
+          <span className="h-1.5 w-1.5 rounded-full bg-critical" /> Error 404
         </div>
         <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl" style={{ animation: "rise 600ms 180ms both" }}>
-          This lead flew off the radar.
+          Page not found
         </h1>
         <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-ink-2" style={{ animation: "rise 600ms 240ms both" }}>
-          We couldn't find <code className="rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-ink">{loc.pathname}</code>. It may have moved, been merged, or never existed. Let's get you back on course.
+          There is no page at <code className="rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-ink">{loc.pathname}</code>. Check the address, or go to one of the pages below. Looking for a lead? Search for it in Leads.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3" style={{ animation: "rise 600ms 300ms both" }}>
@@ -53,7 +54,7 @@ export default function NotFound() {
         </div>
 
         {user && (
-          <div className="mt-10 grid w-full gap-3 sm:grid-cols-3" style={{ animation: "rise 600ms 380ms both" }}>
+          <div className="mt-10 grid w-full max-w-xl gap-3 sm:grid-cols-2" style={{ animation: "rise 600ms 380ms both" }}>
             {QUICK.map((q) => (
               <Link key={q.to} to={q.to} className="card group flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:-translate-y-0.5 hover:shadow-pop">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent-soft text-accent-ink transition group-hover:scale-110"><Icon name={q.icon} /></span>
@@ -68,7 +69,7 @@ export default function NotFound() {
   );
 }
 
-/** The "0": a radar scope with a sweeping beam and the plane circling, lost. */
+/** The "0": a radar scope with a sweeping beam and the plane circling it. */
 function Radar() {
   return (
     <span className="relative inline-block h-[104px] w-[104px] sm:h-[150px] sm:w-[150px]">

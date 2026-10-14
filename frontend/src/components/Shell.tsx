@@ -9,17 +9,19 @@ import { dateTime, human } from "../lib/format";
 import { GradePill, Segmented, ThemeToggle } from "./ui";
 import { Icon, type IconName } from "./icons";
 import { Logo, LogoMark } from "./Logo";
+import { to } from "../lib/links";
 
-type NavItem = { to: string; label: string; icon: IconName; badge?: "stalled" | "quarantined"; live?: boolean };
+type NavItem = { to: string; label: string; icon: IconName; badge?: { key: "stalled" | "quarantined"; href: string; label: string }; live?: boolean };
 const NAV: { section: string; items: NavItem[] }[] = [
   { section: "Main", items: [
     { to: "/queue", label: "My Queue", icon: "queue" },
-    { to: "/pipeline", label: "Pipeline", icon: "pipeline", badge: "stalled" },
+    { to: "/leads", label: "Leads", icon: "list" },
+    { to: "/pipeline", label: "Pipeline", icon: "pipeline", badge: { key: "stalled", href: to.pipeline({ stalled: true }), label: "stalled deals" } },
     { to: "/feed", label: "Live Feed", icon: "feed", live: true },
   ] },
   { section: "Insights", items: [
     { to: "/analytics", label: "Analytics", icon: "analytics" },
-    { to: "/quality", label: "Quality", icon: "quality", badge: "quarantined" },
+    { to: "/quality", label: "Quality", icon: "quality", badge: { key: "quarantined", href: to.quality("quarantine"), label: "quarantined leads" } },
   ] },
   { section: "System", items: [{ to: "/simulator", label: "Simulator", icon: "simulator" }] },
 ];
@@ -29,15 +31,15 @@ function readCollapsed() { try { return localStorage.getItem("lp.sidebar") === "
 export default function Shell() {
   const loc = useLocation();
   const nav = useNavigate();
-  const { user } = useAuth();
   const { notify } = useLive();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [drawer, setDrawer] = useState(false);
   // Arriving from the login takeoff: play the entrance once, then drop the flag so reloads don't replay it.
-  const [arrive] = useState(() => Boolean((loc.state as { arrived?: boolean } | null)?.arrived));
+  const [arrived] = useState(() => (loc.state as { arrived?: string } | null)?.arrived ?? "");
+  const arrive = Boolean(arrived);
   useEffect(() => {
     if (!arrive) return;
-    const t = window.setTimeout(() => notify(`Welcome aboard, ${user?.name.split(" ")[0] ?? "pilot"}. Your queue is ready.`, "welcome"), 900);
+    const t = window.setTimeout(() => notify(arrived, "welcome"), 900);
     nav(loc.pathname + loc.search, { replace: true, state: null });
     return () => clearTimeout(t);
   }, []); // mount only
@@ -79,7 +81,7 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
   const { user, signOut } = useAuth();
   const nav = useNavigate();
   const status = useQuery({ queryKey: ["sim", "status"], queryFn: () => api.get<SimStatus>("/api/sim/status"), refetchInterval: 5000 });
-  const badge = (b?: NavItem["badge"]) => (b ? status.data?.[b] : undefined);
+  const badge = (b?: NavItem["badge"]) => (b ? status.data?.[b.key] : undefined);
 
   return (
     <aside className={`relative m-3 mr-0 flex h-[calc(100%-1.5rem)] flex-col rounded-3xl shadow-card transition-[width] duration-300 ease-out ${drawer ? "card" : "glass"} ${collapsed ? "w-[76px]" : "w-64"}`}>
@@ -115,8 +117,9 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
                         </span>
                         {!collapsed && <span className="flex-1 truncate">{n.label}</span>}
                         {n.live && connected && <span className={`live-dot h-2 w-2 rounded-full bg-good ${collapsed ? "absolute right-2.5 top-2.5" : ""}`} aria-label="Live" />}
-                        {!!count && (
-                          <span className={`rounded-full bg-critical px-1.5 text-[10px] font-semibold leading-[18px] tabular text-white ${collapsed ? "absolute right-1 top-1" : ""}`} title={`${count} ${n.badge}`}>{count > 99 ? "99+" : count}</span>
+                        {!!count && n.badge && (
+                          <span role="link" tabIndex={0} onClick={(e) => { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); nav(n.badge!.href); } }}
+                            className={`rounded-full bg-critical px-1.5 text-[10px] font-semibold leading-[18px] tabular text-white transition hover:scale-110 hover:brightness-110 ${collapsed ? "absolute right-1 top-1" : ""}`} title={`${count} ${n.badge.label}: open them`}>{count > 99 ? "99+" : count}</span>
                         )}
                       </>
                     )}
@@ -129,16 +132,19 @@ function Sidebar({ collapsed, onToggle, onClose, drawer }: { collapsed: boolean;
       </nav>
 
       {!collapsed && (
-        <div className="mx-3 mb-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#60a5fa] p-4 text-white shadow-[0_12px_28px_-12px_rgb(37_99_235/.8)] dark:from-[#1e3a8a] dark:via-[#1d4ed8] dark:to-[#2563eb]">
+        <NavLink to={to.feed()} className="group mx-3 mb-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#60a5fa] p-4 text-white shadow-[0_12px_28px_-12px_rgb(37_99_235/.8)] transition hover:brightness-110 dark:from-[#1e3a8a] dark:via-[#1d4ed8] dark:to-[#2563eb]">
           <div className="relative">
             <LogoMark size={56} tone="white" className="absolute -right-3 -top-3 opacity-20" />
             <div className="flex items-center gap-2 text-xs font-medium text-white/85">
-              <span className={`live-dot h-2 w-2 rounded-full ${connected ? "bg-[#86efac]" : "bg-[#fca5a5]"}`} />{connected ? "Engine live" : "Reconnecting…"}
+              <span className={`h-2 w-2 rounded-full ${connected ? "live-dot bg-[#86efac]" : "bg-[#fca5a5]"}`} />{connected ? "Connected" : "Reconnecting…"}
             </div>
-            <div className="mt-1 font-display text-2xl font-bold tabular">{eventsPerMin}<span className="ml-1 text-xs font-medium text-white/75">events/min</span></div>
-            <div className="mt-0.5 text-[11px] leading-snug text-white/75">Every score, stage and assignment is explained. Click any lead to see why.</div>
+            <div className="mt-1 font-display text-2xl font-bold tabular">{eventsPerMin}<span className="ml-1 text-xs font-medium text-white/75">events / min</span></div>
+            <div className="mt-0.5 text-[11px] leading-snug text-white/80">
+              {status.data ? `${status.data.open_leads} open leads · ${status.data.events.toLocaleString()} events processed` : "Loading workspace numbers…"}
+            </div>
+            <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/90 group-hover:text-white">Open live feed <Icon name="arrowRight" size={12} /></div>
           </div>
-        </div>
+        </NavLink>
       )}
 
       <div className={`flex items-center gap-2.5 border-t border-line px-3 py-3 ${collapsed ? "justify-center" : ""}`}>
@@ -178,11 +184,11 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
       <LogoMark size={28} className="md:hidden" />
       <SearchBox />
       <div className="ml-auto flex flex-wrap items-center gap-2">
-        <div className="hidden items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 shadow-sm sm:flex" title={connected ? "Connected to the live engine" : "Reconnecting to the live engine"}>
+        <NavLink to="/simulator" className="hidden items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 shadow-sm transition hover:border-brand/40 sm:flex" title={`${connected ? "Connected" : "Reconnecting"} · simulated clock, open the Simulator`}>
           <span className={`live-dot h-2 w-2 rounded-full ${connected ? "bg-good" : "bg-critical"}`} aria-hidden />
           <span className="text-xs font-medium tabular text-ink">{resetting ? "Generating history…" : dateTime(clock.now)}</span>
           <span className="hidden text-[11px] text-ink-3 xl:inline">UTC · sim</span>
-        </div>
+        </NavLink>
         <button disabled={resetting} onClick={() => act(clock.paused ? "/api/sim/start" : "/api/sim/pause")}
           className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-medium transition active:scale-[0.97] disabled:opacity-50 ${clock.paused ? "btn-brand" : "border border-line bg-surface text-ink shadow-sm hover:bg-surface-2"}`}>
           <Icon name={clock.paused ? "play" : "pause"} size={14} />{clock.paused ? "Run" : "Pause"}
@@ -239,6 +245,7 @@ function SearchBox() {
   });
   const items = debounced.length >= 2 ? res.data?.items ?? [] : [];
   const go = (l: LeadView) => { nav(`/leads/${l.lead_id}`); setOpen(false); setQ(""); input.current?.blur(); };
+  const all = () => { nav(to.leads({ q: q.trim() })); setOpen(false); setQ(""); input.current?.blur(); };
 
   return (
     <div ref={wrap} className="relative order-last w-full sm:order-none sm:w-auto sm:min-w-[220px] sm:flex-1 lg:max-w-md">
@@ -248,7 +255,7 @@ function SearchBox() {
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") { e.preventDefault(); setHi((h) => Math.min(h + 1, items.length - 1)); }
             if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
-            if (e.key === "Enter" && items[hi]) go(items[hi]);
+            if (e.key === "Enter") { if (items[hi]) go(items[hi]); else if (q.trim()) all(); }
           }}
           placeholder="Search leads, companies, emails…" aria-label="Search leads" role="combobox" aria-expanded={open && items.length > 0} aria-controls="lead-search-results"
           className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3 focus-visible:outline-none" />
@@ -269,14 +276,18 @@ function SearchBox() {
                 <span className="text-xs capitalize text-ink-3">{human(l.stage)}</span>
               </button>
             ))}
-          {!!res.data && res.data.total > items.length && <div className="px-3 pb-1 pt-1.5 text-[11px] text-ink-3">{res.data.total - items.length} more match. Keep typing to narrow.</div>}
+          {!!res.data && res.data.total > 0 && (
+            <button onClick={all} className="mt-1 flex w-full items-center justify-between rounded-xl border-t border-line px-3 pb-1.5 pt-2.5 text-left text-xs font-medium text-accent-ink hover:bg-accent-soft/50">
+              <span>See all {res.data.total} results in Leads</span><Icon name="arrowRight" size={12} />
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-const KIND_ICON: Record<string, IconName> = { "lead.reassigned": "users", "stall.detected": "alert", "lead.merged": "sparkle", "source.flagged": "quality", "scenario.launched": "zap", welcome: "check" };
+const KIND_ICON: Record<string, IconName> = { "lead.reassigned": "users", "stall.detected": "alert", "lead.merged": "merge", "source.flagged": "quality", "scenario.launched": "zap", welcome: "check" };
 
 function Notifications() {
   const { history, unread, markRead } = useLive();
@@ -294,7 +305,7 @@ function Notifications() {
         <div className="pop card absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl shadow-pop">
           <div className="flex items-center justify-between border-b border-line px-4 py-3"><span className="font-display text-sm font-bold">Notifications</span><span className="text-[11px] text-ink-3">Last {history.length}</span></div>
           <div className="scroll-thin max-h-80 overflow-y-auto p-1.5">
-            {!history.length ? <div className="px-3 py-6 text-center text-sm text-ink-3">All quiet. Reassignments, stalls and merges show up here.</div>
+            {!history.length ? <div className="px-3 py-6 text-center text-sm text-ink-3">No notifications yet. Reassignments, stalls and merges appear here.</div>
               : history.map((t) => (
                 <button key={t.id} onClick={() => { if (t.lead_id) nav(`/leads/${t.lead_id}`); setOpen(false); }} className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition hover:bg-surface-2">
                   <ToastIcon t={t} />

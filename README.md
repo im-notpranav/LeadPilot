@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧭 LeadPilot
+# LeadPilot
 
 **Autonomous lead-to-deal intelligence: every lead scored, staged, assigned and explained in real time.**
 
@@ -33,22 +33,22 @@ live out of the box with no external accounts.
 
 ## Table of contents
 
-- [Quick start](#-quick-start)
-- [What goes in, what comes out](#-what-goes-in-what-comes-out)
-- [How scoring works](#-how-scoring-works)
-- [How leads move through the pipeline](#-how-leads-move-through-the-pipeline)
-- [Architecture](#-architecture)
-- [Dashboard tour (5-minute demo)](#-dashboard-tour-5-minute-demo)
-- [API](#-api)
-- [Configuration](#-configuration)
-- [Testing & performance](#-testing--performance)
-- [Using real data instead of the simulator](#-using-real-data-instead-of-the-simulator)
-- [Project structure](#-project-structure)
-- [Known simplifications](#-known-simplifications)
+- [Quick start](#quick-start)
+- [What goes in, what comes out](#what-goes-in-what-comes-out)
+- [How scoring works](#how-scoring-works)
+- [How leads move through the pipeline](#how-leads-move-through-the-pipeline)
+- [Architecture](#architecture)
+- [Dashboard tour (5-minute demo)](#dashboard-tour-5-minute-demo)
+- [API](#api)
+- [Configuration](#configuration)
+- [Testing & performance](#testing--performance)
+- [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
+- [Project structure](#project-structure)
+- [Known simplifications](#known-simplifications)
 
 ---
 
-## 🚀 Quick start
+## Quick start
 
 **Requirements:** Python 3.12, Node.js 18+, and `make` (optional).
 
@@ -57,8 +57,8 @@ make install   # creates backend/.venv, installs Python + npm dependencies
 make dev       # starts the API (port 8000) and the dashboard (port 5173)
 ```
 
-Open **http://localhost:5173** and sign in with the demo account (**demo@leadpilot.io** / **pilot123**, or click
-*Use the demo account*). Interactive API docs are at **http://localhost:8000/docs**.
+Open **http://localhost:5173**. Sign in with the demo account (**demo@leadpilot.io** / **pilot123**) or create your
+own account on the *Create account* page. Interactive API docs are at **http://localhost:8000/docs**.
 
 On first start the backend generates 6 months of closed-deal history and simulates a 21-day warm-up (about 150 open
 leads). This takes 10–20 seconds. After that the simulator runs live at 60× speed (1 simulated minute per real second).
@@ -85,7 +85,7 @@ On macOS / Linux use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/p
 
 ---
 
-## 🔁 What goes in, what comes out
+## What goes in, what comes out
 
 ```mermaid
 flowchart LR
@@ -132,7 +132,7 @@ source quality, a quality review queue, and a live event feed pushed over WebSoc
 
 ---
 
-## 📊 How scoring works
+## How scoring works
 
 ```
 score = clamp( Fit[0..40] + Engagement[0..35] + Intent[0..25] − Penalties , 0, 100 )
@@ -172,7 +172,7 @@ model fitted on the simulated deal history is shown in Analytics for calibration
 
 ---
 
-## 🪜 How leads move through the pipeline
+## How leads move through the pipeline
 
 A lead only moves when an event proves it should. Every move records the **rule ID, the reason and the evidence
 event**.
@@ -211,7 +211,7 @@ drop, S4 ghosting (unanswered follow-ups), S5 no next step after a meeting.
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -253,11 +253,14 @@ TanStack Query · Recharts.
 
 ---
 
-## 🎬 Dashboard tour (5-minute demo)
+## Dashboard tour (5-minute demo)
 
-0. **Sign in.** The app opens with a short brand animation (click or press any key to skip), then the sign-in page.
-   After sign-in the plane "takes off" from the button and the dashboard flies in. Toggle light / dark / system from
-   the top bar or the account menu; the choice is remembered. Press **Ctrl K** (or **/**) to search leads.
+0. **Sign in.** The app opens with a short brand animation (click or press any key to skip). On *Sign in* the form is on
+   the right; on *Create account* the panels swap sides. The brand panel shows live numbers from the running engine.
+   Toggle light / dark / system from the top bar or the account menu. Press **Ctrl K** (or **/**) to search leads.
+   Almost every number, chip, bar and name in the dashboard is a link: grades, stages, sources, signals, owners, KPI
+   tiles, chart bars and counters open the matching filtered view (usually the **Leads** page, whose filters live in
+   the URL so any view can be bookmarked or shared).
 1. **My Queue.** Leads ordered by priority for the selected rep. Each row shows a grade pill with a score sparkline,
    intent chips, the stage, stall flag, SLA countdown, the next best action (**Mark done**) and the top reasons.
 2. **Simulator → Reviver → Launch**, then set speed to 600×. Priya starts cold in *nurture* (score ~30). She visits
@@ -277,7 +280,7 @@ TanStack Query · Recharts.
 
 ---
 
-## 🔌 API
+## API
 
 Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 
@@ -311,7 +314,7 @@ POST /api/events
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 | File | Controls |
 |---|---|
@@ -331,7 +334,7 @@ POST /api/events
 
 ---
 
-## ✅ Testing & performance
+## Testing & performance
 
 ```bash
 make test   # 149 tests
@@ -358,7 +361,7 @@ set `LEADPILOT_DB` to a local path to avoid fsync spikes.
 
 ---
 
-## 🌐 Using real data instead of the simulator
+## Using real data instead of the simulator
 
 The engine doesn't care where events come from, so real sources can post to `POST /api/events` in the format shown
 above. Typical adapters:
@@ -382,7 +385,7 @@ To run on real data in production, you would also need to:
 
 ---
 
-## 📁 Project structure
+## Project structure
 
 ```
 backend/
@@ -398,9 +401,11 @@ backend/
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
-  src/pages/     Login · Queue · LeadDetail · Pipeline · LiveFeed · Analytics · Quality · Simulator · NotFound (404)
+  src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline · LiveFeed · Analytics · Quality ·
+                 Simulator · NotFound (404)
   src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts
-  src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (demo sign-in)
+  src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (browser-local accounts) ·
+                 links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest
 scripts/dev.py   runs backend + frontend together
 Makefile
@@ -408,7 +413,7 @@ Makefile
 
 ---
 
-## 📝 Known simplifications
+## Known simplifications
 
 - A lead and its opportunity are 1:1. A lead counts as a "deal" from *qualified* onward.
 - Enrichment, MX validation and IP geolocation are mocked from seed data in `backend/data`.
@@ -417,6 +422,7 @@ Makefile
 - Weights are expert-set. The logistic model and the grade-vs-conversion chart show how to calibrate them.
 - Plus-tags are stripped from all email domains, so `rahul.k+ads@acme.io` matches `rahul.k@acme.io`. Dots are
   stripped for Gmail only.
-- Sign-in is a client-side demo gate: the API has no authentication, so any email with a 6+ character password
-  works and nothing is enforced server-side. Replace `signIn` in `frontend/src/lib/auth.tsx` when the API adds auth.
+- Accounts are stored in the browser (localStorage, salted SHA-256 password hashes). The API has no authentication, so
+  this gates the dashboard UI only and nothing is enforced server-side. "Forgot password" resets the password of an
+  account in the same browser. Replace the functions in `frontend/src/lib/auth.tsx` when the API adds auth.
 - The in-memory store is the working set and SQLite is the durable copy. The server starts from a fresh seeded world.

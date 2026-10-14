@@ -6,6 +6,7 @@ import Splash from "./components/Splash";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Queue from "./pages/Queue";
+import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import Pipeline from "./pages/Pipeline";
 import LiveFeed from "./pages/LiveFeed";
@@ -19,9 +20,11 @@ export default function App() {
       <Splash />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Login />} />
         <Route path="/" element={<RequireAuth><LiveProvider><Shell /></LiveProvider></RequireAuth>}>
           <Route index element={<Navigate to="/queue" replace />} />
           <Route path="queue" element={<Queue />} />
+          <Route path="leads" element={<Leads />} />
           <Route path="leads/:id" element={<LeadDetail />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="feed" element={<LiveFeed />} />

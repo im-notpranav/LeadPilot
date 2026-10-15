@@ -15,6 +15,7 @@ class AppState:
     config: object = None            # config_versions.ConfigStore
     whatif: object = None            # whatif.WhatIfRuns
     notifications: object = None     # notifications.NotificationCenter
+    calls: object = None             # calls.center.CallCenter
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     bus: object = None
     ws: object = None

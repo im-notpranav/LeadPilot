@@ -19,6 +19,7 @@ SUMMARY_PHRASES = {
     "intent.trial_signup": "signed up for a trial",
     "intent.proposal_viewed": "viewed the proposal",
     "intent.positive_reply_intent": "replied with buying intent",
+    "intent.positive_call_intent": "showed buying intent on a call",
     "intent.competitor_compare": "compared competitors",
     "intent.enterprise_plan_view": "looked at the enterprise plan",
     "intent.case_study_or_roi": "read case studies / ROI",

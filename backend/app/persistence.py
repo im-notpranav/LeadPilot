@@ -27,7 +27,8 @@ SEED_TABLES = {"historical_deals", "reps", "sources", "meta"}
 LOG_TABLES = {"raw_events", "events"}
 ACCOUNT_TABLES = {"profiles", "api_keys",         # people, keys, connectors and settings: survive demo resets
                   "connectors", "connector_deliveries", "tracker_visitors", "config_versions"}
-NOTICE_TABLES = {"notifications", "notification_deliveries", "notification_reads"}   # survive replays, not resets
+# Side effects and inbound source data: they survive replays, but a demo reset clears them.
+NOTICE_TABLES = {"notifications", "notification_deliveries", "notification_reads", "calls"}
 
 
 def jsonable(obj):

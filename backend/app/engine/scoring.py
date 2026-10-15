@@ -39,7 +39,8 @@ SIGNAL_LABELS = {
     "case_study_or_roi": "case study / ROI view", "competitor_compare": "competitor comparison view",
     "enterprise_plan_view": "enterprise plan view", "demo_request": "demo request",
     "contact_sales": "contact-sales request", "trial_signup": "trial signup",
-    "positive_reply_intent": "reply with buying intent", "proposal_viewed": "proposal view",
+    "positive_reply_intent": "reply with buying intent", "positive_call_intent": "call with buying intent",
+    "proposal_viewed": "proposal view",
     "buying_committee": "buying committee", "intent_burst_bonus": "intent burst bonus",
 }
 FIT_LABELS = {"company_size": "Company size", "industry_icp": "Industry ICP", "seniority": "Seniority",
@@ -103,6 +104,8 @@ def _event_signals(e: Event, cfg) -> tuple:
             out.append(("intent", "positive_reply_intent"))
     elif t == "call_logged" and pl.get("outcome") == "connected":
         out.append(("engagement", "call_connected"))
+        if pl.get("call_intent") == "positive_intent":       # written into the event by the call analysis
+            out.append(("intent", "positive_call_intent"))
     elif t == "lead_created":
         cm = pl.get("capture_method")
         if cm == "badge_scan":

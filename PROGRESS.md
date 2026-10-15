@@ -6,7 +6,7 @@ The upgrade turns LeadPilot from a demo into a real product: Supabase for the da
 features, and ideas borrowed from Fizzy (https://github.com/KenshinCommits/Fizzy). It has 12 phases.
 
 **Where the code is:** `main` contains Phases 0–5 (first part) and the dashboard redesign. The finishing steps
-of Phase 5 and Phases 6 and 7 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
+of Phase 5 and Phases 6–8 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
 (`phase-0-foundations` … `phase-5-config`) are kept on GitHub for reference; `phase-5-config` is the same as `main`.
 Start new work from `main`.
 
@@ -21,15 +21,15 @@ Start new work from `main`.
 | 4 | Accounts (companies) and deals (opportunities) | ✅ Done | 2bfe39a, 019a6a6 |
 | 5 | Settings console: versioned rules with diff and rollback | ✅ Done | 9cdc32a, 0efdfa6 |
 | 6 | What-if testing: replay history against a draft config | ✅ Done | 5e948b6 |
-| 7 | Notifications: in-app, email, Slack, SMS | ✅ Done | see branch `claude/epic-bell-nq6hx0` |
-| 8 | Call intelligence with Gemini (summaries, outcomes) | ⬜ To do | |
+| 7 | Notifications: in-app, email, Slack, SMS | ✅ Done | 8afd02e |
+| 8 | Call intelligence with Gemini (summaries, outcomes) | 🟡 Built and tested with a mocked Gemini; needs a real-key check | see branch `claude/epic-bell-nq6hx0` |
 | 9 | Quotes | ⬜ To do | |
 | 10 | Playbooks and recovery sequences | ⬜ To do | |
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 245 backend tests pass (`make test`). 16 browser tests pass (`make e2e`). The 5 Postgres
-tests (`make test-pg`) pass with the Phase 7 migration. They were run against a local Postgres 16; worth
+**Tests right now:** 254 backend tests pass (`make test`). 17 browser tests pass (`make e2e`). The 5 Postgres
+tests (`make test-pg`) pass with the Phase 8 migration. They were run against a local Postgres 16; worth
 one run against Supabase too.
 
 **Dashboard redesign:** the `claude/charming-noether-8ziqwn` branch (brand, sign-in layout, Leads explorer,
@@ -207,13 +207,45 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
 - **Not done (ideas for later):** editing notification rules from the Settings console; per-person choice per rule;
   a daily digest email; retrying failed deliveries.
 
+### Phase 8: Call intelligence (built; check with real keys, see below)
+- **Where calls come from:** a new connector kind **Phone calls** (`/api/hooks/{id}`): Retell's webhook, verified with
+  `RETELL_API_KEY` (`x-retell-signature: v=<ms>,d=<HMAC-SHA256(api key, body + ms)>`, 5-minute window), or
+  LeadPilot's generic call JSON with the connector token / signature. Reps can also **Log a call** on a lead page.
+  Calls are matched to a lead by phone number (dialled number for outbound, caller for inbound) or by
+  `lead_id` / `lead_email` in the call metadata; unknown numbers wait on the Calls page until linked.
+- **Analysis:** `backend/app/calls/gemini.py` calls Gemini's `generateContent` REST endpoint with a JSON response
+  schema (enums for outcome, result, sentiment, intent) at temperature 0, and `clean()` checks and clips whatever comes
+  back. Default model `gemini-2.5-flash` (`GEMINI_MODEL` to change). The transcript is fenced and the prompt tells
+  the model to treat it as data. Without a key, or if Gemini fails: the phone system's summary plus rules
+  (hang-up reason → voicemail / no answer; keyword classifier on the prospect's lines → intent). A rep's own
+  outcome choice always wins; voicemails and unanswered calls never go to Gemini.
+- **Replays stay exact:** the analysis is stored inside the `call_logged` event (plus `meeting_scheduled` when a
+  meeting was agreed). Event ids come from the call id, so a re-delivered call changes nothing. Tested: a replay
+  gives the same score and stage and makes no Gemini request.
+- **Engine:** new intent signal `positive_call_intent` (6 points, `scoring.yaml`) for a connected call with buying
+  intent; it shows as "call with buying intent" in explanations and as `positive_call` in active signals. The
+  config fingerprint changes, so a live restart rewrites projections once.
+- **Recordings:** copied to the private Supabase Storage bucket `call-recordings` (created on first use) when
+  `SUPABASE_SERVICE_ROLE_KEY` is set; played through 1-hour signed links. Otherwise the provider's link is used.
+- **Data:** `calls` table (kept through replays, cleared by demo resets), migration `20261017000000_calls.sql`.
+- **Screens:** Calls card on the lead page; Calls page (`/calls`, managers) with Needs a lead / Failed; connector
+  set-up text for Retell and the generic format; a "Call with …" notification to the owner (rule `call_analyzed`).
+- **Code:** `backend/app/calls/` (gemini, parse, storage, center), `backend/app/api/routes_calls.py`, the call
+  branch in `routes_connectors.py`, `backend/tests/test_calls.py`, `frontend/src/components/calls.tsx`,
+  `frontend/src/pages/Calls.tsx`, `frontend/e2e/calls.spec.ts`.
+- **To check with real keys (the owner):**
+  1. Add `GEMINI_API_KEY`, restart, log a call with a pasted transcript on a lead page: the card should say
+     "Summarised by Gemini (gemini-2.5-flash)". If Google renamed or retired that model, set `GEMINI_MODEL`.
+  2. Retell: create a Phone calls connector, set the webhook URL in Retell and `RETELL_API_KEY`, make a test call to
+     a lead's number. If the signature is refused, check the delivery log on the Connectors page: Retell's signing
+     scheme was implemented from their SDK and has only been tested against our own signer.
+  3. Recordings: add `SUPABASE_SERVICE_ROLE_KEY`, make a call with a recording, press **Play recording**.
+- **Not done (ideas for later):** transcribing audio-only recordings (Gemini can take audio), a call-coaching view
+  across reps, editing an analysis by hand.
+
 ## What should be done next
 
 ### Next phases
-- **Phase 8: Call intelligence.**
-  - A call-provider webhook (Retell adapter).
-  - Gemini writes call summaries and outcomes, saved as events so replays stay repeatable.
-  - Recordings go to Supabase Storage.
 - **Phase 9: Quotes.** Quotes attached to deals.
 - **Phase 10: Playbooks.** Follow-up sequences and recovery plays for stalled deals.
 - **Phase 11: Agent context.** One API that gives an AI agent everything about a lead or deal.
@@ -254,7 +286,7 @@ A chat panel where a rep asks "what should I do next with this lead, and why?":
 ## What you (the owner) need to do
 - [ ] Add `SUPABASE_ANON_KEY` and `LEADPILOT_ADMIN_EMAILS` (your email) to `backend/.env`. Real sign-in needs both.
 - [ ] In Supabase: Authentication → URL Configuration → set **Site URL** to `http://localhost:5173`.
-- [ ] Add `GEMINI_API_KEY` to `backend/.env` before Phase 8.
+- [ ] Add `GEMINI_API_KEY` to `backend/.env` and run the Phase 8 checks above (Gemini, Retell, recordings).
 - [ ] To get notifications outside the app, add the channel keys listed in `backend/.env.example` (Resend, Slack,
       Twilio) and `LEADPILOT_PUBLIC_URL`, restart, then use **Send test** on the Notifications page.
 

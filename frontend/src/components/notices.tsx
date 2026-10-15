@@ -7,11 +7,11 @@ import { Icon, type IconName } from "./icons";
 export const RULE_LABEL: Record<string, string> = {
   hot_lead: "Hot lead", lead_assigned: "New lead", reply_received: "Reply", meeting_booked: "Meeting or demo",
   lead_reassigned: "Reassigned", escalated: "Escalated", stalled: "Stalled", deal_won: "Deal won", deal_lost: "Deal lost",
-  review_needed: "Review needed", source_flagged: "Source flagged",
+  review_needed: "Review needed", source_flagged: "Source flagged", call_analyzed: "Call summary",
 };
 const RULE_ICON: Record<string, IconName> = {
   hot_lead: "zap", lead_assigned: "user", reply_received: "mail", meeting_booked: "clock", lead_reassigned: "users",
-  escalated: "alert", stalled: "alert", deal_won: "trophy", deal_lost: "wallet", review_needed: "quality", source_flagged: "quality",
+  escalated: "alert", stalled: "alert", deal_won: "trophy", deal_lost: "wallet", review_needed: "quality", source_flagged: "quality", call_analyzed: "phone",
 };
 export const TO_LABEL: Record<string, string> = { owner: "Owner", previous_owner: "Previous owner", managers: "Managers" };
 export const CHANNEL_LABEL: Record<string, string> = { in_app: "In app", email: "Email", slack: "Slack", sms: "SMS" };

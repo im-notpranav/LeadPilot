@@ -281,7 +281,7 @@ def test_connectors_are_admin_only(client):
         assert client.get("/api/connectors", headers=h(who)).status_code == 403
         assert client.post("/api/connectors", headers=h(who), json={"kind": "webhook", "name": "x"}).status_code == 403
     listing = client.get("/api/connectors", headers=h("boss")).json()
-    assert listing["kinds"] == ["webhook", "form", "crm", "email", "tracker"]
+    assert listing["kinds"] == ["webhook", "form", "crm", "email", "tracker", "call"]
     for body, msg in (({"kind": "fax", "name": "x"}, "kind"), ({"kind": "webhook", "name": " "}, "name"),
                       ({"kind": "form", "name": "f", "settings": {"form_kind": "psychic"}}, "form_kind"),
                       ({"kind": "tracker", "name": "t", "settings": {"page_rules": [{"pattern": "("}]}}, "page rule")):

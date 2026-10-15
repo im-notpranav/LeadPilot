@@ -46,6 +46,7 @@ A built-in simulator generates leads, buyer personas and sales reps, so the syst
 - [Accounts and deals](#accounts-and-deals)
 - [Settings console](#settings-console)
 - [Notifications](#notifications)
+- [Call intelligence](#call-intelligence)
 - [Testing & performance](#testing--performance)
 - [Using real data instead of the simulator](#using-real-data-instead-of-the-simulator)
 - [Project structure](#project-structure)
@@ -298,7 +299,9 @@ TanStack Query · Recharts.
    version 1 brings the YAML rules back as a new version.
 10. **Notifications.** The bell shows new leads, replies, reassignments and won deals as the simulator runs;
     **All notifications and settings** shows your reps' notifications too, the channels and the rules.
-11. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
+11. **Calls.** On any lead page, **Log a call** with a note like "Customer: what does pricing look like?": it is
+    summarised (by Gemini when `GEMINI_API_KEY` is set) and adds a buying-intent signal to the score.
+12. **Replay event log** rebuilds every projection from the raw log and confirms identical results.
 
 ---
 
@@ -337,6 +340,9 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/notifications/read` | Mark `{ids}` or `{all: true}` read |
 | `GET/PUT` | `/api/notifications/settings` | Channel status, the rules (managers), and your own email / SMS settings and phone |
 | `POST` | `/api/notifications/test` | Send a test on one channel to yourself, or to the Slack channel (admin) |
+| `GET/POST` | `/api/leads/{id}/calls` | A lead's calls (summary, outcome, transcript) · log a call by hand |
+| `GET` | `/api/calls` · `/api/calls/{id}` · `/api/calls/{id}/recording` · `/api/calls/status` | Recent calls (manager), one call, a recording link, whether Gemini and recording storage are set up |
+| `POST` | `/api/calls/{id}/link` · `/api/calls/{id}/retry` | Attach a call to a lead, or retry a failed one (manager) |
 | `WS` | `/ws` | Live stream of every change |
 
 Example event:
@@ -388,6 +394,9 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 | `SLACK_WEBHOOK_URL` | — | Slack notifications (one incoming webhook for the team channel) |
 | `TWILIO_ACCOUNT_SID` · `TWILIO_AUTH_TOKEN` · `TWILIO_FROM_NUMBER` | — | SMS notifications through Twilio |
 | `LEADPILOT_PUBLIC_URL` | — | Dashboard address, so emails, Slack posts and texts link to the lead or deal |
+| `GEMINI_API_KEY` · `GEMINI_MODEL` | — · `gemini-2.5-flash` | Call summaries and outcomes by Gemini (otherwise phone-system summary or rules) |
+| `RETELL_API_KEY` | — | Verifies Retell's signed call webhooks |
+| `SUPABASE_SERVICE_ROLE_KEY` · `LEADPILOT_RECORDINGS_BUCKET` | — · `call-recordings` | Private copies of call recordings in Supabase Storage (server only) |
 | `LEADPILOT_NOTIFY_IN_DEMO` | `0` | Deliver email / Slack / SMS in demo mode too (off: simulated leads only notify in the app) |
 
 ---
@@ -560,6 +569,37 @@ Stored in `notifications`, `notification_deliveries` and `notification_reads`, w
 
 ---
 
+## Call intelligence
+
+Calls come from the phone system (a **Phone calls** connector: Retell, or LeadPilot's generic call format for any
+other system) or are logged by a rep on the lead page (**Log a call**: notes or a pasted transcript, optionally the
+outcome). Each call is matched to its lead by the number dialled (or calling in), or by `lead_id` / `lead_email` in
+the call's metadata.
+
+- **Analysis, once.** Gemini reads the transcript and returns a fixed shape: a 2–4 sentence summary, the outcome
+  (connected / voicemail / no answer), the result (meeting booked, interested, call back, not interested, …),
+  sentiment, buying intent, the next step, buying signals, objections and competitors mentioned. The answer is
+  checked and clipped before use. Without `GEMINI_API_KEY`, the phone system's own summary and simple rules
+  (hang-up reason, keywords) are used, and the lead page says so.
+- **Saved as events.** The analysis is written into the call's `call_logged` event (and a `meeting_scheduled` event
+  when a meeting was agreed). Replays, restarts and settings activations read the events and never call Gemini
+  again, so they stay exact. A connected call with buying intent adds the **call with buying intent** intent
+  signal (`positive_call_intent` in `scoring.yaml`), and the call moves the lead like any connected call.
+- **Recordings.** With `SUPABASE_SERVICE_ROLE_KEY`, each recording is copied into the private bucket
+  `call-recordings` (created on first use) and played through a link that expires after an hour. Otherwise the
+  phone system's own link is used.
+- **Retell set-up.** Create a **Phone calls** connector, paste its URL as the webhook in Retell, put your Retell API
+  key in `RETELL_API_KEY` (Retell signs webhooks with it) and restart. Calls are taken from `call_ended` when Gemini
+  is set up, otherwise from `call_analyzed` (after Retell's own summary); the connector can force either.
+- **Screens.** The lead page's **Calls** card (summary, outcome, signals, next step, recording, transcript) and
+  **Calls** (`/calls`, managers): every call, with **Needs a lead** for calls from unknown numbers (link them to a
+  lead to analyse them) and **Failed**. The owner gets a "Call with …" notification for each analysed phone-system call.
+
+Calls are stored in the `calls` table (migration `supabase/migrations/20261017000000_calls.sql`), kept through
+replays and cleared by a demo reset.
+
+---
+
 ## Settings console
 
 **System → Settings** (`/settings`) shows the rules behind every score, stage, assignment and next action, and lets
@@ -596,7 +636,7 @@ Versions are stored in the `config_versions` table, which survives demo resets (
 ## Testing & performance
 
 ```bash
-make test   # 245 tests (5 Postgres tests skip unless enabled)
+make test   # 254 tests (5 Postgres tests skip unless enabled)
 make test-pg # Postgres tests against LEADPILOT_DB_URL, in a throwaway schema
 make e2e    # Playwright dashboard tests (starts its own API + dashboard on ports 8010 / 5180)
 make perf   # load test
@@ -665,13 +705,14 @@ backend/
     config_versions.py  settings versions: validation, diff, dry run
     whatif.py    what-if runs: scratch replays under two rule sets, compared
     notifications.py  notification rules, inbox, read state, email / Slack / SMS delivery
+    calls/       Gemini analysis · Retell / generic call parsing · recordings in Supabase Storage · call center
   scripts/       perf.py (load test) · gen_seed_data.py
   tests/         one file per engine module + invariants, scenarios, analytics, API
 frontend/
   src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
-                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings · Notifications ·
+                 Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings · Notifications · Calls ·
                  NotFound
-  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif · notices
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif · notices · calls
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest

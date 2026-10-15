@@ -12,6 +12,7 @@ const KINDS: Record<ConnectorKind, { label: string; help: string }> = {
   crm: { label: "CRM", help: "HubSpot, Pipedrive or Salesforce workflows send contact records, signed." },
   email: { label: "Inbound email", help: "Postmark, SendGrid or Mailgun forward prospects' replies and bounces." },
   tracker: { label: "Website tracker", help: "A script on your site records page views and links them to the lead once they fill in a form." },
+  call: { label: "Phone calls", help: "Retell (or any phone system) sends each call; it is summarised and attached to the lead with that number." },
 };
 const DELIVERY_TONE: Record<string, "good" | "warn" | "serious" | "critical"> = {
   accepted: "good", duplicate: "warn", partial: "warn", ignored: "warn", unresolved: "serious", rejected: "critical",
@@ -146,6 +147,14 @@ await fetch("${url}", { method: "POST", body, headers: {
           <Code>{`${url}?token=${secret}`}</Code>
           <p className="text-xs text-ink-2">Tools that can sign requests may use the signature headers below instead of the token.</p>
         </>)}
+        {con.kind === "call" && (<>
+          <p className="text-sm text-ink">In Retell, open your agent (or the account's webhook settings) and set the webhook URL to:</p>
+          <Code>{url}</Code>
+          <p className="text-xs text-ink-2">Retell signs every webhook with your Retell API key: put that key in <code>RETELL_API_KEY</code> in <code>backend/.env</code> and restart. A call is matched to the lead with the number you called (or that called you); pass <code>lead_id</code> or <code>lead_email</code> in the call's metadata to match it exactly. Calls with no matching lead wait on the Calls page.</p>
+          <p className="text-xs text-ink-2">Another phone system? Switch the provider to “Generic” and POST one call per request to <code className="text-xs">{`${url}?token=${secret}`}</code>:</p>
+          <Code>{`{"call_id":"abc-1","direction":"outbound","to":"+14155552671","started_at":"2026-10-15T14:00:00Z","duration_s":312,
+ "transcript":"Agent: Hi…\nCustomer: …","recording_url":"https://…/abc-1.mp3"}`}</Code>
+        </>)}
         {(con.kind === "webhook" || con.kind === "crm") && (<>
           <p className="text-sm text-ink">POST JSON to <code className="text-xs">{url}</code> with two headers: <code className="text-xs">X-LeadPilot-Timestamp</code> (unix seconds, within {tolerance / 60} minutes of now) and <code className="text-xs">X-LeadPilot-Signature: v1=</code> hex HMAC-SHA256 of <code className="text-xs">"{"{timestamp}.{raw body}"}"</code> keyed with the secret.</p>
           <Code>{signed}</Code>
@@ -163,6 +172,8 @@ function Manage({ con, meta, onSecret, onChanged }: { con: Connector; meta: Conn
   const [formKind, setFormKind] = useState(String(s.form_kind ?? "auto"));
   const [capture, setCapture] = useState(String(s.capture_method ?? "form_submit"));
   const [origins, setOrigins] = useState(((s.allowed_origins as string[]) ?? []).join(", "));
+  const [provider, setProvider] = useState(String(s.provider ?? "retell"));
+  const [processOn, setProcessOn] = useState(String(s.process_on ?? "auto"));
   const [error, setError] = useState<string | null>(null);
   const done = { onSuccess: () => { setError(null); onChanged(); }, onError: (e: unknown) => setError(errText(e)) };
   const save = useMutation({
@@ -171,6 +182,7 @@ function Manage({ con, meta, onSecret, onChanged }: { con: Connector; meta: Conn
       if (con.kind === "form") Object.assign(settings, { form_kind: formKind, capture_method: capture });
       if (con.kind === "crm") settings.capture_method = capture;
       if (con.kind === "tracker") settings.allowed_origins = origins;
+      if (con.kind === "call") Object.assign(settings, { provider, process_on: processOn });
       return api.patch<Connector>(`/api/connectors/${con.id}`, { name, source, settings });
     }, ...done,
   });
@@ -197,6 +209,20 @@ function Manage({ con, meta, onSecret, onChanged }: { con: Connector; meta: Conn
               {meta.capture_methods.map((m) => <option key={m} value={m}>{human(m)}</option>)}
             </select></label>
         )}
+        {con.kind === "call" && (<>
+          <label className="block"><span className="mb-1 block text-xs font-medium text-ink-2">Phone system</span>
+            <select aria-label="Phone system" value={provider} onChange={(e) => setProvider(e.target.value)} className={input}>
+              <option value="retell">Retell</option><option value="generic">Generic (LeadPilot call format)</option>
+            </select></label>
+          {provider === "retell" && (
+            <label className="block"><span className="mb-1 block text-xs font-medium text-ink-2">Take each call from</span>
+              <select aria-label="Take each call from" value={processOn} onChange={(e) => setProcessOn(e.target.value)} className={input}>
+                <option value="auto">Automatic: call_ended with Gemini, otherwise call_analyzed</option>
+                <option value="call_ended">call_ended (as soon as the call ends)</option>
+                <option value="call_analyzed">call_analyzed (after Retell's own analysis)</option>
+              </select></label>
+          )}
+        </>)}
         {con.kind === "tracker" && (
           <label className="block"><span className="mb-1 block text-xs font-medium text-ink-2">Allowed sites (blank = any)</span>
             <input value={origins} onChange={(e) => setOrigins(e.target.value)} placeholder="example.com, shop.example.com" className={input} /></label>

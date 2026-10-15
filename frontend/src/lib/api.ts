@@ -115,7 +115,7 @@ export type AuthConfig = { enabled: boolean; supabase_url: string | null; anon_k
 export type Profile = { user_id: string; email: string | null; name: string | null; role: Role; rep_id: string | null; team_rep_ids: string[] | null; created_at: string | null; updated_at: string | null; last_seen_at: string | null };
 export type ApiKey = { id: string; name: string; prefix: string; created_by: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null; secret?: string; note?: string };
 
-export type ConnectorKind = "webhook" | "form" | "crm" | "email" | "tracker";
+export type ConnectorKind = "webhook" | "form" | "crm" | "email" | "tracker" | "call";
 export type Connector = {
   id: string; kind: ConnectorKind; name: string; source: string | null; settings: Record<string, unknown>;
   created_by: string | null; created_at: string; last_received_at: string | null; received_count: number;
@@ -146,6 +146,18 @@ export type ConfigCurrent = { active: ConfigVersion; sections: ConfigSection[]; 
 export type ConfigVersionDetail = ConfigVersion & { sections: ConfigSection[]; changes: ConfigChange[]; changes_vs_active: ConfigChange[]; previous_id: number | null };
 export type ConfigCheck = { ok: boolean; events_checked: number; changes: ConfigChange[] };
 export type ConfigActivated = { version: ConfigVersion; replayed_events: number; seconds: number };
+export type CallAnalysis = {
+  summary: string; outcome: "connected" | "voicemail" | "no_answer"; result: string; sentiment: "positive" | "neutral" | "negative";
+  call_intent: string; meeting_booked: boolean; next_step: string; buying_signals: string[]; objections: string[]; competitors: string[];
+};
+export type Call = {
+  id: string; provider: string; provider_call_id: string; direction: "inbound" | "outbound"; status: "queued" | "analyzing" | "done" | "unmatched" | "failed";
+  lead_id: string | null; lead_name?: string | null; rep_id: string | null; duration_s: number | null; analysis: CallAnalysis | null; analyzed_by: string | null;
+  error: string | null; event_ids: string[]; started_at: string | null; ended_at: string | null; created_at: string | null;
+  has_recording: boolean; recording_stored: boolean; number: string | null; transcript?: string;
+};
+export type CallsStatus = { gemini: { configured: boolean; model: string }; recordings: { configured: boolean; bucket: string } };
+export type CallList = { items: Call[] } & CallsStatus;
 export type NoticeDelivery = { channel: string; target: string | null; status: "sent" | "failed" | "skipped"; detail: string | null; ts: string | null };
 export type Notice = {
   id: number; ts: string; rule: string; severity: "info" | "important" | "urgent"; audience: "rep" | "managers"; rep_id: string | null;

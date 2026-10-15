@@ -273,3 +273,19 @@ notification_reads = Table(
     Column("user_key", String, primary_key=True),
     Column("last_read_id", Integer), Column("read_ids", JSON),
 )
+
+calls = Table(
+    "calls", metadata,
+    # Phone calls as they arrived (source data, like raw_events): kept through replays, cleared by a demo reset.
+    # The analysis is also written into the call's call_logged event, so replays never need Gemini again.
+    Column("id", String, primary_key=True),           # <provider>:<provider call id>
+    Column("provider", String), Column("provider_call_id", String), Column("connector_id", String),
+    Column("lead_id", String, index=True), Column("lead_ref", JSON), Column("rep_id", String),
+    Column("direction", String), Column("from_number", String), Column("to_number", String),
+    Column("started_at", DateTime(timezone=True)), Column("ended_at", DateTime(timezone=True)),
+    Column("duration_s", Float), Column("status", String, index=True), Column("transcript", Text),
+    Column("recording_url", Text), Column("recording_path", String), Column("provider_analysis", JSON),
+    Column("disconnection_reason", String), Column("outcome_hint", String), Column("analysis", JSON),
+    Column("analyzed_by", String), Column("error", Text), Column("event_ids", JSON),
+    Column("created_at", DateTime(timezone=True), index=True), Column("updated_at", DateTime(timezone=True)),
+)

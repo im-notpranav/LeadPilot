@@ -214,6 +214,15 @@ class NotificationCenter:
                            facts + (f" Next: {act['action']}." if act else ""), link, lead=lead, owner=new)
             else:
                 self._make("lead_assigned", d, f"New lead for you: {who['name']}", facts, link, lead=lead, owner=new)
+        elif kind == "event.processed" and lead is not None and d.get("type") == "call_logged":
+            ev = rt.store.events.get(d.get("event_id") or "")
+            pl = (ev.payload if ev is not None else None) or {}
+            if pl.get("call_id") and pl.get("provider") != "manual":
+                from .calls.center import RESULT_LABEL
+                what = "meeting booked" if pl.get("meeting_booked") else RESULT_LABEL.get(pl.get("result"), "call")
+                self._make("call_analyzed", d, f"Call with {who['name']}: {what}",
+                           pl.get("summary") or f"{pl.get('outcome', 'call').replace('_', ' ').capitalize()}.",
+                           link, lead=lead, owner=lead.owner)
         elif kind == "event.processed" and lead is not None and d.get("actor") != "rep":
             typ = d.get("type")
             if typ == "email_replied":

@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import re
 import secrets
 import time
@@ -25,6 +26,7 @@ from urllib.parse import parse_qsl, urlparse
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
 
 from ..auth import Principal
+from ..calls.parse import CallParseError, parse_generic, parse_retell, retell_signature_ok
 from ..connectors import csv_import, signing
 from ..connectors.email_parse import email_event
 from ..connectors.fields import CAPTURE_METHODS, FORM_KINDS, flatten, lead_events, lead_from_fields, page_category
@@ -46,6 +48,8 @@ BLOCKED_TYPES = {"quality_assessed", "lead_enriched", "lead_merged", "time_tick"
                  "review_rejected", "quality_cleared"}
 BOTS = re.compile(r"bot|crawl|spider|slurp|headless|lighthouse|pingdom|monitor|preview|facebookexternalhit", re.I)
 VID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
+CALL_PROVIDERS = ("retell", "generic")
+PROCESS_ON = ("auto", "call_ended", "call_analyzed")
 ID_FIELDS = ("event_id", "submission_id", "submissionId", "response_id", "token", "hs_object_id", "objectId",
              "vid", "Id", "id", "uuid")
 
@@ -131,6 +135,10 @@ def _validate_settings(kind: str, settings: dict) -> dict:
         raise HTTPException(422, f"form_kind must be one of {', '.join(FORM_KINDS)}")
     if "capture_method" in s and s["capture_method"] not in CAPTURE_METHODS:
         raise HTTPException(422, f"capture_method must be one of {', '.join(CAPTURE_METHODS)}")
+    if "provider" in s and s["provider"] not in CALL_PROVIDERS:
+        raise HTTPException(422, f"provider must be one of {', '.join(CALL_PROVIDERS)}")
+    if "process_on" in s and s["process_on"] not in PROCESS_ON:
+        raise HTTPException(422, f"process_on must be one of {', '.join(PROCESS_ON)}")
     for flag in ("allow_token", "capture_forms", "use_record_source"):
         if flag in s:
             s[flag] = bool(s[flag])
@@ -310,6 +318,25 @@ def _record_events(con: dict, data, ip: str | None) -> tuple[list[dict], list[di
     return events, errors
 
 
+def _receive_call(con: dict, data) -> list[dict]:
+    """Hand a call to the call center (analysis and the event happen in the background)."""
+    s = con.get("settings") or {}
+    try:
+        if s.get("provider", "retell") == "retell":
+            event, call = parse_retell(data)
+            mode = s.get("process_on", "auto")
+            wanted = ("call_ended" if state.calls.gemini.configured else "call_analyzed") if mode == "auto" else mode
+            if event != wanted:
+                return [{"status": "ignored", "call_id": call["provider_call_id"],
+                         "reason": f"{event or 'this event'} is not used; calls are taken from {wanted}"}]
+        else:
+            call = parse_generic(data)
+    except CallParseError as exc:
+        raise HTTPException(422, str(exc)) from None
+    rec, new = state.calls.receive(call, con["id"])
+    return [{"status": "queued" if new else "duplicate", "call_id": rec["id"]}]
+
+
 @public.post("/hooks/{cid}")
 async def receive_hook(cid: str, request: Request):
     con = state.connectors.get(cid)
@@ -327,7 +354,13 @@ async def receive_hook(cid: str, request: Request):
     if len(raw) > MAX_HOOK_BYTES:
         refuse(413, "body larger than 1 MB")
     settings = con.get("settings") or {}
-    if request.headers.get("x-leadpilot-signature") or request.headers.get("x-leadpilot-timestamp"):
+    if con["kind"] == "call" and request.headers.get("x-retell-signature"):
+        key = os.environ.get("RETELL_API_KEY", "").strip()
+        if not key:
+            refuse(401, "set RETELL_API_KEY on the server to accept Retell's signed webhooks")
+        if not retell_signature_ok(key, raw, request.headers.get("x-retell-signature")):
+            refuse(401, "Retell signature does not match (check RETELL_API_KEY) or is more than 5 minutes old")
+    elif request.headers.get("x-leadpilot-signature") or request.headers.get("x-leadpilot-timestamp"):
         try:
             signing.verify(con["secret"], request.headers, raw, replay_guard)
         except signing.SignatureError as exc:
@@ -355,6 +388,13 @@ async def receive_hook(cid: str, request: Request):
             if not parsed["ok"]:
                 raise HTTPException(422, parsed["error"])
             events = [parsed["event"]]
+        elif con["kind"] == "call":
+            results = _receive_call(con, data)
+            status = "accepted" if any(r["status"] == "queued" for r in results) else (
+                "duplicate" if results and all(r["status"] == "duplicate" for r in results) else "ignored")
+            state.connectors.record(cid, status=status, http_status=200, results=results, sample=sample,
+                                    reason=next((r.get("reason") for r in results if r.get("reason")), None))
+            return {"status": status, "results": results}
         else:
             raise HTTPException(400, "tracker connectors receive data at /api/track/{site key}")
     except HTTPException as exc:

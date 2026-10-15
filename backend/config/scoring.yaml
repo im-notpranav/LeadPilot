@@ -64,6 +64,7 @@ intent:
   contact_sales:         {points: 12, half_life_days: 21, repeat_decay: 0.5}
   trial_signup:          {points: 12, half_life_days: 21, repeat_decay: 0.5}
   positive_reply_intent: {points: 6,  half_life_days: 14, repeat_decay: 0.8}
+  positive_call_intent:  {points: 6,  half_life_days: 14, repeat_decay: 0.8}   # a connected call whose analysis found buying intent
   proposal_viewed:       {points: 8,  half_life_days: 10, repeat_decay: 0.6}
   buying_committee:      {points: 5,  window_days: 14, min_other_leads: 2}
   intent_burst_bonus:    {points: 5,  window_hours: 72, min_signals: 3}

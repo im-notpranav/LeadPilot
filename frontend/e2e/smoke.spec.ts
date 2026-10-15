@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const API = "http://127.0.0.1:8010";
-const ROUTES = ["/queue", "/leads", "/pipeline", "/pipeline?view=leads", "/accounts", "/feed", "/analytics", "/quality", "/simulator", "/settings", "/notifications"];
+const ROUTES = ["/queue", "/leads", "/pipeline", "/pipeline?view=leads", "/accounts", "/feed", "/analytics", "/quality", "/simulator", "/settings", "/notifications", "/calls"];
 
 test.beforeAll(async ({ request }) => {
   // The demo backend generates history + a short warm-up before it serves data.

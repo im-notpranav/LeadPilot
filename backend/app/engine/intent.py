@@ -126,6 +126,8 @@ def active_intent_signals(intent_factors: dict, events: list[Event], now, cfg) -
             out.append(name)
     if "intent.positive_reply_intent" in intent_factors:
         out.append("positive_reply")
+    if "intent.positive_call_intent" in intent_factors:
+        out.append("positive_call")
     if "intent.buying_committee" in intent_factors:
         out.append("buying_committee")
     if "intent.intent_burst_bonus" in intent_factors:

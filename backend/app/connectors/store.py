@@ -18,15 +18,19 @@ from ..models import tables as T
 
 log = logging.getLogger("leadpilot.connectors")
 
-KINDS = ("webhook", "form", "crm", "email", "tracker")
+KINDS = ("webhook", "form", "crm", "email", "tracker", "call")
 DEFAULTS: dict[str, dict] = {
     "webhook": {"allow_token": False},
     "form": {"allow_token": True, "form_kind": "auto", "capture_method": "form_submit", "field_map": {}},
     "crm": {"allow_token": False, "capture_method": "form_submit", "field_map": {}, "use_record_source": True},
     "email": {"allow_token": True},
     "tracker": {"allowed_origins": [], "page_rules": [], "capture_forms": True},
+    # Phone calls: Retell's webhook (signed with RETELL_API_KEY) or LeadPilot's generic call format.
+    # process_on (Retell): auto = call_ended when Gemini is set up, otherwise call_analyzed (Retell's own summary).
+    "call": {"allow_token": True, "provider": "retell", "process_on": "auto"},
 }
-DEFAULT_SOURCE = {"webhook": None, "form": "website", "crm": "crm", "email": "email", "tracker": "website"}
+DEFAULT_SOURCE = {"webhook": None, "form": "website", "crm": "crm", "email": "email", "tracker": "website",
+                  "call": "call"}
 MAX_PENDING = 50               # anonymous page views kept per visitor until they identify themselves
 MAX_DELIVERIES = 1000
 

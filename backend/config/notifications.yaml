@@ -48,6 +48,11 @@ rules:
     to: [managers]
     channels: [in_app, email, slack]
     severity: urgent
+  call_analyzed:       # a call from the phone system (not one a rep logged) was summarised
+    enabled: true
+    to: [owner]
+    channels: [in_app]
+    severity: important
   stalled:             # a lead stalled with at least this risk
     enabled: true
     min_risk: 50

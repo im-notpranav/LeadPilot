@@ -17,6 +17,7 @@ import Connectors from "./pages/Connectors";
 import Import from "./pages/Import";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
+import Calls from "./pages/Calls";
 import { Loading } from "./components/ui";
 
 // The chart library is only used on these pages. Splitting them out keeps the first load (and the splash) fast;
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="connectors" element={guard("/connectors", <Connectors />)} />
         <Route path="access" element={guard("/access", <Access />)} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="calls" element={guard("/calls", <Calls />)} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

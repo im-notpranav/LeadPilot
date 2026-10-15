@@ -395,6 +395,7 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 | `LEADPILOT_ADMIN_EMAILS` | — | Comma-separated emails that are always admins |
 | `LEADPILOT_PERSIST` | `1` | Set to `0` to run fully in memory |
 | `LEADPILOT_WARMUP_DAYS` | `21` | Length of the simulated warm-up |
+| `LEADPILOT_SIM_SPEED` | `60` | Demo clock speed at start (1, 10, 60, 600). Use 1 for an always-on hosted demo |
 | `USE_LLM` | `false` | Optional LLM reply-classifier hook (core logic never depends on it) |
 | `RESEND_API_KEY` · `LEADPILOT_EMAIL_FROM` | — | Email notifications through Resend (sender on a verified domain) |
 | `SLACK_WEBHOOK_URL` | — | Slack notifications (one incoming webhook for the team channel) |

@@ -37,6 +37,7 @@ class Settings:
     supabase_anon_key: str | None
     jwt_secret: str | None    # legacy HS256 projects (and tests); new projects verify via the JWKS endpoint
     admin_emails: frozenset   # these users are always admins (bootstraps the first admin)
+    sim_speed: int | None = None  # demo clock speed at start (simulator.yaml default_speed when unset)
 
     @property
     def live(self) -> bool:
@@ -64,6 +65,7 @@ def get_settings() -> Settings:
     if mode not in MODES:
         raise ValueError(f"LEADPILOT_MODE must be one of {MODES}, got {mode!r}")
     warmup = os.environ.get("LEADPILOT_WARMUP_DAYS")
+    sim_speed = os.environ.get("LEADPILOT_SIM_SPEED")
     db_url = os.environ.get("LEADPILOT_DB_URL") or None
     supabase_url = _real(os.environ.get("SUPABASE_URL")) or supabase_url_from_db(db_url)
     jwt_secret = _real(os.environ.get("SUPABASE_JWT_SECRET"))
@@ -89,4 +91,5 @@ def get_settings() -> Settings:
         jwt_secret=jwt_secret,
         admin_emails=frozenset(e.strip().lower() for e in os.environ.get("LEADPILOT_ADMIN_EMAILS", "").split(",")
                                if e.strip()),
+        sim_speed=int(sim_speed) if sim_speed else None,
     )

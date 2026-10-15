@@ -107,7 +107,9 @@ async def sim_loop() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    overrides = {"simulator": {"warmup_days": settings.warmup_days}} if settings.warmup_days is not None else {}
+    sim = {k: v for k, v in (("warmup_days", settings.warmup_days), ("default_speed", settings.sim_speed))
+           if v is not None}
+    overrides = {"simulator": sim} if sim else {}
     db = Persistence(settings.db_url, schema=settings.db_schema) if settings.persist else NullPersistence()
     # The rules in force: the YAML files plus the active settings version (version 1 = the files as they are).
     state.config = ConfigStore(db, base_overrides=overrides)

@@ -1,0 +1,48 @@
+# Render Blueprint: the LeadPilot API (FastAPI) as one always-on instance. The dashboard is on Vercel
+# (frontend/vercel.json proxies /api here; the Live Feed WebSocket connects here directly).
+#
+# Why these settings (see DEPLOY.md):
+# - plan starter, not free: free instances sleep after 15 minutes, which stops the simulator and the SLA loops.
+# - The disk is there to keep exactly one copy running. Render turns off zero-downtime deploys for services with a
+#   disk, so a deploy stops the old copy before the new one starts (two copies would both write events).
+# - --workers 1: state lives in memory in one process.
+services:
+  - type: web
+    name: leadpilot-api
+    runtime: python
+    plan: starter
+    region: singapore            # closest Render region to the Supabase project (ap-south-1)
+    branch: main
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/health
+    disk:
+      name: leadpilot-var
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      # Seeded demo world: every start wipes this schema and simulates 21 days of leads (~4k events).
+      # Use a schema of its own, never one that a local copy or live mode writes to.
+      - key: LEADPILOT_MODE
+        value: demo
+      - key: LEADPILOT_DB_SCHEMA
+        value: demo_web
+      - key: LEADPILOT_PERSIST
+        value: "1"
+      - key: LEADPILOT_SIM_SPEED  # 1x: about a day of leads per real day, so memory stays flat
+        value: "1"
+      # Secrets: set in the Render dashboard (sync: false keeps them out of git).
+      - key: LEADPILOT_DB_URL      # Supabase session pooler URL (port 5432)
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: LEADPILOT_ADMIN_EMAILS
+        sync: false
+      - key: LEADPILOT_PUBLIC_URL  # the Vercel address, e.g. https://leadpilot.vercel.app
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

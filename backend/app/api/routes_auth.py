@@ -19,7 +19,9 @@ admin_router = APIRouter(prefix="/api/admin", dependencies=[Depends(admin)])
 @public.get("/health")
 async def health():
     rt = state.runtime
-    return {"ok": True, "status": rt.status if rt else "starting", "mode": ("live" if rt.live else "demo") if rt else None,
+    # ok: the process is up (platform health checks); ready: the world is built (demo reset / live rebuild done)
+    return {"ok": True, "ready": bool(rt and rt.status == "ready"), "status": rt.status if rt else "starting",
+            "mode": ("live" if rt.live else "demo") if rt else None,
             "auth": bool(state.settings and state.settings.auth), "db": rt.db.status() if rt else None}
 
 

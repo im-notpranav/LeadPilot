@@ -102,7 +102,7 @@ def live_client(tmp_path, monkeypatch):
 
 def test_live_api_refuses_simulator_controls(live_client):
     h = live_client.get("/api/health").json()
-    assert h["mode"] == "live" and h["status"] == "ready"
+    assert h["mode"] == "live" and h["status"] == "ready" and h["ready"] is True
     for path in ("/api/sim/start", "/api/sim/reset", "/api/sim/scenario/reviver"):
         assert live_client.post(path, json={}).status_code == 409
     r = live_client.post("/api/events", json=live_events(datetime.now(timezone.utc))).json()
@@ -119,6 +119,15 @@ def test_env_mode_is_validated(monkeypatch):
     monkeypatch.setenv("LEADPILOT_AUTH", "off")
     assert get_settings().live
     assert os.environ["LEADPILOT_MODE"] == "live"
+
+
+def test_env_sim_speed(monkeypatch):
+    from app.settings import get_settings
+    monkeypatch.setenv("LEADPILOT_MODE", "demo")
+    monkeypatch.delenv("LEADPILOT_SIM_SPEED", raising=False)
+    assert get_settings().sim_speed is None
+    monkeypatch.setenv("LEADPILOT_SIM_SPEED", "1")
+    assert get_settings().sim_speed == 1
 
 
 def test_restart_skips_projection_rewrite_unless_config_changed(tmp_path):

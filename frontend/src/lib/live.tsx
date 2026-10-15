@@ -10,7 +10,15 @@ type Live = { clock: Clock; connected: boolean; feed: FeedItem[]; toasts: Toast[
 
 const LiveCtx = createContext<Live>({ clock: { now: null, speed: 60, paused: true, status: "starting" }, connected: false, feed: [], toasts: [], dismiss: () => {}, eventsPerMin: 0, notify: () => {} });
 
-const DATA_KEYS = [["leads"], ["queue"], ["pipeline"], ["lead"], ["feed"], ["reps"], ["sim"]];
+// The backend's WebSocket origin. Same host by default; a split deploy (dashboard on Vercel, API elsewhere) sets
+// VITE_BACKEND_WS_URL at build time, because Vercel proxies /api but cannot proxy WebSockets.
+function wsBase(): string {
+  const configured = import.meta.env.VITE_BACKEND_WS_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+  return `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`;
+}
+
+const DATA_KEYS =[["leads"], ["queue"], ["pipeline"], ["lead"], ["feed"], ["reps"], ["sim"]];
 const QUALITY_KEYS = [["quality"]];
 
 export function LiveProvider({ children }: { children: ReactNode }) {
@@ -34,9 +42,8 @@ export function LiveProvider({ children }: { children: ReactNode }) {
     let stop = false;
     let retry: number | undefined;
     const connect = () => {
-      const proto = location.protocol === "https:" ? "wss" : "ws";
       const token = currentToken();          // read at every (re)connect, so refreshed sessions are picked up
-      ws = new WebSocket(`${proto}://${location.host}/ws${token ? `?token=${encodeURIComponent(token)}` : ""}`);
+      ws = new WebSocket(`${wsBase()}/ws${token ? `?token=${encodeURIComponent(token)}` : ""}`);
       ws.onopen = () => setConnected(true);
       ws.onclose = (e) => { setConnected(false); if (!stop) retry = window.setTimeout(connect, e.code === 4401 ? 5000 : 1500); };
       ws.onmessage = (ev) => {

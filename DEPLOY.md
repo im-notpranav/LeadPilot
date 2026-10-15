@@ -27,10 +27,10 @@ one simulated day per real day. Anyone with access can reset it from the Simulat
    `LEADPILOT_DB_URL` (Supabase session pooler, port 5432), `SUPABASE_ANON_KEY`, `LEADPILOT_ADMIN_EMAILS`,
    `LEADPILOT_PUBLIC_URL` (the Vercel address; fill in after step 3 if you don't know it yet), and optionally
    `GEMINI_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. Wait for `/api/health` to show `"ready": true`.
-   If Render gives the service an address other than `leadpilot-api.onrender.com`, change it in
+   If Render gives the service an address other than `leadpilot-pkb2.onrender.com`, change it in
    `frontend/vercel.json`.
 3. **Vercel:** Add New → Project → import the repo. Set **Root Directory** to `frontend` (Vite is detected). Add the
-   environment variable `VITE_BACKEND_WS_URL=wss://leadpilot-api.onrender.com`, then deploy.
+   environment variable `VITE_BACKEND_WS_URL=wss://leadpilot-pkb2.onrender.com`, then deploy.
 4. **Supabase → Authentication → URL Configuration:** set the Site URL to the Vercel address and add it to the
    Redirect URLs, so sign-up and password-reset emails link back to it.
 5. **Check:** open the Vercel address and sign in with the admin email. The Live Feed should show as connected, the

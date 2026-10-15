@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 from .engine.assignment import smoothed_win_rate
 from .engine.enrich import segment_for
+from .engine.quotes import display_status
 from .engine.types import Event, iso
 
 
@@ -57,6 +58,7 @@ class LeadRecord:
 class Store:
     def __init__(self, cfg):
         self.cfg = cfg
+        self.clock = None                  # set by the runtime; quote expiry is judged against it
         self.historical: list[dict] = []
         self.raw_log: list[dict] = []
         self.reset_projections()
@@ -97,6 +99,8 @@ class Store:
         self.opp_evals: dict[str, dict] = {}                   # opp_id -> evaluation at the last refresh
         self.account_opps: dict[str, list] = defaultdict(list)  # account key -> opp ids, in opening order
         self.lead_account: dict[str, str] = {}                 # lead_id -> account key used at the last refresh
+        self.quote_rows: dict[str, dict] = {}                  # quote_id -> projection row at the last refresh
+        self.quote_tokens: dict[str, tuple] = {}               # buyer link token -> (opp_id, quote_id)
         self.load_history(self.historical)
 
     # ---------------------------------------------------------------- ids / history
@@ -259,6 +263,7 @@ class Store:
             "is_stalled": bool(ev and ev["stall"]["is_stalled"]), "stall": ev.get("stall"),
             "close_date": o.close_date, "lost_reason": o.lost_reason, "last_activity_at": iso(o.last_activity_at),
             "committee_covered": ev["committee"]["covered"] if ev else [],
+            "quote": self._latest_quote(o),
         }
         if detail:
             people = []
@@ -276,7 +281,46 @@ class Store:
                 "transitions": [{**t, "ts": iso(t["ts"])} for t in o.transitions],
                 "open_rule": o.open_rule, "opened_event_id": o.opened_event_id, "events": len(o.event_ids),
                 "created_by": o.created_by,
+                "quotes": [self.quote_view(o, q) for q in reversed(list(o.quotes.values()))],
             })
+        return view
+
+    # ---------------------------------------------------------------- quotes
+    def today(self) -> str | None:
+        return self.clock.now().date().isoformat() if self.clock is not None else None
+
+    def _latest_quote(self, o) -> dict | None:
+        """The newest quote that still counts (for deal cards): not voided or superseded."""
+        q = next((q for q in reversed(list(o.quotes.values())) if q.status not in ("void", "superseded")), None)
+        return {"quote_id": q.quote_id, "status": display_status(q, self.today()), "total": q.totals.get("total")} if q else None
+
+    def quote_view(self, o, q, buyer: bool = False) -> dict:
+        """One quote. buyer=True is what the buyer's link shows: no internal fields."""
+        lead = self.leads.get(q.lead_id)
+        lp = lead.profile if lead is not None else None
+        view = {
+            "quote_id": q.quote_id, "title": q.title, "status": display_status(q, self.today()),
+            "currency": self.cfg.quotes.currency, "valid_until": q.valid_until, "lines": q.lines,
+            "discount_pct": q.discount_pct, "totals": q.totals, "notes": q.notes, "terms": q.terms,
+            "created_at": iso(q.created_at), "sent_at": iso(q.sent_at), "accepted_at": iso(q.accepted_at),
+            "declined_at": iso(q.declined_at), "decline_reason": q.decline_reason,
+            "accepted_by": q.accepted_by, "deal_name": o.name, "company": lp.company if lp else None,
+            "recipient": {"lead_id": q.lead_id, "name": lp.name if lp else None, "title": lp.title if lp else None,
+                          "email": lp.email if lp else None},
+        }
+        if buyer:
+            view["recipient"].pop("lead_id")
+            return view
+        view.update({
+            "opp_id": o.opp_id, "rev": q.rev, "base_status": q.status, "created_by": q.created_by,
+            "updated_at": iso(q.updated_at), "sent_by": q.sent_by, "viewed_at": iso(q.viewed_at),
+            "last_viewed_at": iso(q.last_viewed_at), "views": q.views, "needs_approval": q.needs_approval,
+            "approved": q.approved, "approved_by": q.approved_by if q.approved else None,
+            "approved_at": iso(q.approved_at) if q.approved else None, "ready": q.ready,
+            "max_discount_pct": self.cfg.quotes.approval.max_discount_pct,
+            "voided_at": iso(q.voided_at), "void_reason": q.void_reason, "supersedes": q.supersedes,
+            "superseded_by": q.superseded_by, "link": f"/q/{q.token}" if q.token else None,
+        })
         return view
 
     def percentile(self, values: list[float], pct: float) -> float:

@@ -156,7 +156,9 @@ def test_admin_rules(client, roles):
 
 def test_every_private_route_rejects_anonymous_and_pending(client, roles):
     public = {"/api/health", "/api/auth/config",
-              "/api/hooks/{cid}", "/api/track/{key}"}        # connectors: authenticated by their own secret
+              "/api/hooks/{cid}", "/api/track/{key}",        # connectors: authenticated by their own secret
+              "/api/public/quotes/{token}", "/api/public/quotes/{token}/accept",   # the buyer's quote link: the
+              "/api/public/quotes/{token}/decline"}                                # token is the secret
     checked = 0
     for route_path, ops in client.get("/openapi.json").json()["paths"].items():   # every HTTP endpoint
         if route_path in public:

@@ -41,12 +41,14 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
+const QUOTE_WORD: Record<string, string> = { draft: "drafted", needs_approval: "awaiting approval", sent: "sent", expired: "expired", declined: "declined" };
+
 export function DealCard({ d }: { d: Opportunity }) {
   const open = d.status === "open";
   return (
     <Link to={to.deal(d.opp_id)} className={`block rounded-xl border bg-surface p-3 text-sm shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-card ${d.is_stalled ? "border-[var(--c-critical)]" : "border-line hover:border-brand/40"}`}>
       <div className="truncate font-medium text-ink">{d.name}</div>
-      <div className="truncate text-xs text-ink-3">{KIND_LABEL[d.kind]} · {d.contacts} contact{d.contacts === 1 ? "" : "s"}</div>
+      <div className="truncate text-xs text-ink-3">{KIND_LABEL[d.kind]} · {d.contacts} contact{d.contacts === 1 ? "" : "s"}{open && d.quote ? ` · quote ${QUOTE_WORD[d.quote.status] ?? human(d.quote.status)}` : ""}</div>
       <div className="mt-2 flex items-center justify-between gap-2 text-xs tabular text-ink-2">
         <span>{open ? `${money(d.expected_value)} · ${pct(d.close_prob)}` : money(d.acv)}</span>
         <Committee covered={d.committee_covered} />

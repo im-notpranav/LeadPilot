@@ -12,9 +12,9 @@ import yaml
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 CONFIG_DIR = BACKEND_DIR / "config"
 DATA_DIR = BACKEND_DIR / "data"
-CONFIG_FILES = ("scoring", "pipeline", "assignment", "quality", "nba", "simulator")
+CONFIG_FILES = ("scoring", "pipeline", "assignment", "quality", "nba", "quotes", "simulator")
 # What the settings console may change. The simulator only drives demo mode, so it stays file-only.
-EDITABLE_SECTIONS = ("scoring", "pipeline", "assignment", "quality", "nba")
+EDITABLE_SECTIONS = ("scoring", "pipeline", "assignment", "quality", "nba", "quotes")
 
 
 class Cfg(dict):

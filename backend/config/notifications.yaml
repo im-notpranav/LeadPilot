@@ -69,6 +69,26 @@ rules:
     to: [owner, managers]
     channels: [in_app]
     severity: info
+  quote_approval:      # a quote's discount is above the limit, so a manager has to approve it before it is sent
+    enabled: true
+    to: [managers]
+    channels: [in_app, email]
+    severity: important
+  quote_approved:      # a manager approved the quote's discount: it can be sent now
+    enabled: true
+    to: [owner]
+    channels: [in_app]
+    severity: info
+  quote_viewed:        # the buyer opened the quote for the first time
+    enabled: true
+    to: [owner]
+    channels: [in_app]
+    severity: important
+  quote_declined:      # the buyer declined the quote (the deal stays open)
+    enabled: true
+    to: [owner, managers]
+    channels: [in_app, email]
+    severity: important
   review_needed:       # a suspicious lead waits for a quality review
     enabled: true
     to: [managers]

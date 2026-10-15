@@ -32,6 +32,7 @@ class Runtime:
         self.db = persistence or NullPersistence()
         self.clock = WallClock() if live else SimClock(sc.start_time, speed=sc.default_speed, paused=True)
         self.store = Store(cfg)
+        self.store.clock = self.clock
         self.processor = Processor(cfg, self.store, self.clock, self.db)
         self.scheduler = Scheduler()
         self.sim = Simulator(cfg, self.store, self.scheduler)

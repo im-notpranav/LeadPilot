@@ -37,6 +37,7 @@ EVENT_TYPES = {
     # manual / system extensions
     "manual_assign", "quality_cleared", "merge_approved", "review_rejected", "sla_check", "lead_refresh",
     "opportunity_created", "opportunity_updated",
+    "quote_created", "quote_revised", "quote_approved", "quote_declined", "quote_voided",
     # derived (written by the processor)
     "quality_assessed", "lead_enriched", "lead_merged",
 }
@@ -667,6 +668,9 @@ class Processor:
                 ev = store.opp_evals.pop(oid, None) or {}
                 row = dict(ev.get("row") or {"opp_id": oid, "account_key": key, "name": gone.name})
                 self.db.upsert("opportunities", {**row, "status": "void"})
+                for qid in gone.quotes:
+                    if (qrow := store.quote_rows.pop(qid, None)) is not None:
+                        self.db.upsert("quotes", {**qrow, "status": "void"})
                 self._emit("opportunity.removed", {"opp_id": oid})
         store.account_opps[key] = ids
         for lead in contacts:
@@ -675,6 +679,42 @@ class Processor:
             prev = store.opps.get(o.opp_id)
             store.opps[o.opp_id] = o
             self._evaluate_deal(o, now, prev.stage if prev else None)
+            self._sync_quotes(o)
+
+    def _sync_quotes(self, o) -> None:
+        """Write the deal's quotes that changed, keep the buyer-link index, and report status changes."""
+        store = self.store
+        primary = store.leads.get(o.primary_lead_id)
+        owner = primary.owner if primary else None
+        for q in o.quotes.values():
+            if q.token:
+                store.quote_tokens[q.token] = (o.opp_id, q.quote_id)
+            waiting = q.status == "draft" and q.needs_approval and not q.approved
+            row = {"quote_id": q.quote_id, "opp_id": o.opp_id, "lead_id": q.lead_id,
+                   "account_id": None if o.account_key.startswith("lead:") else o.account_key, "title": q.title,
+                   "status": q.status, "rev": q.rev, "currency": self.cfg.quotes.currency, "lines": q.lines,
+                   "discount_pct": q.discount_pct, "total": q.totals.get("total"),
+                   "recurring_total": q.totals.get("recurring"), "one_time_total": q.totals.get("one_time"),
+                   "list_total": q.totals.get("list_total"),
+                   "effective_discount_pct": q.totals.get("effective_discount_pct"),
+                   "needs_approval": q.needs_approval, "approved_by": q.approved_by if q.approved else None,
+                   "valid_until": q.valid_until, "created_by": q.created_by, "created_at": q.created_at,
+                   "sent_at": q.sent_at, "viewed_at": q.viewed_at, "views": q.views, "accepted_at": q.accepted_at,
+                   "declined_at": q.declined_at, "decline_reason": q.decline_reason, "updated_at": q.updated_at}
+            old = store.quote_rows.get(q.quote_id)
+            if row == old:
+                continue
+            store.quote_rows[q.quote_id] = row
+            self.db.upsert("quotes", row)
+            was_waiting = bool(old and old["status"] == "draft" and old["needs_approval"] and not old["approved_by"])
+            self._emit("quote.changed", {"quote_id": q.quote_id, "opp_id": o.opp_id, "deal_name": o.name,
+                                         "lead_id": q.lead_id, "title": q.title, "status": q.status,
+                                         "from": old["status"] if old else None, "total": row["total"],
+                                         "discount_pct": row["effective_discount_pct"], "waiting_approval": waiting,
+                                         "was_waiting": was_waiting, "views": q.views,
+                                         "first_view": q.views > 0 and not (old and old["views"]),
+                                         "decline_reason": q.decline_reason, "created_by": q.created_by,
+                                         "owner_rep_id": owner})
 
     def _evaluate_deal(self, o, now: datetime, prev_stage: str | None) -> None:
         store = self.store

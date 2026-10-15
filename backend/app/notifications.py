@@ -246,6 +246,8 @@ class NotificationCenter:
                        f"Expected value ${d.get('expected_value') or 0:,.0f}." if won else f"Was in {d['from'].replace('_', ' ')}.",
                        f"/deals/{d['opp_id']}", opp_id=d["opp_id"], owner=d.get("owner_rep_id"), scope=d.get("owner_rep_id"),
                        lead=lead)
+        elif kind == "quote.changed":
+            self._route_quote(d, lead, who)
         elif kind == "lead.flagged" and d.get("status") == "suspicious" and lead is not None:
             self._make("review_needed", d, f"Review {who['name']}: looks suspicious",
                        f"Fake-lead score {d.get('fake_score', 0):.0f} from {d.get('source') or 'an unknown source'}.",
@@ -254,6 +256,26 @@ class NotificationCenter:
             reasons = d.get("reasons") or []
             self._make("source_flagged", d, f"Source flagged: {d.get('source_id')}",
                        reasons[0] if reasons else "It looks like it is sending junk.", "/quality#sources")
+
+    def _route_quote(self, d: dict, lead, who: dict) -> None:
+        link = f"/deals/{d['opp_id']}#quotes"
+        owner = d.get("owner_rep_id")
+        what = f"{d.get('title')} ({d.get('deal_name')}), ${d.get('total') or 0:,.0f}"
+        if d["waiting_approval"] and not d["was_waiting"]:
+            self._make("quote_approval", d, f"Approve a {d.get('discount_pct') or 0:.0f}% discount",
+                       f"{what}. Drafted by {d.get('created_by') or 'a rep'}.", link, lead=lead, scope=owner,
+                       opp_id=d["opp_id"])
+        elif d["was_waiting"] and not d["waiting_approval"] and d["status"] == "draft":
+            self._make("quote_approved", d, f"Quote approved: {d.get('title')}", f"{what}. It can be sent now.",
+                       link, lead=lead, owner=owner, scope=owner, opp_id=d["opp_id"])
+        if d.get("first_view") and d["status"] == "sent":
+            self._make("quote_viewed", d, f"{who['name']} opened the quote", what + ".", link, lead=lead,
+                       owner=owner, scope=owner, opp_id=d["opp_id"])
+        if d["status"] == "declined" and d.get("from") == "sent":
+            self._make("quote_declined", d, f"Quote declined: {d.get('title')}",
+                       f"{who['name']} declined {what}." + (f" Reason: {d['decline_reason']}" if d.get("decline_reason")
+                                                            else ""), link, lead=lead, owner=owner, scope=owner,
+                       opp_id=d["opp_id"])
 
     def _make(self, rule_name: str, d: dict, title: str, body: str, link: str | None, *, lead=None,
               opp_id: str | None = None, owner: str | None = None, previous: str | None = None,

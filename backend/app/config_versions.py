@@ -25,7 +25,7 @@ from .models import tables as T
 log = logging.getLogger("leadpilot.config")
 
 SECTION_LABELS = {"scoring": "Scoring", "pipeline": "Pipeline and deals", "assignment": "Assignment",
-                  "quality": "Quality and duplicates", "nba": "Next best actions"}
+                  "quality": "Quality and duplicates", "nba": "Next best actions", "quotes": "Quotes"}
 DRY_RUN_EVENTS = 400
 _SAME = object()
 

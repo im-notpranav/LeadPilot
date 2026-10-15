@@ -7,6 +7,7 @@ import { useLive } from "../lib/live";
 import { ago, dateTime, day, human, money, pct, signed } from "../lib/format";
 import { to } from "../lib/links";
 import { DEAL_STAGES, DealStage, Field, KIND_LABEL, ROLE_LABEL, errText, inputCls } from "../components/deals";
+import { DealQuotes } from "../components/quotes";
 import { Icon } from "../components/icons";
 import { Button, Card, Chip, Empty, GradePill, Loading, StageBadge, StallFlag, Stat } from "../components/ui";
 
@@ -51,7 +52,7 @@ export default function Deal() {
         </div>
         <StagePath d={d} />
         <div className="mt-4 grid grid-cols-2 gap-4 border-t border-line pt-4 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat label="Value" value={money(d.acv)} sub={d.amount ? "set on the deal" : "predicted ACV"} />
+          <Stat label="Value" value={money(d.acv)} sub={d.amount ? (d.quote && ["sent", "accepted"].includes(d.quote.status) ? `from quote ${d.quote.quote_id}` : "set on the deal") : "predicted ACV"} />
           <Stat label="Chance to win" value={open ? pct(d.close_prob, 1) : d.status === "won" ? "Won" : "Lost"} sub={open ? "from fit, intent and stage" : day(d.closed_at)} />
           <Stat label="Expected value" value={open ? money(d.expected_value) : "-"} sub="value × chance" />
           <Stat label="In this stage" value={open ? `${d.days_in_stage.toFixed(1)}d` : "-"} sub={d.stall?.sla_days ? `stage time limit ${d.stall.sla_days}d` : human(d.stage)} />
@@ -62,6 +63,7 @@ export default function Deal() {
 
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="min-w-0 space-y-4 xl:col-span-2">
+          <DealQuotes d={d} />
           <History d={d} />
           <Contacts d={d} />
         </div>

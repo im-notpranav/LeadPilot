@@ -187,7 +187,7 @@ def sections(c, change) -> dict[str, str]:
 def test_settings_are_visible_to_managers_and_changeable_by_admins_only(client):
     cur = client.get("/api/config", headers=h("boss")).json()
     assert cur["active"]["id"] == 1 and cur["engine_version"] == 1 and cur["can_edit"] is True
-    assert [s["name"] for s in cur["sections"]] == ["scoring", "pipeline", "assignment", "quality", "nba"]
+    assert [s["name"] for s in cur["sections"]] == ["scoring", "pipeline", "assignment", "quality", "nba", "quotes"]
     assert "#" in cur["sections"][0]["file"]                       # the documented YAML file, comments included
     assert client.get("/api/config", headers=h("max")).json()["can_edit"] is False
     assert client.get("/api/config", headers=h("rita")).status_code == 403

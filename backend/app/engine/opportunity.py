@@ -11,7 +11,8 @@ events in timestamp order, like the lead pipeline, so a replay or out-of-order a
   O7  won · O8 lost · OM moved by hand (opportunity_updated with a stage)
 
 An event carrying payload.opportunity_id goes to that deal; any other event goes to the account's most recently
-opened deal that is still open.
+opened deal that is still open. Quote events (engine/quotes.py) always name their deal; a deal's quotes are folded
+along with it.
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from datetime import datetime
 from .intent import has_negotiation_terms, reply_class
 from .metrics import is_inbound
 from .prediction import close_probability, predict_acv
+from .quotes import QUOTE_TYPES, apply_quote_event
 from .types import Event, LeadContext, Profile, ScoreResult, age_days
 
 FORWARD = ("qualified", "meeting", "proposal", "negotiation", "won")
@@ -52,6 +54,7 @@ class Opportunity:
     last_inbound_at: datetime | None = None
     proposal_sent_at: datetime | None = None
     created_by: str | None = None
+    quotes: dict = field(default_factory=dict)      # quote_id -> engine.quotes.Quote, in creation order
 
     @property
     def status(self) -> str:
@@ -104,15 +107,19 @@ def _amount(value) -> float | None:
     return v if v > 0 and math.isfinite(v) else None
 
 
-def _route(o: Opportunity, e: Event, cfg) -> None:
-    pl = e.payload or {}
-    t = e.type
+def _touch(o: Opportunity, e: Event, cfg) -> None:
     if e.lead_id and e.lead_id not in o.contact_ids:
         o.contact_ids.append(e.lead_id)
     o.event_ids.append(e.event_id)
     o.last_activity_at = e.ts
     if is_inbound(e, cfg):
         o.last_inbound_at = e.ts
+
+
+def _route(o: Opportunity, e: Event, cfg) -> None:
+    pl = e.payload or {}
+    t = e.type
+    _touch(o, e, cfg)
     if t in ("proposal_sent", "contract_sent", "deal_won", *EXPLICIT_TYPES) and _amount(pl.get("amount")):
         o.amount = _amount(pl.get("amount"))
     if t in EXPLICIT_TYPES:
@@ -165,6 +172,12 @@ def fold_opportunities(account_key: str, events: list[Event], eligible: set, com
             _route(o, e, cfg)
             continue
         target = by_id.get(str(pl["opportunity_id"])) if pl.get("opportunity_id") else None
+        if pl.get("quote_id") and target is not None:
+            apply_quote_event(target.quotes, target.opp_id, e, cfg)
+        if e.type in QUOTE_TYPES:                      # quote bookkeeping: activity on the deal, nothing more
+            if target is not None and target.status == "open":
+                _touch(target, e, cfg)
+            continue
         if target is None:
             target = next((o for o in reversed(opps) if o.status == "open"), None)
         elif target.status != "open" and e.type != "opportunity_updated":

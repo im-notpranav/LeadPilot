@@ -1,0 +1,26 @@
+# Quotes: what a rep can put on a quote for a deal, and when a manager has to approve it first.
+#
+# A quote's lines keep their own prices, so changing the catalog never changes a quote that already exists.
+# Approval is part of the rules (it decides whether a quote may be sent), so changing it re-runs the events.
+
+currency: USD
+valid_days: 30              # a new quote is valid for this many days unless the rep picks a date
+max_lines: 50
+approval:
+  max_discount_pct: 15      # a quote whose total is discounted by more than this needs a manager's approval
+seller_name: LeadPilot      # shown at the top of the quote the buyer opens
+terms: >-
+  Prices in US dollars, excluding taxes. Annual items are billed yearly in advance; one-time items are billed
+  on signature. This quote is valid until the date shown.
+catalog:
+# billing: recurring (priced per year) or one_time. unit: what the quantity counts.
+  - {sku: LP-CORE, name: LeadPilot Core, description: "Scoring, routing and the deal board", unit: seat, price: 600,
+     billing: recurring}
+  - {sku: LP-PRO, name: LeadPilot Pro, description: "Core plus call intelligence and analytics", unit: seat,
+     price: 1200, billing: recurring}
+  - {sku: LP-PLATFORM, name: Enterprise platform, description: "SSO, audit log, sandbox and a 99.9% uptime SLA",
+     unit: plan, price: 15000, billing: recurring}
+  - {sku: LP-SUPPORT, name: Premium support, description: "Named support engineer, 4-hour response", unit: plan,
+     price: 4000, billing: recurring}
+  - {sku: LP-ONBOARD, name: Onboarding and setup, description: "Data import, connector setup and team training",
+     unit: package, price: 5000, billing: one_time}

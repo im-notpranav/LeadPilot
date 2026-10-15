@@ -1,12 +1,12 @@
 # LeadPilot upgrade: progress
 
-Last updated: 14 Oct 2026
+Last updated: 15 Oct 2026
 
 The upgrade turns LeadPilot from a demo into a real product: Supabase for the database and login, Gemini for AI
 features, and ideas borrowed from Fizzy (https://github.com/KenshinCommits/Fizzy). It has 12 phases.
 
 **Where the code is:** `main` contains Phases 0–5 (first part) and the dashboard redesign. The finishing steps
-of Phase 5 and Phases 6–8 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
+of Phase 5 and Phases 6–9 are on the branch `claude/epic-bell-nq6hx0`, ready to merge into `main`. The phase branches
 (`phase-0-foundations` … `phase-5-config`) are kept on GitHub for reference; `phase-5-config` is the same as `main`.
 Start new work from `main`.
 
@@ -23,13 +23,13 @@ Start new work from `main`.
 | 6 | What-if testing: replay history against a draft config | ✅ Done | 5e948b6 |
 | 7 | Notifications: in-app, email, Slack, SMS | ✅ Done | 8afd02e |
 | 8 | Call intelligence with Gemini (summaries, outcomes) | 🟡 Built and tested with a mocked Gemini; needs a real-key check | see branch `claude/epic-bell-nq6hx0` |
-| 9 | Quotes | ⬜ To do | |
+| 9 | Quotes on deals, with approval and a buyer link | ✅ Done | see branch `claude/epic-bell-nq6hx0` |
 | 10 | Playbooks and recovery sequences | ⬜ To do | |
 | 11 | Agent context API (and the AI assistant idea, below) | ⬜ To do | |
 | 12 | Hardening, faster restarts, docs | ⬜ To do | |
 
-**Tests right now:** 254 backend tests pass (`make test`). 17 browser tests pass (`make e2e`). The 5 Postgres
-tests (`make test-pg`) pass with the Phase 8 migration. They were run against a local Postgres 16; worth
+**Tests right now:** 264 backend tests pass (`make test`). 18 browser tests pass (`make e2e`). The 5 Postgres
+tests (`make test-pg`) pass with the Phase 9 migration. They were run against a local Postgres 16; worth
 one run against Supabase too.
 
 **Dashboard redesign:** the `claude/charming-noether-8ziqwn` branch (brand, sign-in layout, Leads explorer,
@@ -243,10 +243,38 @@ real Supabase sign-in, roles and page guards from Phase 2 are kept. Merge future
 - **Not done (ideas for later):** transcribing audio-only recordings (Gemini can take audio), a call-coaching view
   across reps, editing an analysis by hand.
 
+### Phase 9: Quotes
+- **What it does:** a **Quotes** card on the deal page. Reps build a quote from the catalog or their own lines
+  (quantity, unit price, line discount, per year or one-time), a discount on the whole quote, the contact it is for and
+  a valid-until date. A discount above 15% off list needs a manager's approval first. **Mark as sent** moves the deal
+  to proposal and sets its amount to the quote's total; **New version** replaces a sent quote; **Withdraw** voids one.
+- **The buyer's link:** `/q/<token>` opens the quote without signing in (works on a phone; print or save as PDF).
+  The buyer accepts (typing their name) or declines. Opening it is a `proposal_viewed` (at most every 6 hours; the
+  rep's "Open as the buyer" preview does not count). Accepting wins the deal at the quote's total.
+- **Event-sourced:** new event types `quote_created`, `quote_revised`, `quote_approved`, `quote_declined`,
+  `quote_voided`; sending is `proposal_sent` and accepting is `deal_won`, each with `payload.quote_id` and
+  `payload.opportunity_id`, so the lead and deal pipelines move the way they already did. Quotes are folded with
+  their deal (`engine/quotes.py`, called from `fold_opportunities`), so replays and settings activations rebuild
+  them exactly. Events that do not fit a quote's state (e.g. accepting a draft) are ignored by the fold.
+- **Config:** `backend/config/quotes.yaml` (catalog, approval limit, validity, terms, seller name); a new **Quotes**
+  section in the Settings console. Changing the approval limit re-runs the events like any rule change.
+- **Notifications:** `quote_approval` (managers), `quote_approved` and `quote_viewed` (owner), `quote_declined`
+  (owner and managers) in `notifications.yaml`.
+- **Email:** **Send by email** uses the notification email channel (Resend) and needs `LEADPILOT_PUBLIC_URL`. Like
+  notifications, it is off in demo mode unless `LEADPILOT_NOTIFY_IN_DEMO=1`. Not yet tried with a real Resend key.
+- **Data:** `quotes` table (a projection, rebuilt on replay), migration `20261018000000_quotes.sql`.
+- **Code:** `backend/app/engine/quotes.py`, `backend/app/api/routes_quotes.py`, `_sync_quotes` in `processor.py`,
+  `quote_view` in `store.py`, `backend/tests/test_quotes.py`, `frontend/src/components/quotes.tsx`,
+  `frontend/src/pages/PublicQuote.tsx` (rendered straight from `main.tsx`, outside sign-in), `frontend/e2e/quotes.spec.ts`.
+- **Not done (ideas for later):** taxes and multiple currencies; a real PDF file and e-signature; monthly billing
+  and multi-year terms; a product catalog editor beyond the YAML; an approval queue page (the API has
+  `GET /api/quotes?status=needs_approval`).
+- **Known gap:** any GET of the buyer's link counts as a view, so an email scanner that pre-opens links can
+  trigger "opened the quote" early.
+
 ## What should be done next
 
 ### Next phases
-- **Phase 9: Quotes.** Quotes attached to deals.
 - **Phase 10: Playbooks.** Follow-up sequences and recovery plays for stalled deals.
 - **Phase 11: Agent context.** One API that gives an AI agent everything about a lead or deal.
 - **Phase 12: Hardening.**
@@ -287,6 +315,8 @@ A chat panel where a rep asks "what should I do next with this lead, and why?":
 - [ ] Add `SUPABASE_ANON_KEY` and `LEADPILOT_ADMIN_EMAILS` (your email) to `backend/.env`. Real sign-in needs both.
 - [ ] In Supabase: Authentication → URL Configuration → set **Site URL** to `http://localhost:5173`.
 - [ ] Add `GEMINI_API_KEY` to `backend/.env` and run the Phase 8 checks above (Gemini, Retell, recordings).
+- [ ] Optional: to email quotes to buyers, set up Resend and `LEADPILOT_PUBLIC_URL` (same keys as notifications) and
+      try **Send by email** on a quote in live mode.
 - [ ] To get notifications outside the app, add the channel keys listed in `backend/.env.example` (Resend, Slack,
       Twilio) and `LEADPILOT_PUBLIC_URL`, restart, then use **Send test** on the Notifications page.
 

@@ -203,6 +203,22 @@ opportunities = Table(
     Column("committee", JSON), Column("transitions", JSON), Column("last_activity_at", DateTime(timezone=True)),
 )
 
+quotes = Table(
+    "quotes", metadata,
+    # Quotes on deals: a projection rebuilt from the deal's quote events (engine/quotes.py). status: draft | sent |
+    # accepted | declined | void | superseded. Lines keep their own prices.
+    Column("quote_id", String, primary_key=True),
+    Column("opp_id", String, index=True), Column("lead_id", String, index=True), Column("account_id", String),
+    Column("title", String), Column("status", String, index=True), Column("rev", Integer), Column("currency", String),
+    Column("lines", JSON), Column("discount_pct", Float), Column("total", Float), Column("recurring_total", Float),
+    Column("one_time_total", Float), Column("list_total", Float), Column("effective_discount_pct", Float),
+    Column("needs_approval", Boolean), Column("approved_by", String), Column("valid_until", String),
+    Column("created_by", String), Column("created_at", DateTime(timezone=True)),
+    Column("sent_at", DateTime(timezone=True)), Column("viewed_at", DateTime(timezone=True)), Column("views", Integer),
+    Column("accepted_at", DateTime(timezone=True)), Column("declined_at", DateTime(timezone=True)),
+    Column("decline_reason", Text), Column("updated_at", DateTime(timezone=True)),
+)
+
 connectors = Table(
     "connectors", metadata,
     # kind: webhook (LeadPilot events, HMAC) | form | crm | email | tracker (website snippet, public site key).

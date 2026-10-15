@@ -44,6 +44,7 @@ A built-in simulator generates leads, buyer personas and sales reps, so the syst
 - [Sign-in, roles and API keys](#sign-in-roles-and-api-keys)
 - [Connectors: forms, CRM, email, website, CSV](#connectors-forms-crm-email-website-csv)
 - [Accounts and deals](#accounts-and-deals)
+- [Quotes](#quotes)
 - [Settings console](#settings-console)
 - [Notifications](#notifications)
 - [Call intelligence](#call-intelligence)
@@ -332,6 +333,10 @@ Full interactive docs at **`/docs`** (Swagger UI). Main endpoints:
 | `POST` | `/api/import/preview` · `/api/import/commit` | CSV import (manager) |
 | `GET` | `/api/accounts` · `/api/accounts/{id}` | Companies with their people, buying committee and deals |
 | `GET/POST/PATCH` | `/api/opportunities` · `/api/opportunities/{id}` | Deal board, deal detail, create a deal, edit or close one |
+| `GET` | `/api/quotes/catalog` · `/api/quotes` · `/api/quotes/{id}` | The catalog and quote rules · quotes on your deals (`status=needs_approval` for the approval queue) · one quote |
+| `POST` · `PATCH` | `/api/opportunities/{id}/quotes` · `/api/quotes/{id}` | Draft a quote on a deal (`supersedes` for a new version) · change a draft |
+| `POST` | `/api/quotes/{id}/approve` · `/send` · `/void` · `/accept` · `/decline` | Approve a discount (manager) · send (`email: true` to email it) · withdraw · record the buyer's answer |
+| `GET` · `POST` | `/api/public/quotes/{token}` · `/accept` · `/decline` | The buyer's view of a quote, and their answer (no sign-in: the token is the key) |
 | `GET` | `/api/config` · `/api/config/versions` · `/api/config/versions/{id}` | Rules in force, version history, one version with its changes (manager) |
 | `POST` | `/api/config/check` | Validate edited rules and dry-run them on real events; returns problems or the list of changes (admin) |
 | `POST` | `/api/config/versions` · `/{id}/activate` · `/{id}/restore` | Save a version (optionally activate it), activate a draft, roll back (admin) |
@@ -369,9 +374,10 @@ X-API-Key: lp_…            (or a signed-in admin / manager session)
 | `assignment.yaml` | Regions, segments, language, load weights, reassignment SLAs |
 | `quality.yaml` | Duplicate matching thresholds, fake-lead signals |
 | `nba.yaml` | Next-best-action rules N1–N15 and priority weights |
+| `quotes.yaml` | Quote catalog, discount approval limit, validity, default terms, seller name |
 | `simulator.yaml` | Lead volume, sources, personas, rep profiles, warm-up length, seed |
 
-The first five files are the defaults. Admins change them from the dashboard without a restart: see
+The first six files are the defaults. Admins change them from the dashboard without a restart: see
 [Settings console](#settings-console). `simulator.yaml` is only editable on disk.
 
 Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-ignored). Real environment variables win.
@@ -393,7 +399,7 @@ Settings can also go in `backend/.env` (copy `backend/.env.example`; it is git-i
 | `RESEND_API_KEY` · `LEADPILOT_EMAIL_FROM` | — | Email notifications through Resend (sender on a verified domain) |
 | `SLACK_WEBHOOK_URL` | — | Slack notifications (one incoming webhook for the team channel) |
 | `TWILIO_ACCOUNT_SID` · `TWILIO_AUTH_TOKEN` · `TWILIO_FROM_NUMBER` | — | SMS notifications through Twilio |
-| `LEADPILOT_PUBLIC_URL` | — | Dashboard address, so emails, Slack posts and texts link to the lead or deal |
+| `LEADPILOT_PUBLIC_URL` | — | Dashboard address, so emails, Slack posts and texts link to the lead or deal, and emailed quotes link to the buyer's page |
 | `GEMINI_API_KEY` · `GEMINI_MODEL` | — · `gemini-2.5-flash` | Call summaries and outcomes by Gemini (otherwise phone-system summary or rules) |
 | `RETELL_API_KEY` | — | Verifies Retell's signed call webhooks |
 | `SUPABASE_SERVICE_ROLE_KEY` · `LEADPILOT_RECORDINGS_BUCKET` | — · `call-recordings` | Private copies of call recordings in Supabase Storage (server only) |
@@ -532,6 +538,35 @@ table (migration `supabase/migrations/20261014000000_opportunities.sql`).
 
 ---
 
+## Quotes
+
+A rep builds a **quote** on a deal page (**Quotes → New quote**): lines from the catalog or typed in (quantity, unit
+price, line discount, billed per year or once), a discount on the whole quote, a contact it is for and a date it is
+valid until (30 days by default). The total shown is the first-year value: yearly items plus one-time items.
+
+- **Approval.** A quote discounted by more than 15% off list (`approval.max_discount_pct`) needs a manager's
+  approval before it can be sent. Managers get a notification; editing the quote after approval asks again.
+- **Sending.** **Mark as sent** records a `proposal_sent` event for the quote: the deal moves to proposal (O5) and its
+  amount becomes the quote's total. With email set up (Resend, `LEADPILOT_PUBLIC_URL`, and live mode), **Send by
+  email** also emails the contact a link to it. A sent quote can no longer be edited: **New version** makes a copy
+  that replaces it.
+- **The buyer's link.** Each quote has its own link (`/q/<token>`, no sign-in; the long random token is the key). The
+  buyer reads the quote, prints it or saves it as a PDF, and **accepts** (typing their name) or **declines** it.
+  Opening it counts as a `proposal_viewed` (at most once every 6 hours) and the owner is told the first time.
+  Accepting wins the deal at the quote's total (`deal_won`, O7); declining tells the owner and managers and leaves
+  the deal open. Drafts and withdrawn quotes are not shown on the link. Reps can also record an answer they got by
+  phone or email (**Buyer accepted / declined**).
+- **Replays.** Every step is an event on the quote's contact (`quote_created`, `quote_revised`, `quote_approved`,
+  `proposal_sent`, `proposal_viewed`, `deal_won`, `quote_declined`, `quote_voided`, each naming its deal and quote),
+  and quotes are rebuilt with their deal. Lines keep their own prices, so changing the catalog never changes an
+  existing quote. A sent quote past its date shows as expired and can no longer be accepted.
+
+The catalog, the approval limit, the default terms and the seller name are in `backend/config/quotes.yaml` (also
+editable in the Settings console). Quotes are stored in the `quotes` table (migration
+`supabase/migrations/20261018000000_quotes.sql`).
+
+---
+
 ## Notifications
 
 The **bell** in the top bar and the **Notifications** page (`/notifications`, also in the account menu) show what
@@ -547,6 +582,9 @@ needs attention, as it happens. The rules are in `backend/config/notifications.y
 | Escalated | too many reassignments: the lead went to the manager queue (R3) | managers | in app, email, Slack · urgent |
 | Stalled | a lead stalled with risk ≥ 50 | the owner | in app |
 | Deal won / lost | a deal closed | the owner and managers | in app (+ Slack when won) |
+| Quote approval | a quote's discount is above the limit | managers | in app, email |
+| Quote approved / opened | a manager approved the discount · the buyer opened the quote for the first time | the owner | in app |
+| Quote declined | the buyer declined a quote | the owner and managers | in app, email |
 | Review needed | a suspicious lead waits for a quality review | managers | in app |
 | Source flagged | a lead source looks like it sends junk | managers | in app, Slack |
 
@@ -609,7 +647,7 @@ admins change them. Managers can look but not change anything.
   that differ from them, so new defaults added in code reach every version. Version 1 ("Starting rules from the YAML
   files") is created on first start. Exactly one version is **active**; the others are **drafts** (saved, never used)
   or **retired** (used before).
-- **Editing.** Each section (Scoring, Pipeline and deals, Assignment, Quality and duplicates, Next best actions) is
+- **Editing.** Each section (Scoring, Pipeline and deals, Assignment, Quality and duplicates, Next best actions, Quotes) is
   edited as YAML. **Show the documented defaults** shows the YAML file with its comments.
 - **Check changes.** Validates the edit (valid YAML, same shape as the defaults, numbers stay numbers, the config
   loads) and **dry-runs** it on a built-in sample journey plus the first 400 real events in a scratch engine. It shows
@@ -692,15 +730,15 @@ To run on real data in production, you would also need to:
 
 ```
 backend/
-  config/        scoring · pipeline · assignment · quality · nba · simulator · notifications (YAML)
+  config/        scoring · pipeline · assignment · quality · nba · quotes · simulator · notifications (YAML)
   data/          seed companies, reps, sources, domain lists, IP geo
   app/
     engine/      pure functions: normalize · identity · quality · enrich · profile · scoring · intent
-                 explain · metrics · pipeline · stall · prediction · assignment · nba · priority · opportunity
+                 explain · metrics · pipeline · stall · prediction · assignment · nba · priority · opportunity · quotes
     simulator/   personas · generator · history · scenarios
     analytics/   funnel · response_time · source_quality · rep_performance · calibration
     connectors/  field mapping · signing · email parsing · CSV import · store · tracker.js
-    api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · config · websocket routes
+    api/         leads · pipeline · reps · analytics · sim · auth · connectors · deals · quotes · config · websocket routes
     processor.py store.py persistence.py runtime.py scheduler.py clock.py bus.py main.py
     config_versions.py  settings versions: validation, diff, dry run
     whatif.py    what-if runs: scratch replays under two rule sets, compared
@@ -711,8 +749,8 @@ backend/
 frontend/
   src/pages/     Login (sign in + create account) · Queue · Leads · LeadDetail · Pipeline (deals / leads) · Accounts ·
                  Account · Deal · LiveFeed · Analytics · Quality · Simulator · Access · Connectors · Import · Settings · Notifications · Calls ·
-                 NotFound
-  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif · notices · calls
+                 PublicQuote (the buyer's quote link) · NotFound
+  src/components Shell (sidebar, top bar, search, toasts) · Splash · Logo · icons · ui · charts · deals · whatif · notices · calls · quotes
   src/lib        api client · live WebSocket · formatting · theme (light/dark) · auth (Supabase sign-in) ·
                  links (drill-down URLs)
   public/        favicon.svg (adapts to dark mode) · favicon.ico · PNG + Apple touch icons · web manifest

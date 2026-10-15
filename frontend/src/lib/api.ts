@@ -45,6 +45,7 @@ export type Opportunity = {
   stage_entered_at: string | null; days_in_stage: number; amount: number | null; acv: number | null;
   close_prob: number | null; expected_value: number; is_stalled: boolean; stall: Stall | null;
   close_date: string | null; lost_reason: string | null; last_activity_at: string | null; committee_covered: string[];
+  quote: { quote_id: string; status: QuoteStatus; total: number } | null;
 };
 export type DealContact = { lead_id: string; name: string | null; title: string | null; seniority: string; email: string | null; score: number; grade: string; stage: string; owner_rep_id: string | null; primary: boolean };
 export type OpportunityDetail = Opportunity & {
@@ -54,7 +55,28 @@ export type OpportunityDetail = Opportunity & {
   close_factors: { key: string; label: string; logit: number | null }[];
   transitions: { ts: string; from: string | null; to: string; rule_id: string; evidence: string[]; reason: string; mode: string }[];
   open_rule: string; opened_event_id: string; events: number; created_by: string | null;
+  quotes: Quote[];
 };
+export type QuoteStatus = "draft" | "needs_approval" | "sent" | "expired" | "accepted" | "declined" | "void" | "superseded";
+export type QuoteLine = { sku: string | null; name: string; description: string; unit: string; qty: number; unit_price: number; discount_pct: number; billing: "recurring" | "one_time" };
+export type QuoteTotals = { list_total: number; line_discounts: number; subtotal: number; quote_discount: number; recurring: number; one_time: number; total: number; effective_discount_pct: number; line_totals: number[] };
+/** What the buyer's link shows. */
+export type BuyerQuote = {
+  quote_id: string; title: string; status: QuoteStatus; currency: string; valid_until: string | null; lines: QuoteLine[];
+  discount_pct: number; totals: QuoteTotals; notes: string; terms: string; created_at: string; sent_at: string | null;
+  accepted_at: string | null; declined_at: string | null; decline_reason: string | null;
+  accepted_by: { name: string | null; title?: string | null; email?: string | null; recorded_by?: string } | null;
+  deal_name: string; company: string | null; recipient: { lead_id?: string; name: string | null; title: string | null; email: string | null };
+  seller_name?: string; answerable?: boolean;
+};
+export type Quote = BuyerQuote & {
+  opp_id: string; rev: number; base_status: string; created_by: string | null; updated_at: string | null; sent_by: string | null;
+  viewed_at: string | null; last_viewed_at: string | null; views: number; needs_approval: boolean; approved: boolean;
+  approved_by: string | null; approved_at: string | null; ready: boolean; max_discount_pct: number; voided_at: string | null;
+  void_reason: string | null; supersedes: string | null; superseded_by: string | null; link: string | null; emailed_to?: string | null;
+};
+export type CatalogItem = { sku: string; name: string; description: string; unit: string; price: number; billing: "recurring" | "one_time" };
+export type QuoteCatalog = { currency: string; valid_days: number; max_lines: number; max_discount_pct: number; terms: string; seller_name: string; catalog: CatalogItem[]; email: { ready: boolean; reason: string | null }; today: string };
 export type DealColumn = { stage: DealStage; count: number; acv_total: number; ev_total: number; stalled: number; cards: Opportunity[] };
 export type DealBoard = { columns: DealColumn[]; open_deals: number; pipeline_ev: number; pipeline_acv: number };
 export type AccountRow = {

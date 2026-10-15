@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import (routes_analytics, routes_auth, routes_calls, routes_config, routes_connectors, routes_deals,
-                  routes_leads, routes_notifications, routes_pipeline, routes_reps, routes_sim, ws)
+                  routes_leads, routes_notifications, routes_pipeline, routes_quotes, routes_reps, routes_sim, ws)
 from .api.security import manager, user
 from .auth import AccountStore, TokenVerifier
 from .analytics.calibration import train_model
@@ -150,13 +150,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="LeadPilot", version="1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-# Public: health + auth config, and connector hooks / tracker (they check the connector's own secret).
+# Public: health + auth config, connector hooks / tracker (they check the connector's own secret), and the buyer's
+# quote link (/api/public/quotes/<token>: the token is the secret).
 # Self: /api/me (pending users too). Admin: people, API keys, connectors. Managers: CSV import.
 for r in (routes_auth.public, routes_auth.me_router, routes_auth.admin_router, routes_leads.ingest_router, ws.router,
-          routes_connectors.public, routes_connectors.admin_router, routes_connectors.import_router):
+          routes_connectors.public, routes_connectors.admin_router, routes_connectors.import_router,
+          routes_quotes.public):
     app.include_router(r)
 for r in (routes_leads.router, routes_pipeline.router, routes_deals.router, routes_reps.router, routes_sim.router,
-          routes_notifications.router, routes_calls.router):
+          routes_notifications.router, routes_calls.router, routes_quotes.router):
     app.include_router(r, dependencies=[Depends(user)])
 app.include_router(routes_analytics.router, dependencies=[Depends(manager)])
 app.include_router(routes_config.router)         # managers read; admins change (checked per route)

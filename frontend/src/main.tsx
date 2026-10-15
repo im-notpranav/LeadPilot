@@ -8,17 +8,21 @@ import { AuthProvider } from "./lib/auth";
 import { ThemeProvider } from "./lib/theme";
 import { AuthGate } from "./pages/Login";
 import Splash from "./components/Splash";
+import PublicQuote from "./pages/PublicQuote";
 import "./index.css";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 2000, refetchOnWindowFocus: false, retry: 1 } },
 });
 
+// A buyer opening a quote link (/q/<token>) gets the quote alone: no sign-in, no live connection, no app shell.
+const buyerQuote = window.location.pathname.startsWith("/q/");
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <BrowserRouter>
+        {buyerQuote ? <PublicQuote /> : <BrowserRouter>
           <Splash />
           <AuthProvider>
             <AuthGate>
@@ -27,7 +31,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               </LiveProvider>
             </AuthGate>
           </AuthProvider>
-        </BrowserRouter>
+        </BrowserRouter>}
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>,
